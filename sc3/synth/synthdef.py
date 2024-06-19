@@ -180,6 +180,10 @@ class SynthDef(metaclass=MetaSynthDef):
         """SynthDef's metadata dict."""
         return self._metadata
 
+    @metadata.setter
+    def metadata(self, value):
+        self._metadata = value
+
     @classmethod
     def wrap(cls, func, rates=None, prepend=None):
         """Wrap a function within another SynthDef function.

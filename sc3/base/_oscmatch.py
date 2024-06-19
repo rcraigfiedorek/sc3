@@ -5,13 +5,13 @@ import re
 
 _rewrite_symbols = {
     # Valid OSC address symbols with re meaning BEFORE special symbols rewrite.
-    "(": "\(",
-    ")": "\)",
-    "^": "\^",
-    ".": "\.",
-    "$": "\$",
-    "+": "\+",
-    "|": "\|",
+    "(": r"\(",
+    ")": r"\)",
+    "^": r"\^",
+    ".": r"\.",
+    "$": r"\$",
+    "+": r"\+",
+    "|": r"\|",
     "\\": "\\\\",
     # OSC special symbols (are invalid or special OSC Address symbols).
     "{": "(?:",
