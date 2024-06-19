@@ -10,11 +10,11 @@ from . import responders as rpd
 from . import _oscinterface as osci
 
 
-__all__ = ['NetAddr', 'BundleNetAddr']
+__all__ = ["NetAddr", "BundleNetAddr"]
 
 
-class NetAddr():
-    '''
+class NetAddr:
+    """
     NetAddr's objects represent *target* addresses to send messages to, or
     establish connections with, using UDP or TCP transport protocols.
 
@@ -30,7 +30,7 @@ class NetAddr():
     NetAddr object. Note that differently from UDP protocol, which is
     connectionless, TCP connections are client connections that can't be used
     for serving purposes as independent ports.
-    '''
+    """
 
     # use_doubles = False
     # broadcast_flag = False
@@ -55,80 +55,81 @@ class NetAddr():
 
     @property
     def hostname(self):
-        '''Address name.'''
+        """Address name."""
         return self._hostname
 
     @property
     def addr(self):
-        '''Address name as int.'''
+        """Address name as int."""
         return self._addr
 
     @property
     def port(self):
-        '''Address port.'''
+        """Address port."""
         return self._port
 
     @property
     def proto(self):
-        '''Return the transport protocol.'''
+        """Return the transport protocol."""
         return self._osc_interface.proto
 
     @property
     def is_local(self):
-        '''Return true if the address is in localhost.'''
+        """Return true if the address is in localhost."""
         return ipaddress.IPv4Address(self._hostname).is_loopback
 
     @property
     def local_endpoint(self):
-        '''Return the bind address as a tuple (hostname, port).'''
+        """Return the bind address as a tuple (hostname, port)."""
         if self._osc_interface.socket:
             return self._osc_interface.socket.getsockname()
 
     def change_output_port(self, port):
-        '''Change UDP local endpoint.'''
+        """Change UDP local endpoint."""
         with _libsc3.main._main_lock:
-            local_addr = (socket.gethostbyname('localhost'), port)
-            new_interface = type(
-                _libsc3.main._osc_interface)._local_endpoints.get(local_addr)
+            local_addr = (socket.gethostbyname("localhost"), port)
+            new_interface = type(_libsc3.main._osc_interface)._local_endpoints.get(
+                local_addr
+            )
         if new_interface is None:
-            raise Exception(f'port {port} is not open')
-        if self._osc_interface.proto == 'tcp' or new_interface == 'tcp':
+            raise Exception(f"port {port} is not open")
+        if self._osc_interface.proto == "tcp" or new_interface == "tcp":
             raise Exception("can't change output port from/to TCP")
         self._osc_interface = new_interface
         self._port = port
 
     @staticmethod
     def lang_port():
-        '''Return the default UPD port of the language.'''
+        """Return the default UPD port of the language."""
         return _libsc3.main._osc_interface.port
 
     @staticmethod
     def lang_endpoints():
-        '''Return a list of all active local endpoints as (hostname, port, proto).'''
+        """Return a list of all active local endpoints as (hostname, port, proto)."""
         with _libsc3.main._main_lock:
             return [
-                (*k, v.proto) for k, v in
-                type(_libsc3.main._osc_interface)._local_endpoints.items()]
-
+                (*k, v.proto)
+                for k, v in type(_libsc3.main._osc_interface)._local_endpoints.items()
+            ]
 
     ### TCP Connections ###
 
-    def connect(self, on_complete=None, on_failure=None,
-                local_port=None, timeout=3):
-        '''Stablish a TCP connection to this address.'''
+    def connect(self, on_complete=None, on_failure=None, local_port=None, timeout=3):
+        """Stablish a TCP connection to this address."""
         # Async.
         with _libsc3.main._main_lock:
-            if self._osc_interface.proto == 'tcp'\
-            and self._osc_interface.is_connected:
+            if self._osc_interface.proto == "tcp" and self._osc_interface.is_connected:
                 self.disconnect()
             self._osc_interface = osci.OscTcpInterface(
-                local_port or self.lang_port() + 1, 100)
+                local_port or self.lang_port() + 1, 100
+            )
             self._osc_interface.bind()
             self._osc_interface.try_connect(
-                self._target, timeout, on_complete, on_failure)
+                self._target, timeout, on_complete, on_failure
+            )
 
     def disconnect(self):
-        '''Close TCP connection to this address.'''
+        """Close TCP connection to this address."""
         if self._osc_interface is _libsc3.main._osc_interface:
             return
         # Sync.
@@ -138,19 +139,18 @@ class NetAddr():
 
     @property
     def is_connected(self):
-        '''Return True if a TCP connection is stablished.'''
+        """Return True if a TCP connection is stablished."""
         return self._osc_interface.is_connected
 
-
     def has_bundle(self):
-        '''
+        """
         Polymorphic method used to differentiate NetAddr from BundleNetAddr
         by avoiding type checking.
-        '''
+        """
         return False
 
     def send_msg(self, *args):
-        '''Send an OSC message to the server.
+        """Send an OSC message to the server.
 
         Parameters
         ----------
@@ -163,12 +163,12 @@ class NetAddr():
         Invoked as::
 
           addr.send_msg('/osc_addr', p1, p2, ...)
-        '''
+        """
 
         self._osc_interface.send_msg(self._target, *args)
 
     def send_bundle(self, time, *elements):
-        '''Send an OSC bundle to the server.
+        """Send an OSC bundle to the server.
 
         Parameters
         ----------
@@ -187,15 +187,15 @@ class NetAddr():
         Elements lists representing messages or bundles. Invoked as::
 
           addr.send_bundle(1, ['/msg', ...], [1.2, ['/bndl', ...], ...], ...)
-        '''
+        """
 
         self._osc_interface.send_bundle(self._target, time, *elements)
 
     def send_clumped_bundles(self, time, *elements):
-        '''
+        """
         This method is used to send bundles larger than UDP datagram size
         as successive sub-clumped packages.
-        '''
+        """
         if self._calc_bndl_dgram_size(elements) > self._MAX_UDP_DGRAM_SIZE:
             for item in self._clump_bundle(elements):
                 if time is not None:
@@ -205,15 +205,15 @@ class NetAddr():
             self.send_bundle(time, *elements)
 
     def send_status_msg(self):
-        '''Send '/status' message to the server.
+        """Send '/status' message to the server.
 
         The server will respond with '/status.reply'.
-        '''
+        """
 
-        self._osc_interface.send_msg(self._target, '/status')
+        self._osc_interface.send_msg(self._target, "/status")
 
     def sync(self, condition=None, latency=None, elements=None):
-        '''
+        """
         Generator method that internally manages server's '/sync'
         message. Because it's used to synchronize bundles sent
         to the server it is primarly used through Server's ``sync``
@@ -229,12 +229,12 @@ class NetAddr():
         elements: list
             A list of lists as OSC messages which will be sent
             before the '/sync' message.
-        '''
+        """
 
         condition = condition or stm.Condition()
         if elements is None:
             id = self._make_sync_responder(condition)
-            self.send_bundle(latency, ['/sync', id])
+            self.send_bundle(latency, ["/sync", id])
             yield from condition.wait()
         else:
             sync_size = self._SYNC_BNDL_DGRAM_SIZE
@@ -242,7 +242,7 @@ class NetAddr():
             if self._calc_bndl_dgram_size(elements) > max_size:
                 for item in self._clump_bundle(elements, max_size):
                     id = self._make_sync_responder(condition)
-                    item.append(['/sync', id])
+                    item.append(["/sync", id])
                     self.send_bundle(latency, *item)
                     if latency is not None:
                         latency += 1e-9  # One nanosecond later each.
@@ -250,7 +250,7 @@ class NetAddr():
             else:
                 id = self._make_sync_responder(condition)
                 elements = list(elements)
-                elements.append(['/sync', id])
+                elements.append(["/sync", id])
                 self.send_bundle(latency, *elements)
                 yield from condition.wait()
 
@@ -263,7 +263,7 @@ class NetAddr():
                 condition.test = True
                 condition.signal()
 
-        resp = rpd.OscFunc(resp_func, '/synced', self)
+        resp = rpd.OscFunc(resp_func, "/synced", self)
         return id
 
     def _clump_bundle(self, elements, size=8192):
@@ -275,8 +275,9 @@ class NetAddr():
                 elist.append((self._calc_bndl_dgram_size(e[1:]), e))
             else:
                 raise ValueError(
-                    'elements within bundles must be valid OSC '
-                    f'messages or bundles, received: {e}')
+                    "elements within bundles must be valid OSC "
+                    f"messages or bundles, received: {e}"
+                )
         res = []
         clump = []
         acc_size = 16  # Bundle prefix + Timetag bytes.
@@ -302,12 +303,13 @@ class NetAddr():
                 res += self._calc_bndl_dgram_size(e[1:])
             else:
                 raise ValueError(
-                    'elements within bundles must be valid OSC '
-                    f'messages or bundles, received: {e}')
+                    "elements within bundles must be valid OSC "
+                    f"messages or bundles, received: {e}"
+                )
         return res
 
     def _calc_msg_dgram_size(self, msg):
-        res = self._strpad4(len(bytes(msg[0], 'ascii')))  # Address.
+        res = self._strpad4(len(bytes(msg[0], "ascii")))  # Address.
         res += self._strpad4(len(msg[1:]) + 1)  # Type tag string.
         for val in msg[1:]:
             if isinstance(val, str):
@@ -343,13 +345,14 @@ class BundleNetAddr(NetAddr):
     # Important difference: This class is a context manager. forkIfNeeded
     # can't be implemented, addr.sync() uses it in sclang. Here sync calls are
     # handled different doing yield from directly within the with statement.
-    '''
+    """
     This class is a context manager that acts as a proxy of the current
     NetAddr and collects single messages to be sent as a bundle. It's main
     use is through 'bind' method of the server objects.
-    '''
+    """
 
-    class _SYNC_FLAG(): pass
+    class _SYNC_FLAG:
+        pass
 
     def __init__(self, target, arg_list=None, send=True):
         if isinstance(target, NetAddr):
@@ -389,7 +392,7 @@ class BundleNetAddr(NetAddr):
 
     def _send_last_bundle(self):
         time = self._server.latency if self._server else None
-        bundle = self._bundle[self._last_sync+1:]
+        bundle = self._bundle[self._last_sync + 1 :]
         if bundle:
             self._save_addr.send_clumped_bundles(time, *bundle)
 
@@ -408,7 +411,7 @@ class BundleNetAddr(NetAddr):
         return res
 
     def get_bundle(self, time=None):
-        '''Return all bundled messages so far.'''
+        """Return all bundled messages so far."""
         if self._last_sync == -1:
             return [time, *self._bundle]
         else:

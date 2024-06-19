@@ -27,67 +27,65 @@ from . import node as nod
 from . import _graphparam as gpp
 
 
-__all__ = ['s', 'Server', 'ServerOptions']
+__all__ = ["s", "Server", "ServerOptions"]
 
 
 _logger = logging.getLogger(__name__)
 
 
 s = None
-'''Default server global variable.'''
+"""Default server global variable."""
 
 
 class Defaults(enum.Enum):
-    '''Default command values for server options.
+    """Default command values for server options."""
 
-    '''
+    UDP_PORT = ("-u", None)  # mutex -t, opt int
+    TCP_PORT = ("-t", None)  # mutex -u, opt int
 
-    UDP_PORT = ('-u', None)  # mutex -t, opt int
-    TCP_PORT = ('-t', None)  # mutex -u, opt int
+    BIND_ADDRESS = ("-B", "127.0.0.1")  # opt str
+    MAX_LOGINS = ("-l", 64)  # opt int
+    PASSWORD = ("-p", None)  # opt str
+    ZEROCONF = ("-R", 1)  # RENDEZVOUS, boolean
 
-    BIND_ADDRESS = ('-B', '127.0.0.1')  # opt str
-    MAX_LOGINS = ('-l', 64)  # opt int
-    PASSWORD = ('-p', None)  # opt str
-    ZEROCONF = ('-R', 1)  # RENDEZVOUS, boolean
+    RESTRICTED_PATH = ("-P", None)  # opt str
+    UGEN_PLUGINS_PATH = ("-U", None)  # opt str
 
-    RESTRICTED_PATH = ('-P', None)  # opt str
-    UGEN_PLUGINS_PATH = ('-U', None)  # opt str
+    CONTROL_BUSES = ("-c", 16384)  # # opt int, num_control_bus_channels
+    AUDIO_BUSES = ("-a", 1024)  # # opt int, num_audio_bus_channels
+    INPUT_CHANNELS = ("-i", 8)  # opt int, num_input_bus_channels
+    OUTPUT_CHANNELS = ("-o", 8)  # opt int, num_output_bus_channels
+    BLOCK_SIZE = ("-z", 64)  # opt int
+    BUFFERS = ("-b", 1024)  # opt int, num_buffers
+    MAX_NODES = ("-n", 1024)  # opt int
+    MAX_SYNTHDEFS = ("-d", 1024)  # opt int, max_synth_defs
+    RT_MEMORY = ("-m", 8192)  # opt int, mem_size
+    WIRES = ("-w", 64)  # opt int, num_wire_bufs
+    RGENS = ("-r", 64)  # opt int, num_rgens
+    LOAD_SYNTHDEFS = ("-D", 1)  # opt bool, load_defs
 
-    CONTROL_BUSES = ('-c', 16384)  # # opt int, num_control_bus_channels
-    AUDIO_BUSES = ('-a', 1024)  # # opt int, num_audio_bus_channels
-    INPUT_CHANNELS = ('-i', 8)  # opt int, num_input_bus_channels
-    OUTPUT_CHANNELS = ('-o', 8)  # opt int, num_output_bus_channels
-    BLOCK_SIZE = ('-z', 64)  # opt int
-    BUFFERS = ('-b', 1024)  # opt int, num_buffers
-    MAX_NODES = ('-n', 1024)  # opt int
-    MAX_SYNTHDEFS = ('-d', 1024)  # opt int, max_synth_defs
-    RT_MEMORY = ('-m', 8192)  # opt int, mem_size
-    WIRES = ('-w', 64)  # opt int, num_wire_bufs
-    RGENS = ('-r', 64)  # opt int, num_rgens
-    LOAD_SYNTHDEFS = ('-D', 1)  # opt bool, load_defs
-
-    HW_DEVICE_NAME = ('-H', None)  # opt str
-    HW_BUFFER_SIZE = ('-Z', 0)  # opt int, hardware_buffer_size
-    SAMPLE_RATE = ('-S', 0)  # opt int, supernova differs: 44100
-    NRT = ('-N', None)  # mode flag
-    VERBOSE = ('-V', 0)  # opt int
+    HW_DEVICE_NAME = ("-H", None)  # opt str
+    HW_BUFFER_SIZE = ("-Z", 0)  # opt int, hardware_buffer_size
+    SAMPLE_RATE = ("-S", 0)  # opt int, supernova differs: 44100
+    NRT = ("-N", None)  # mode flag
+    VERBOSE = ("-V", 0)  # opt int
 
     # Supernova only.
-    MEMORY_LOCKING = ('-L', None)  # mode flag
-    THREADS = ('-T', 4)  # opt int
-    USE_SYSTEM_CLOCK = ('-C', 1)  # opt bool
+    MEMORY_LOCKING = ("-L", None)  # mode flag
+    THREADS = ("-T", 4)  # opt int
+    USE_SYSTEM_CLOCK = ("-C", 1)  # opt bool
 
     # Darwin only.
-    INPUT_STREAMS = ('-I', None)  # opt str, input_streams_enabled
-    OUTPUT_STREAMS = ('-O', None)  # opt str, output_streams_enabled
+    INPUT_STREAMS = ("-I", None)  # opt str, input_streams_enabled
+    OUTPUT_STREAMS = ("-O", None)  # opt str, output_streams_enabled
 
     def __init__(self, flag, default):
         self.flag = flag
         self.default = default
 
 
-class ServerOptions():
-    '''Encapsulates commandline and other server options.
+class ServerOptions:
+    """Encapsulates commandline and other server options.
 
     Attributes
     ----------
@@ -248,13 +246,13 @@ class ServerOptions():
     rec_buf_size : int
         Undocumented/unused client side option.
 
-    '''
+    """
 
     # locals().update(Defaults.__members__)
 
     def __init__(self):
         self.program = plf.Platform.default_server_cmd
-        self.protocol = 'upd'
+        self.protocol = "upd"
 
         self.bind_address = Defaults.BIND_ADDRESS.default
         self.max_logins = 1  # not default cmd value.
@@ -298,42 +296,39 @@ class ServerOptions():
         self.reserved_buffers = 0  # not used, really.
         self.initial_node_id = 1000
         # self.remote_control_volume = False  # ServerPlusGui makeGui, no GUI.
-        self.rec_header_format = 'aiff'
-        self.rec_sample_format = 'float'
+        self.rec_header_format = "aiff"
+        self.rec_sample_format = "float"
         self.rec_channels = 2
         self.rec_buf_size = None
 
-    def options_list(self, port, osc_file=None, input_file=None,
-                     output_file=None):
-        '''Return a list of options for the server command.
-
-        '''
+    def options_list(self, port, osc_file=None, input_file=None, output_file=None):
+        """Return a list of options for the server command."""
 
         o = []
 
         if port is None:
             o.append(Defaults.NRT.flag)
             if osc_file is None:
-                raise ValueError('osc_file must be supplied for nrt')
+                raise ValueError("osc_file must be supplied for nrt")
             o.append(str(osc_file))
-            input_file = '_' if input_file is None else str(input_file)
+            input_file = "_" if input_file is None else str(input_file)
             o.append(input_file)
             if output_file is None:
                 # *** TODO: Method in Platform for name generation. See Recorder & Buffer.
                 output_file = plf.Platform.recording_dir
                 output_file.mkdir(exist_ok=True)
-                output_file = str(output_file / 'SC_')
-                output_file += time.strftime('%Y%m%d_%H%M%S')
-                output_file += '.' + self.rec_header_format
+                output_file = str(output_file / "SC_")
+                output_file += time.strftime("%Y%m%d_%H%M%S")
+                output_file += "." + self.rec_header_format
             else:
                 output_file = str(output_file)
             o.append(output_file)
             # No default SR for NRT.
-            o.append(str(self.sample_rate) if self.sample_rate else '44100')
+            o.append(str(self.sample_rate) if self.sample_rate else "44100")
             o.append(self.rec_header_format)
             o.append(self.rec_sample_format)
         else:
-            if self.protocol == 'tcp':
+            if self.protocol == "tcp":
                 o.extend([Defaults.TCP_PORT.flag, str(port)])
             else:
                 o.extend([Defaults.UDP_PORT.flag, str(port)])
@@ -355,7 +350,7 @@ class ServerOptions():
         if self.ugen_plugins_path != Defaults.UGEN_PLUGINS_PATH.default:
             plist = utl.as_list(self.ugen_plugins_path)
             plist = [os.path.normpath(x) for x in plist]
-            o.extend([Defaults.UGEN_PLUGINS_PATH.flag, ':'.join(plist)])
+            o.extend([Defaults.UGEN_PLUGINS_PATH.flag, ":".join(plist)])
 
         if self.control_buses != Defaults.CONTROL_BUSES.default:
             o.extend([Defaults.CONTROL_BUSES.flag, str(self.control_buses)])
@@ -381,8 +376,7 @@ class ServerOptions():
         if self.rgens != Defaults.RGENS.default:
             o.extend([Defaults.RGENS.flag, str(self.rgens)])
         if self.load_synthdefs != Defaults.LOAD_SYNTHDEFS.default:
-            o.extend([Defaults.LOAD_SYNTHDEFS.flag,
-                str(int(self.load_synthdefs))])
+            o.extend([Defaults.LOAD_SYNTHDEFS.flag, str(int(self.load_synthdefs))])
 
         if self.hw_device_name != Defaults.HW_DEVICE_NAME.default:
             flag = Defaults.HW_DEVICE_NAME.flag
@@ -392,7 +386,7 @@ class ServerOptions():
             elif isinstance(dev, tuple):
                 o.extend([flag, str(dev[0]), str(dev[1])])
             else:
-                raise TypeError('hw_device_name must be str or tuple')
+                raise TypeError("hw_device_name must be str or tuple")
         if self.hw_buffer_size != Defaults.HW_BUFFER_SIZE.default:
             o.extend([Defaults.HW_BUFFER_SIZE.flag, str(self.hw_buffer_size)])
 
@@ -406,23 +400,21 @@ class ServerOptions():
             if self.threads != Defaults.THREADS.default:
                 o.extend([Defaults.THREADS.flag, str(self.threads)])
             if True:  # self.use_system_clock != Defaults.USE_SYSTEM_CLOCK.default:
-                o.extend([Defaults.USE_SYSTEM_CLOCK.flag,
-                    str(int(self.use_system_clock))])
+                o.extend(
+                    [Defaults.USE_SYSTEM_CLOCK.flag, str(int(self.use_system_clock))]
+                )
 
         # Darwin only.
-        if plf.Platform.name.startswith('darwin'):
+        if plf.Platform.name.startswith("darwin"):
             if self.input_streams != Defaults.INPUT_STREAMS.default:
                 o.extend([Defaults.INPUT_STREAMS.flag, str(self.input_streams)])
             if self.output_streams != Defaults.OUTPUT_STREAMS.default:
-                o.extend([Defaults.OUTPUT_STREAMS.flag,
-                    str(self.output_streams)])
+                o.extend([Defaults.OUTPUT_STREAMS.flag, str(self.output_streams)])
 
         return o
 
     def first_private_bus(self):
-        '''Return the bus number after output and input buses.
-
-        '''
+        """Return the bus number after output and input buses."""
 
         return self.output_channels + self.input_channels
 
@@ -444,7 +436,7 @@ class ServerOptions():
 #     def set_control_bus_values(self, *values): ...
 
 
-class ServerProcess():
+class ServerProcess:
     def __init__(self, on_exit=None):
         self.on_exit = on_exit or (lambda exit_code: None)
         self.proc = None
@@ -464,7 +456,8 @@ class ServerProcess():
             stderr=subprocess.PIPE,
             bufsize=1,
             universal_newlines=True,
-            start_new_session=True)
+            start_new_session=True,
+        )
         self._redirect_outerr()
 
         def popen_wait_thread():
@@ -477,7 +470,8 @@ class ServerProcess():
 
         t = threading.Thread(
             target=popen_wait_thread,
-            name=f'{type(self).__name__}.popen_wait id: {id(self)}')
+            name=f"{type(self).__name__}.popen_wait id: {id(self)}",
+        )
         t.daemon = True
         t.start()
 
@@ -497,11 +491,12 @@ class ServerProcess():
                     self.proc.wait(timeout=self.timeout)
             except subprocess.TimeoutExpired:
                 self.proc.kill()
-                self.proc.communicate() # just to be polite
+                self.proc.communicate()  # just to be polite
 
         t = threading.Thread(
             target=terminate_proc_thread,
-            name=f'{type(self).__name__}.terminate id: {id(self)}')
+            name=f"{type(self).__name__}.terminate id: {id(self)}",
+        )
         t.daemon = True
         t.start()
 
@@ -511,34 +506,37 @@ class ServerProcess():
 
     def _redirect_outerr(self):
         def read(out, flag, logger):
-            while not flag.is_set() and self.running():  # BUG: is still a different thread.
+            while (
+                not flag.is_set() and self.running()
+            ):  # BUG: is still a different thread.
                 line = out.readline()
                 if line:
                     # print(line, end='')
                     logger.info(line.rstrip())
 
         def make_thread(out, flag, out_name):
-            logger = logging.getLogger(f'SERVER.{out_name}')
+            logger = logging.getLogger(f"SERVER.{out_name}")
             t = threading.Thread(
                 target=read,
-                name=f'{type(self).__name__}.{out_name} id: {id(self)}',
-                args=(out, flag, logger))
+                name=f"{type(self).__name__}.{out_name} id: {id(self)}",
+                args=(out, flag, logger),
+            )
             t.daemon = True
             t.start()
             return t
 
         self._tflag = threading.Event()
-        self._tout = make_thread(self.proc.stdout, self._tflag, 'stdout')
-        self._terr = make_thread(self.proc.stderr, self._tflag, 'stderr')
+        self._tout = make_thread(self.proc.stdout, self._tflag, "stdout")
+        self._terr = make_thread(self.proc.stderr, self._tflag, "stderr")
 
 
 class MetaServer(type):
     sync_s = True
-    '''Update global variable `s` when default server is changed.'''
+    """Update global variable `s` when default server is changed."""
 
     def __init__(cls, *_):
         def init_func(cls):
-            cls.DEFAULT_ADDRESS = nad.NetAddr('127.0.0.1', 57110)
+            cls.DEFAULT_ADDRESS = nad.NetAddr("127.0.0.1", 57110)
             cls.named = dict()
             cls.all = set()
 
@@ -547,7 +545,7 @@ class MetaServer(type):
             cls._buffer_alloc_class = eng.ContiguousBlockAllocator
             cls._bus_alloc_class = eng.ContiguousBlockAllocator
 
-            cls.default = cls('localhost', cls.DEFAULT_ADDRESS)
+            cls.default = cls("localhost", cls.DEFAULT_ADDRESS)
             # cls.internal = cls(
             #     'internal', nad.NetAddr(None, None))  # No internal by now.
 
@@ -559,9 +557,7 @@ class MetaServer(type):
 
     @property
     def default(cls):
-        '''Default server object usualy binded to the `s` global variable.
-
-        '''
+        """Default server object usualy binded to the `s` global variable."""
 
         return cls._default
 
@@ -573,12 +569,10 @@ class MetaServer(type):
             global s
             s = value
         for server in cls.all:
-            mdl.NotificationCenter.notify(server, 'default', value)
+            mdl.NotificationCenter.notify(server, "default", value)
 
     def remove(cls, server):
-        '''Remove a server instance from the instances registry.
-
-        '''
+        """Remove a server instance from the instances registry."""
 
         cls.all.remove(server)
         del cls.named[server.name]
@@ -588,20 +582,20 @@ class MetaServer(type):
             server._status_watcher._resume_alive_thread()
 
     def quit_all(cls, watch_shutdown=True):
-        '''Quit all known local servers.'''
+        """Quit all known local servers."""
         for server in cls.all:
             if server._is_local:
                 server.quit(watch_shutdown)
 
     def free_all(cls, even_remote=False):  # All refers to cls.all.
-        '''Free nodes from all registered local or remote servers.
+        """Free nodes from all registered local or remote servers.
 
         Parameters
         ----------
         even_remote : bool
             Free also the nodes of remote server. False by default.
 
-        '''
+        """
 
         if even_remote:
             for server in cls.all:
@@ -613,14 +607,14 @@ class MetaServer(type):
                     server.free_nodes()
 
     def hard_free_all(cls, even_remote=False):
-        '''Free nodes from all known local or remote servers.
+        """Free nodes from all known local or remote servers.
 
         Parameters
         ----------
         even_remote : bool
             Free also the nodes of remote server. False by default.
 
-        '''
+        """
 
         if even_remote:
             for server in cls.all:
@@ -670,17 +664,17 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
         self._shm_interface = None  # ServerShmInterface
         self._server_process = None  # ServerProcess
         self._pid_release_condition = stm.Condition(lambda: self._pid is None)
-        mdl.NotificationCenter.notify(type(self), 'server_added', self)
+        mdl.NotificationCenter.notify(type(self), "server_added", self)
 
     @property
     def addr(self):
-        '''NetAddr object of the server.'''
+        """NetAddr object of the server."""
         return self._addr
 
     @addr.setter
     def addr(self, value):
         if any(s.addr == value for s in type(self).all):
-            raise ValueError(f'{value} already in use by other server')
+            raise ValueError(f"{value} already in use by other server")
         self._addr = value
         self._in_process = self._addr.addr == 0
         self._is_local = self._in_process or self._addr.is_local
@@ -691,9 +685,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
 
     @property
     def name(self):
-        '''Custom name of the server, only setteable at creation time.
-
-        '''
+        """Custom name of the server, only setteable at creation time."""
 
         return self._name
 
@@ -706,7 +698,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
 
     @property
     def default_group(self, all_users=False):
-        '''Servers' default group node (user space).
+        """Servers' default group node (user space).
 
         Synth and Group target this node by default.
 
@@ -715,7 +707,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
         all_users: bool
             If true return a list of all default groups (multiuser setup).
 
-        '''
+        """
 
         if all_users:
             return self._default_groups
@@ -724,9 +716,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
 
     @property
     def status(self):
-        '''ServerStatusWatcher instance that keeps track of server status.
-
-        '''
+        """ServerStatusWatcher instance that keeps track of server status."""
 
         # This this read-only property (non-data descritor) is the only
         # intended user interface to ServerStatusWatcher instances. Library's
@@ -740,65 +730,53 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
 
     @property
     def volume(self):
-        '''Volume instance.
-
-        '''
+        """Volume instance."""
 
         return self._volume
 
     @property
     def recorder(self):
-        '''Recorder instance
-
-        '''
+        """Recorder instance"""
 
         return self._recorder
 
     @property
     def pid(self):
-        '''Process ID of the server program.
-
-        '''
+        """Process ID of the server program."""
 
         return self._pid
 
     @property
     def program_running(self):
-        '''Returns ``True`` if the server program is running in localhost.
-
-        '''
+        """Returns ``True`` if the server program is running in localhost."""
 
         if self._server_process is None:
             return False
         return self._server_process.running()
 
-
     ### Client ID  ##
 
     @property
     def client_id(self):
-        '''Client ID, usually 0 in a single user scenario.
-
-        '''
+        """Client ID, usually 0 in a single user scenario."""
 
         return self._client_id
 
     def _set_client_id(self, value):
         if not isinstance(value, int):
-            raise TypeError(f'value is not an int: {type(value)}')
+            raise TypeError(f"value is not an int: {type(value)}")
         if value < 0 or value >= self.options.max_logins:
             # Supernova ignores max_logins option
             # and doesn't return max_logins info.
             _logger.error(
-                f'id ({value}) outside options.max_logins '
-                f'({s.options.max_logins}), current id is {self._client_id}')
+                f"id ({value}) outside options.max_logins "
+                f"({s.options.max_logins}), current id is {self._client_id}"
+            )
             if self.options.program == plf.Platform.SUPERNOVA_CMD:
-                _logger.info(
-                    'NOTE: suepernova servers ignore options.max_logins')
+                _logger.info("NOTE: suepernova servers ignore options.max_logins")
             return
         self._client_id = value
         self._new_allocators()
-
 
     ### ClientID-based id allocators ###
 
@@ -807,52 +785,55 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
         self._new_bus_allocators()
         self._new_buffer_allocators()
         # self._new_scope_buffer_allocators()
-        mdl.NotificationCenter.notify(self, '_new_allocators')
+        mdl.NotificationCenter.notify(self, "_new_allocators")
 
     def _new_node_allocators(self):
         self._node_allocator = type(self)._node_alloc_class(
-            self.client_id, self.options.initial_node_id)
+            self.client_id, self.options.initial_node_id
+        )
         # // defaultGroup and defaultGroups depend
         # // on allocator, so always make them here:
         self._make_default_groups()
 
     def _make_default_groups(self):
         # // Keep defaultGroups for all clients on this server.
-        self._default_groups = [nod.Group.basic_new(
-            self, self._node_allocator.num_ids * client_id + 1
-        ) for client_id in range(self._status_watcher.max_logins)]
+        self._default_groups = [
+            nod.Group.basic_new(self, self._node_allocator.num_ids * client_id + 1)
+            for client_id in range(self._status_watcher.max_logins)
+        ]
         self._default_group = self._default_groups[self.client_id]
 
     def _new_bus_allocators(self):
         audio_bus_io_offset = self.options.first_private_bus()
         num_ctrl_per_client = (
-            self.options.control_buses // self._status_watcher.max_logins)
+            self.options.control_buses // self._status_watcher.max_logins
+        )
         num_audio_per_client = (
-            (self.options.audio_buses - audio_bus_io_offset) //
-            self._status_watcher.max_logins)
+            self.options.audio_buses - audio_bus_io_offset
+        ) // self._status_watcher.max_logins
         ctrl_reserved_offset = self.options.reserved_control_buses
         ctrl_bus_client_offset = num_ctrl_per_client * self.client_id
         audio_reserved_offset = self.options.reserved_audio_buses
         audio_bus_client_offset = num_audio_per_client * self.client_id
 
         self._control_bus_allocator = type(self)._bus_alloc_class(
-            num_ctrl_per_client,
-            ctrl_reserved_offset,
-            ctrl_bus_client_offset)
+            num_ctrl_per_client, ctrl_reserved_offset, ctrl_bus_client_offset
+        )
 
         self._audio_bus_allocator = type(self)._bus_alloc_class(
             num_audio_per_client,
             audio_reserved_offset,
-            audio_bus_client_offset + audio_bus_io_offset)
+            audio_bus_client_offset + audio_bus_io_offset,
+        )
 
     def _new_buffer_allocators(self):
-        num_buffers_per_client = (
-            self.options.buffers // self._status_watcher.max_logins)
+        num_buffers_per_client = self.options.buffers // self._status_watcher.max_logins
         num_reserved_buffers = self.options.reserved_buffers
         buffer_client_offset = num_buffers_per_client * self.client_id
 
         self._buffer_allocator = type(self)._buffer_alloc_class(
-            num_buffers_per_client, num_reserved_buffers, buffer_client_offset)
+            num_buffers_per_client, num_reserved_buffers, buffer_client_offset
+        )
 
     # shm for GUI.
     # def _new_scope_buffer_allocators(self):
@@ -860,40 +841,40 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
     #         self._scope_buffer_allocator = eng.StackNumberAllocator(0, 127)
 
     def _next_buffer_number(self, n):
-        '''Allocate ``n`` consecutive buffer numbers and return the first
+        """Allocate ``n`` consecutive buffer numbers and return the first
         index.
 
         Raises an exception if the buffers can't be allocated.
 
-        '''
+        """
 
         bufnum = self._buffer_allocator.alloc(n)
         if bufnum is None:
             if n > 1:
                 raise Exception(
-                    f'No block of {n} consecutive '
-                    'buffer numbers is available')
+                    f"No block of {n} consecutive " "buffer numbers is available"
+                )
             else:
                 raise Exception(
-                    'No more buffer numbers, free '
-                    'some buffers before allocating')
+                    "No more buffer numbers, free " "some buffers before allocating"
+                )
         return bufnum
 
     def _free_all_buffers(self):
-        '''Free all the buffers of the server. Use Buffer.free_all(server).'''
+        """Free all the buffers of the server. Use Buffer.free_all(server)."""
         bundle = []
         for block in self._buffer_allocator.blocks():
             for i in range(block.address, block.address + block.size - 1):
-                bundle.append(['/b_free', i])
+                bundle.append(["/b_free", i])
             self._buffer_allocator.free(block.address)
         self.addr.send_bundle(None, *bundle)
 
     def _next_node_id(self):
-        '''Return the next available node ID.
+        """Return the next available node ID.
 
         Each time this method is called the node allocator returns a new ID.
 
-        '''
+        """
 
         return self._node_allocator.alloc()
 
@@ -904,11 +885,10 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
     # def free_perm_node_id(self, id):
     #     return self._node_allocator.free_perm(id)
 
-
     ### Network messages ###
 
     def query_tree(self, controls=False, action=None, timeout=3):
-        '''Query the servers's node tree.
+        """Query the servers's node tree.
 
         Parameters
         ----------
@@ -919,29 +899,29 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
         timeout: int | float
             Request timeout in seconds.
 
-        '''
+        """
 
         nod.RootNode(self).query_tree(controls, action, timeout)
 
     def dump_tree(self, controls=False):
-        '''Ask the server to dump its node tree to stdout.
+        """Ask the server to dump its node tree to stdout.
 
         Parameters
         ----------
         controls: bool
             If `True` also print synth controls with current values.
 
-        '''
+        """
 
         if not self._is_local:
-            _logger.info(f'server {self.name} is not local')
+            _logger.info(f"server {self.name} is not local")
         elif self._pid is None:
-            _logger.info(f'server {self.name} is not running')
+            _logger.info(f"server {self.name} is not running")
             return
         nod.RootNode(self).dump_tree(controls)  # Also needs stdout access.
 
     def dump_osc(self, code=1):
-        '''Enable server-side message dumping.
+        """Enable server-side message dumping.
 
         The flags for ``code`` are as follow:
           * 0 - turn dumping OFF.
@@ -950,14 +930,14 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
           * 3 - print both the parsed and hexadecimal representations of the
           contents.
 
-        '''
+        """
 
         self.dump_mode = code
-        self.addr.send_msg('/dumpOSC', code)
-        mdl.NotificationCenter.notify(self, 'dump_osc', code)
+        self.addr.send_msg("/dumpOSC", code)
+        mdl.NotificationCenter.notify(self, "dump_osc", code)
 
     def sync(self, condition=None, latency=None, elements=None):
-        '''Wait for previous asynchronous commands to finish.
+        """Wait for previous asynchronous commands to finish.
 
         Parameters
         ----------
@@ -980,7 +960,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
         reply with the message ``'/synced'``, and waits in a Condition until
         all previous *asynchronous commands* have been completed.
 
-        '''
+        """
 
         if _libsc3.main is _libsc3.NrtMain:
             yield 0
@@ -988,7 +968,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
             yield from self.addr.sync(condition, latency, elements)
 
     def bind(self):
-        '''Return a BundleNetAddr context manager that collects generated
+        """Return a BundleNetAddr context manager that collects generated
         messages into a bundle and send it to the server.
 
         Note that ``sync`` will work as expected inside a routine by sending
@@ -1001,10 +981,9 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
               s.addr.send_msg( ... )
               ...
 
-        '''
+        """
 
         return nad.BundleNetAddr(self)
-
 
     ### Default group ###
 
@@ -1019,13 +998,12 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
 
     def _send_default_groups(self):
         for group in self._default_groups:
-            self.addr.send_msg('/g_new', group.node_id, 0, 0)
+            self.addr.send_msg("/g_new", group.node_id, 0, 0)
 
     def _send_default_groups_for_client_ids(self, client_ids):  # unused
         for i in client_ids:
             group = self._default_groups[i]
-            self.addr.send_msg('/g_new', group.node_id, 0, 0)
-
+            self.addr.send_msg("/g_new", group.node_id, 0, 0)
 
     ### Shared memory interface ###
 
@@ -1035,11 +1013,10 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
     # def has_shm(self):  # Was has_shm_interface.
     #     return self._shm_interface is not None
 
-
     ### Boot and login ###
 
     def register(self, on_complete=None, on_failure=None):
-        '''Register to a remote server.
+        """Register to a remote server.
 
         Parameters
         ----------
@@ -1050,7 +1027,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
             A function to be called if registration fails. Optionally, the
             function receives the server object as its only argument.
 
-        '''
+        """
 
         if self._status_watcher._server_registering:
             _logger.info(f"server '{self.name}' already registeringing")
@@ -1063,22 +1040,25 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
                 self._status_watcher._server_registering = False
                 fn.value(on_complete, self)
                 _libsc3.main._atexitq.add(
-                    _libsc3.main._atexitprio.SERVERS, self._unregister_atexit)
+                    _libsc3.main._atexitprio.SERVERS, self._unregister_atexit
+                )
 
             def _on_failure(server):
-                if self.addr.proto == 'tcp':
+                if self.addr.proto == "tcp":
                     self.addr.disconnect()
                 self._status_watcher._server_registering = False
                 fn.value(on_failure, self)
 
-            self._status_watcher._add_action(
-                'register', _on_complete, _on_failure)
+            self._status_watcher._add_action("register", _on_complete, _on_failure)
 
-            if self.options.protocol == 'tcp':
+            if self.options.protocol == "tcp":
+
                 def success():
                     self._status_watcher._start_alive_thread()
+
                 def failure():
                     self._status_watcher._server_registering = False
+
                 self.addr.connect(success, failure)
             else:
                 self._status_watcher._start_alive_thread()
@@ -1086,7 +1066,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
             _logger.info(f"server '{self.name}' already running")
 
     def unregister(self, on_complete=None, on_failure=None):
-        '''Unregister from a remote server.
+        """Unregister from a remote server.
 
         Parameters
         ----------
@@ -1097,7 +1077,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
             A function called if unregistration fails. Optionally, the function
             receives the server object as its only argument.
 
-        '''
+        """
 
         if self._status_watcher._server_unregistering:
             _logger.info(f"server '{self.name}' already unregisteringing")
@@ -1107,7 +1087,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
             self._status_watcher._server_unregistering = True
 
             def _on_complete(server):
-                if self.addr.proto == 'tcp' and self.addr.is_connected:
+                if self.addr.proto == "tcp" and self.addr.is_connected:
                     self.addr.disconnect()
                 self._status_watcher._server_unregistering = False
                 if self._pid is not None:
@@ -1121,8 +1101,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
                 self._status_watcher._server_unregistering = False
                 fn.value(on_failure, self)
 
-            self._status_watcher._add_action(
-                'unregister', _on_complete, _on_failure)
+            self._status_watcher._add_action("unregister", _on_complete, _on_failure)
             self._status_watcher._unregister()
         else:
             _logger.info(f"server '{self.name}' is not registered")
@@ -1134,7 +1113,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
             # _logger.info(f"server '{self.name}' requested id unregistration")
 
     def boot(self, register=True, on_complete=None, on_failure=None):
-        '''Start the local server program.
+        """Start the local server program.
 
         Parameters
         ----------
@@ -1155,7 +1134,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
         To register to an already running server in a remote machine use
         the ``register`` method.
 
-        '''
+        """
 
         if _libsc3.main is _libsc3.NrtMain:
             self._status_watcher._boot_nrt()
@@ -1181,20 +1160,22 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
             server._boot_init()
             fn.value(on_complete, server)
             _libsc3.main._atexitq.add(
-                _libsc3.main._atexitprio.SERVERS, self._quit_atexit)
+                _libsc3.main._atexitprio.SERVERS, self._quit_atexit
+            )
 
         def _on_failure(server):
-            if self.addr.proto == 'tcp':
+            if self.addr.proto == "tcp":
                 self.addr.disconnect()
             server._status_watcher._server_booting = False
             server._status_watcher._server_rebooting = False
             fn.value(on_failure, server)
 
-        self._status_watcher._add_action('boot', _on_complete, _on_failure)
+        self._status_watcher._add_action("boot", _on_complete, _on_failure)
 
         if not self._is_local:
             _logger.info(f"remote server '{self.name}' needs manual boot")
         else:
+
             def boot_task():
                 # Server can be quitting and booting at the same time, e.g.
                 # rebooting, pid release blocks boot until quit is completed.
@@ -1202,42 +1183,50 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
                     yield from self._pid_release_condition.wait()
 
                 if self._in_process:
-                    _logger.info('booting internal server')
+                    _logger.info("booting internal server")
                     self._boot_in_process()  # Not implemented yet.
                     self._pid = _libsc3.main.pid  # Not implemented yet.
                 else:
                     # self._disconnect_shm()  # Not implemented yet.
                     try:
                         self._server_process = ServerProcess(
-                            self._on_server_process_exit)
+                            self._on_server_process_exit
+                        )
                         self._server_process.run(self)
                     except OSError as e:
                         self._server_process = None
                         self._status_watcher._server_booting = False
                         self._status_watcher._server_rebooting = False
-                        if e.errno == errno.ENOENT\
-                        and e.filename == self.options.program:
+                        if (
+                            e.errno == errno.ENOENT
+                            and e.filename == self.options.program
+                        ):
                             _logger.error(
-                                f'{self.name} failed to boot, program '
-                                f'{e.filename} not found')
+                                f"{self.name} failed to boot, program "
+                                f"{e.filename} not found"
+                            )
                             return
                         else:
                             raise
                     self._pid = self._server_process.proc.pid
                     _logger.info(
                         f"booting server '{self.name}' on address "
-                        f"{self.addr.hostname}:{self.addr.port}")
+                        f"{self.addr.hostname}:{self.addr.port}"
+                    )
 
                 if register:
                     # Needs delay to avoid registering to another local server
                     # from another client in case of address already in use.
-                    if self.options.protocol == 'tcp' and not self._in_process:
+                    if self.options.protocol == "tcp" and not self._in_process:
+
                         def success():
                             self._status_watcher._start_alive_thread(1)
+
                         def failure():
                             self._status_watcher._server_booting = False
                             self._status_watcher._server_rebooting = False
                             self._status_watcher._clear_actions()
+
                         self.addr.connect(success, failure)
                     else:
                         self._status_watcher._start_alive_thread(1)
@@ -1246,7 +1235,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
 
     def _boot_init(self):
         if self.dump_mode != 0:
-            self.addr.send_msg('/dumpOSC', self.dump_mode)
+            self.addr.send_msg("/dumpOSC", self.dump_mode)
         # self._connect_shm()  # Not implemented yet
 
     def _on_server_process_exit(self, exit_code):
@@ -1255,9 +1244,8 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
         self._pid = None
         self._pid_release_condition.signal()
         _logger.info(f"server '{self.name}' exited with exit code {exit_code}")
-        if not self._process_quit_requested\
-        and self._status_watcher._server_booting:
-            self._status_watcher._perform_actions('boot', 'on_failure')
+        if not self._process_quit_requested and self._status_watcher._server_booting:
+            self._status_watcher._perform_actions("boot", "on_failure")
             _logger.warning(f"server '{self.name}' failed to boot")
         self._process_quit_requested = False
         # In case of server crash or Exception in World_OpenUDP: bind: Address
@@ -1274,7 +1262,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
             event.wait(5)  # _MainThread, set_func runs in AppClock thread.
 
     def reboot(self, func=None, on_failure=None):
-        '''Quit and (re)start the server program.
+        """Quit and (re)start the server program.
 
         Parameters
         ----------
@@ -1286,7 +1274,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
             Optionally, the function receives the server object as its only
             argument.
 
-        '''
+        """
 
         if _libsc3.main is _libsc3.NrtMain:
             # self.quit()
@@ -1304,12 +1292,16 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
 
         self._status_watcher._server_rebooting = True
 
-        if self._status_watcher.server_running\
-        and not self._status_watcher.unresponsive:
+        if (
+            self._status_watcher.server_running
+            and not self._status_watcher.unresponsive
+        ):
+
             def _on_complete():
                 if func is not None:
                     func()
                 self.boot()
+
             self.quit(True, _on_complete, on_failure)
         else:
             if func is not None:
@@ -1317,7 +1309,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
             self.boot(on_failure=on_failure)
 
     def quit(self, watch_shutdown=True, on_complete=None, on_failure=None):
-        '''Stop the server program.
+        """Stop the server program.
 
         Parameters
         ----------
@@ -1332,15 +1324,14 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
             Optionally, the function receives the server object as its only
             argument.
 
-        '''
+        """
 
         if _libsc3.main is _libsc3.NrtMain:
             self._status_watcher._quit_nrt()
             return
 
         # if server is not running or is running but unresponsive.
-        if not self._status_watcher.server_running\
-        or self._status_watcher.unresponsive:
+        if not self._status_watcher.server_running or self._status_watcher.unresponsive:
             _logger.info(f"server '{self.name}' is not running")
             return
 
@@ -1351,7 +1342,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
         self._status_watcher._server_quitting = True
 
         def _on_complete():
-            if self.addr.proto == 'tcp':
+            if self.addr.proto == "tcp":
                 self.addr.disconnect()
             self._status_watcher._server_quitting = False
             _libsc3.main._atexitq.remove(self._quit_atexit)
@@ -1362,18 +1353,17 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
             fn.value(on_failure, self)
 
         if watch_shutdown and self._status_watcher.unresponsive:
-            _logger.info(
-                f"server '{self.name}' was unresponsive, quitting anyway")
+            _logger.info(f"server '{self.name}' was unresponsive, quitting anyway")
             watch_shutdown = False
 
-        self._status_watcher._add_action('quit', _on_complete, _on_failure)
+        self._status_watcher._add_action("quit", _on_complete, _on_failure)
         self._status_watcher._quit(watch_shutdown)
         self._process_quit_requested = True
-        self.addr.send_msg('/quit')  # Send quit after responders are in place.
+        self.addr.send_msg("/quit")  # Send quit after responders are in place.
 
         if self._in_process:
             self._quit_in_process()  # Not implemented.
-            _logger.info('internal server has quit')
+            _logger.info("internal server has quit")
         else:
             _logger.info(f"'/quit' message sent to server '{self.name}'")
 
@@ -1383,36 +1373,32 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
         self._set_client_id(0)
 
     def free_nodes(self):  # Was instance freeAll in sclang.
-        '''Free all server's nodes.
+        """Free all server's nodes."""
 
-        '''
-
-        self.addr.send_msg('/g_freeAll', 0)
-        self.addr.send_msg('/clearSched')
+        self.addr.send_msg("/g_freeAll", 0)
+        self.addr.send_msg("/clearSched")
         self._init_tree()
 
     def free_default_group(self, all_users=False):
-        '''Free all nodes within the client's default group.
-
-        '''
+        """Free all nodes within the client's default group."""
 
         if all_users:
             for group in self._default_groups:
-                self.addr.send_msg('/g_freeAll', group.node_id)
+                self.addr.send_msg("/g_freeAll", group.node_id)
         else:
-            self.addr.send_msg('/g_freeAll', self._default_group.node_id)
+            self.addr.send_msg("/g_freeAll", self._default_group.node_id)
 
-    def reorder(self, node_list, target, add_action='addToHead'):
-        '''Reorder nodes in ``node_list`` relative to ``target``.
-
-        '''
+    def reorder(self, node_list, target, add_action="addToHead"):
+        """Reorder nodes in ``node_list`` relative to ``target``."""
 
         target = gpp.node_param(target)._as_target()
         node_list = [x.node_id for x in node_list]
         self.addr.send_msg(
-            '/n_order', nod.Node._action_number_for(add_action), # 62
-            target.node_id, *node_list)
-
+            "/n_order",
+            nod.Node._action_number_for(add_action),  # 62
+            target.node_id,
+            *node_list,
+        )
 
     ### Node parameter interface ###
 

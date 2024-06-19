@@ -3,7 +3,7 @@
 from . import absobject as aob
 
 
-__all__ = ['Operand']
+__all__ = ["Operand"]
 
 
 class Operand(aob.AbstractObject):
@@ -20,7 +20,6 @@ class Operand(aob.AbstractObject):
     @value.setter
     def value(self, value):
         self.__value = value
-
 
     ### AbstractObject interface ###
 
@@ -40,7 +39,6 @@ class Operand(aob.AbstractObject):
     def _compose_narop(self, selector, *args):
         return type(self)(selector(self.value, *args))
 
-
     def __hash__(self):
         return self.value.__hash__()
 
@@ -51,8 +49,7 @@ class Operand(aob.AbstractObject):
             return self.value.__eq__(value)
 
     def __repr__(self):
-        return f'{type(self).__name__}({repr(self.value)})'
-
+        return f"{type(self).__name__}({repr(self.value)})"
 
     def __int__(self):
         return int(self.value)

@@ -1,6 +1,6 @@
-'''
+"""
 Event.sc attempt 3.2. No multichannel expasion.
-'''
+"""
 
 import types
 import sys
@@ -16,17 +16,17 @@ from ..synth import _graphparam as gpp
 from . import scale as scl
 
 
-__all__ = ['event', 'new_event', 'Rest', 'silent', 'is_rest']
+__all__ = ["event", "new_event", "Rest", "silent", "is_rest"]
 
 
 ### Arrayed Controls ###
 
 
 class arrayed_param(aob.AbstractSequence, tuple):
-    '''Return type to support for arrayed controls within event keys.'''
+    """Return type to support for arrayed controls within event keys."""
 
     def __repr__(self):
-        return f'{type(self).__name__}{super(aob.AbstractSequence, self).__repr__()}'
+        return f"{type(self).__name__}{super(aob.AbstractSequence, self).__repr__()}"
 
 
 ### Rest ###
@@ -46,43 +46,44 @@ def silent(dur=1.0, inevent=None):
         inevent = event()
     else:
         inevent = inevent.copy()
-    inevent['delta'] = dur * inevent.get('stretch', 1.0)
-    inevent['dur'] = dur if isinstance(dur, Rest) else Rest(dur)
+    inevent["delta"] = dur * inevent.get("stretch", 1.0)
+    inevent["dur"] = dur if isinstance(dur, Rest) else Rest(dur)
     return inevent
 
 
 def is_rest(inevent):
-    return (inevent.get('type') == 'rest' or
-            any(isinstance(value, Rest) for value in inevent.values()))
+    return inevent.get("type") == "rest" or any(
+        isinstance(value, Rest) for value in inevent.values()
+    )
 
 
 ### Event Keys ###
 
 
-class keyfunction():
-    '''Decorator class as mark for instance methods that become keys.'''
+class keyfunction:
+    """Decorator class as mark for instance methods that become keys."""
 
     def __init__(self, func):
         self.func = func
 
 
 class _PrepareDict(dict):
-    '''
+    """
     Especial dictionary to collect attributes and methods. It allows
     to repeat names but classes can't have public value-attributes.
-    '''
+    """
 
     def __init__(self):
-        super().__setitem__('default_values', dict())
-        super().__setitem__('default_functions', dict())
+        super().__setitem__("default_values", dict())
+        super().__setitem__("default_functions", dict())
 
     def __setitem__(self, key, value):
-        if key.startswith('_') or isinstance(value, types.FunctionType):
+        if key.startswith("_") or isinstance(value, types.FunctionType):
             super().__setitem__(key, value)
         elif isinstance(value, keyfunction):
-            self['default_functions'][key] = value.func
+            self["default_functions"][key] = value.func
         else:
-            self['default_values'][key] = value
+            self["default_values"][key] = value
 
 
 class MetaEventDict(type):
@@ -91,14 +92,14 @@ class MetaEventDict(type):
     @classmethod
     def __prepare__(meta_cls, cls_name, args, **kwargs):
         pd = _PrepareDict()
-        if 'partial_events' in kwargs:
+        if "partial_events" in kwargs:
             # Inherit non-key object attributes.
-            dk = ('default_values', 'default_functions')
-            for pe in kwargs['partial_events']:
+            dk = ("default_values", "default_functions")
+            for pe in kwargs["partial_events"]:
                 ed = vars(pe)
                 keys = ed.keys() - dk
                 for k in keys:
-                    if k.startswith('__'):
+                    if k.startswith("__"):
                         pass
                     else:
                         pd[k] = ed[k]
@@ -107,7 +108,7 @@ class MetaEventDict(type):
     def __init__(cls, name, bases, cls_dict, partial_events=None):
         default_values = dict()
         default_functions = dict()
-        if name == 'EventDict':
+        if name == "EventDict":
             return
         if partial_events is not None:
             for pe in partial_events:  # reversed?
@@ -125,9 +126,8 @@ class MetaEventDict(type):
             default_functions[sys.intern(key)] = value
         cls.default_values = default_values
         cls.default_functions = default_functions
-        if 'type' in cls.default_values\
-        and cls.default_values['type'] is not None:
-            cls._event_types[cls.default_values['type']] = cls
+        if "type" in cls.default_values and cls.default_values["type"] is not None:
+            cls._event_types[cls.default_values["type"]] = cls
 
     @property
     def types(cls):
@@ -159,11 +159,10 @@ class EventDict(dict, metaclass=MetaEventDict):
         return type(self)(self)
 
     def __repr__(self):
-        return f'{type(self).__name__}({super().__repr__()})'
+        return f"{type(self).__name__}({super().__repr__()})"
 
 
-def new_event(name, values=None, functions=None,
-              bases=None, partial_events=None):
+def new_event(name, values=None, functions=None, bases=None, partial_events=None):
     def init_defaults(ns):
         if values is not None:
             for k, v in values.items():
@@ -171,20 +170,20 @@ def new_event(name, values=None, functions=None,
         if functions is not None:
             for k, v in functions.items():
                 if not isinstance(v, types.FunctionType):
-                    raise ValueError(f'{v} is not FunctionType')
+                    raise ValueError(f"{v} is not FunctionType")
                 ns[k] = keyfunction(v)
 
     if bases is None:
         bases = (EventDict,)
     if partial_events is None:
-        partial_events = {'partial_events': ()}
+        partial_events = {"partial_events": ()}
     else:
-        partial_events = {'partial_events': partial_events}
+        partial_events = {"partial_events": partial_events}
     return types.new_class(name, bases, partial_events, init_defaults)
 
 
 class event(EventDict):
-    _default_type = 'note'
+    _default_type = "note"
 
     def __new__(cls, *args, **kwargs):
         # There are three sources of type, from an EvenType instance, from
@@ -194,11 +193,11 @@ class event(EventDict):
         # just before calling play), but event streams expect event types
         # and the type of the event must be mutable for derivated instances.
         if args and isinstance(args[0], EventType):
-            type = args[0]('type')
+            type = args[0]("type")
         else:
             type = None
         d = {**dict(*args), **kwargs}  # Override duplicated 'type' keys.
-        type = d.pop('type', None) or type  # Also remove 'type' from actual keys.
+        type = d.pop("type", None) or type  # Also remove 'type' from actual keys.
         if type:
             try:
                 return cls._event_types[type](d)
@@ -232,16 +231,16 @@ class PitchKeys(PartialEvent):
     scale = scl.Scale([0, 2, 4, 5, 7, 9, 11])
 
     def _detuned_freq(self):
-        return self('freq') * self('harmonic') + self('detune')
+        return self("freq") * self("harmonic") + self("detune")
 
     @keyfunction
     def freq(self):
-        if 'midinote' in self or 'note' in self:
+        if "midinote" in self or "note" in self:
             return self._freq_from_midinote()
-        elif 'degree' in self:
+        elif "degree" in self:
             return self._freq_from_degree()
         else:
-            return self.default_values['freq']
+            return self.default_values["freq"]
 
     def _freq_from_midinote(self):
         return bi.midicps(self._transposed_midinote())
@@ -254,31 +253,31 @@ class PitchKeys(PartialEvent):
         return bi.midicps(self._midinote_from_degree())
 
     def _transposed_midinote(self):
-        return self('midinote') + self('ctranspose')
+        return self("midinote") + self("ctranspose")
 
     @keyfunction
     def midinote(self):
-        if 'note' in self:
+        if "note" in self:
             return self._midi_from_note()
-        elif 'degree' in self:
+        elif "degree" in self:
             return self._midinote_from_degree()
-        elif 'freq' in self:
+        elif "freq" in self:
             return self._midinote_from_freq()
         else:
-            return self.default_values['midinote']
+            return self.default_values["midinote"]
 
     def _midi_from_note(self):
         # See comment in keyfunction.
-        ret = self['note'] + self('gtranspose') + self('root')
-        ret = ret / self('scale').tuning.spo + self('octave') - 5.0
-        ret = ret * (12.0 * bi.log2(self('scale').tuning.octave_ratio)) + 60
+        ret = self["note"] + self("gtranspose") + self("root")
+        ret = ret / self("scale").tuning.spo + self("octave") - 5.0
+        ret = ret * (12.0 * bi.log2(self("scale").tuning.octave_ratio)) + 60
         return ret
 
     def _midinote_from_degree(self):
-        scale = self('scale')
-        ret = scale.degree_to_key(self('degree') + self('mtranspose'))
-        ret = ret + self('gtranspose') + self('root')
-        ret = ret / scale.tuning.spo + self('octave') - 5.0
+        scale = self("scale")
+        ret = scale.degree_to_key(self("degree") + self("mtranspose"))
+        ret = ret + self("gtranspose") + self("root")
+        ret = ret / scale.tuning.spo + self("octave") - 5.0
         ret = ret * (12.0 * bi.log2(scale.tuning.octave_ratio)) + 60
         return ret
 
@@ -290,16 +289,16 @@ class PitchKeys(PartialEvent):
         # When set, this key doesn't call degree_to_key when converting to
         # midinote so it can be done externally, yet this is not the best
         # path for combinations and naming/meaning gets confusing.
-        return self('scale').degree_to_key(self('degree') + self('mtranspose'))
+        return self("scale").degree_to_key(self("degree") + self("mtranspose"))
 
     @keyfunction
     def degree(self):
-        if 'freq' in self:
+        if "freq" in self:
             return self._degree_from_freq()
-        elif 'midinote' in self:
+        elif "midinote" in self:
             return self._degree_from_midinote()
         else:
-            return self.default_values['degree']
+            return self.default_values["degree"]
 
     def _degree_from_freq(self):
         return self._midinote_to_degree(bi.cpsmidi(self._detuned_freq()))
@@ -309,7 +308,7 @@ class PitchKeys(PartialEvent):
 
     def _midinote_to_degree(self, midinote):
         # From SequenceableCollection.performDegreeToKey
-        scale = self('scale')
+        scale = self("scale")
         degree_root = (midinote // 12 - 5) * len(scale.tuning)
         key = midinote % 12
         # From SequenceableCollection.indexInBetween modified.
@@ -350,59 +349,61 @@ class DurationKeys(PartialEvent):
     @keyfunction
     def delta(self):
         # NOTE: Cast from Rest is done externally (explicit).
-        return self('dur') * self('stretch')
+        return self("dur") * self("stretch")
 
     @keyfunction
     def sustain(self):
-        return self('dur') * self('legato') * self('stretch')
+        return self("dur") * self("legato") * self("stretch")
 
 
 class AmplitudeKeys(PartialEvent):
     amp = 0.1
     db = -20
-    velocity = 12  # 0.1amp == -20dB == 12vel, linear mapping (-42.076dB range for velocity)
+    velocity = (
+        12  # 0.1amp == -20dB == 12vel, linear mapping (-42.076dB range for velocity)
+    )
 
     pan = 0.0
-    trig = 0.5   # Why was?
+    trig = 0.5  # Why was?
 
     @keyfunction
     def amp(self):
-        if 'db' in self:
-            return bi.dbamp(self['db'])
-        elif 'velocity' in self:
+        if "db" in self:
+            return bi.dbamp(self["db"])
+        elif "velocity" in self:
             return self._amp_from_velocity()
         else:
-            return self.default_values['amp']
+            return self.default_values["amp"]
 
     def _amp_from_velocity(self):
-        return self['velocity'] / 127
+        return self["velocity"] / 127
 
     @keyfunction
     def db(self):
-        if 'amp' in self:
-            return bi.ampdb(self['amp'])
-        elif 'velocity' in self:
+        if "amp" in self:
+            return bi.ampdb(self["amp"])
+        elif "velocity" in self:
             return self._db_from_velocity()
         else:
-            return self.default_values['db']
+            return self.default_values["db"]
 
     def _db_from_velocity(self):
         return bi.ampdb(self._amp_from_velocity())
 
     @keyfunction
     def velocity(self):
-        if 'amp' in self:
+        if "amp" in self:
             return self._velocity_from_amp()
-        elif 'db' in self:
+        elif "db" in self:
             return self._velocity_from_db()
         else:
-            return self.default_values['velocity']
+            return self.default_values["velocity"]
 
     def _velocity_from_amp(self):
-        return int(127 * self['amp'])
+        return int(127 * self["amp"])
 
     def _velocity_from_db(self):
-        return int(127 * bi.dbamp(self['db']))
+        return int(127 * bi.dbamp(self["db"]))
 
 
 class ServerKeys(PartialEvent):
@@ -413,13 +414,13 @@ class ServerKeys(PartialEvent):
     synth_lib = None
     synth_desc = None
     out = 0
-    add_action = 'addToHead'
+    add_action = "addToHead"
     msg_params = []
-    instrument = 'default'
+    instrument = "default"
     variant = None
     has_gate = True  # // assume SynthDef has gate
     send_gate = None  # // sendGate == false turns off releases
-    args = ('freq', 'amp', 'pan', 'trig')  # // for 'type' 'set'
+    args = ("freq", "amp", "pan", "trig")  # // for 'type' 'set'
 
     @keyfunction
     def server(self):
@@ -427,7 +428,7 @@ class ServerKeys(PartialEvent):
 
     @keyfunction
     def group(self):
-        return self('server').default_group.node_id
+        return self("server").default_group.node_id
 
     @keyfunction
     def synth_lib(self):
@@ -435,44 +436,54 @@ class ServerKeys(PartialEvent):
 
     @keyfunction
     def send_gate(self):
-        return self('has_gate')
+        return self("has_gate")
 
     def _get_msg_params(self):  # Was get_msg_func
-        msg_params = self('msg_params')
-        if not msg_params or self('is_playing'):
-            synth_lib = self('synth_lib')
-            desc = synth_lib.at(self('instrument'))
+        msg_params = self("msg_params")
+        if not msg_params or self("is_playing"):
+            synth_lib = self("synth_lib")
+            desc = synth_lib.at(self("instrument"))
             if desc is None:
-                self['msg_params'] = self._default_msg_params()
-                return self['msg_params']
+                self["msg_params"] = self._default_msg_params()
+                return self["msg_params"]
             else:
-                self['synth_desc'] = desc
-                self['has_gate'] = desc.has_gate
+                self["synth_desc"] = desc
+                self["has_gate"] = desc.has_gate
                 if desc.has_gate and not desc.keep_gate:
                     control_names = desc.control_names[:]
-                    control_names.remove('gate')
+                    control_names.remove("gate")
                 else:
                     control_names = desc.control_names
                 msg_params = []
                 for arg in control_names:
                     if arg in self:
                         msg_params.extend([arg, self(arg)])
-                self['msg_params'] = msg_params
+                self["msg_params"] = msg_params
                 return msg_params
         else:
             return msg_params
 
     def _default_msg_params(self):  # Was default_msg_func.
-        return ['freq', self('freq'), 'amp', self('amp'),
-                'pan', self('pan'), 'out', self('out')]
+        return [
+            "freq",
+            self("freq"),
+            "amp",
+            self("amp"),
+            "pan",
+            self("pan"),
+            "out",
+            self("out"),
+        ]
 
     def _synthdef_name(self):
-        if self('variant') is not None\
-        and self('synth_desc') is not None\
-        and self('synth_desc').has_variants():
+        if (
+            self("variant") is not None
+            and self("synth_desc") is not None
+            and self("synth_desc").has_variants()
+        ):
             return f"{self('instrument')}.{self('variant')}"
         else:
-            return self('instrument')
+            return self("instrument")
 
     # def _sched_bundle(self, lag, offset, server, msg, latency=None):
     #     # // "lag" is a tempo independent absolute lag time (in seconds)
@@ -481,100 +492,95 @@ class ServerKeys(PartialEvent):
 
 class MidiKeys(PartialEvent):
     midiout = None
-    midicmd = 'note_on'
+    midicmd = "note_on"
 
     channel = 0  # 'note_on', 'note_off', 'polytouch', 'control_change'
-                 # ''program_change', 'aftertouch', 'pitchwheel',
-                 # 'all_sounds_off', 'reset_all_controllers', 'all_notes_off'
+    # ''program_change', 'aftertouch', 'pitchwheel',
+    # 'all_sounds_off', 'reset_all_controllers', 'all_notes_off'
     control = 0  # 'control_change'
     value = 0  # 'polytouch', 'control_change', 'aftertouch'
-    program = 0 # 'program_change'
+    program = 0  # 'program_change'
     pitch = 0  # 'pitchwheel'
-    data = b''  # 'sysx'
+    data = b""  # 'sysx'
 
     frame_type = ...  # 'quarter_frame'
     frame_value = ...  # 'quarter_frame'
 
     pos = 0  # 'songpos'
-    song = 0 # 'song_select'
+    song = 0  # 'song_select'
 
     def _note_on(self):
         return {
-            'type': 'note_on',
-            'channel': self('channel'),
-            'note': self('midinote'),
-            'velocity': bi.clip(self('velocity'), 0, 127)
+            "type": "note_on",
+            "channel": self("channel"),
+            "note": self("midinote"),
+            "velocity": bi.clip(self("velocity"), 0, 127),
         }
 
     def _note_off(self):
         return {
-            'type': 'note_off',
-            'channel': self('channel'),
-            'note': self('midinote'),
-            'velocity': bi.clip(self('velocity'), 0, 127)
+            "type": "note_off",
+            "channel": self("channel"),
+            "note": self("midinote"),
+            "velocity": bi.clip(self("velocity"), 0, 127),
         }
 
     def _polytouch(self):
         return {
-            'type': 'polytouch',
-            'channel': self('channel'),
-            'note': self('midinote'),
-            'value': self('value')  # *** NOTE: 14 bits, 0-127. Could be expressed as bi.midiratio with mul + offset.
+            "type": "polytouch",
+            "channel": self("channel"),
+            "note": self("midinote"),
+            "value": self(
+                "value"
+            ),  # *** NOTE: 14 bits, 0-127. Could be expressed as bi.midiratio with mul + offset.
         }
 
     def _control_change(self):
         return {
-            'type': 'control_change',
-            'channel': self('channel'),
-            'control': self('control'),
-            'value': self('value')
+            "type": "control_change",
+            "channel": self("channel"),
+            "control": self("control"),
+            "value": self("value"),
         }
 
     def _program_change(self):
         return {
-            'type': 'program_change',
-            'channel': self('channel'),
-            'program': self('program')
+            "type": "program_change",
+            "channel": self("channel"),
+            "program": self("program"),
         }
 
     def _aftertouch(self):
         return {
-            'type': 'aftertouch',
-            'channel': self('channel'),
-            'value': self('value')
+            "type": "aftertouch",
+            "channel": self("channel"),
+            "value": self("value"),
         }
 
     def _pitchwheel(self):
         return {
-            'type': 'pitchwheel',
-            'channel': self('channel'),
-            'pitch': self('pitch')  # *** NOTE: 14 bits, 0-16383. Could be expressed as bi.midiratio with mul + offset.
+            "type": "pitchwheel",
+            "channel": self("channel"),
+            "pitch": self(
+                "pitch"
+            ),  # *** NOTE: 14 bits, 0-16383. Could be expressed as bi.midiratio with mul + offset.
         }
 
     def _sysex(self):
-        return {
-            'type': 'sysex',
-            'data': self('data')
-        }
+        return {"type": "sysex", "data": self("data")}
 
     def _quarter_frame(self):
         return {
-            'type': 'quarter_frame',
-            'frame_type': self('frame_type'),
-            'frame_value': self('frame_value')
+            "type": "quarter_frame",
+            "frame_type": self("frame_type"),
+            "frame_value": self("frame_value"),
         }
 
     def _songpos(self):  # Song Position Pointer (SPP).
-        return {
-            'type': 'songpos',
-            'pos': self('pos')
-        }
+        return {"type": "songpos", "pos": self("pos")}
 
     def _song_select(self):
-        return {
-            'type': 'song_select',
-            'song': self('song')
-        }
+        return {"type": "song_select", "song": self("song")}
 
     # {'type': 'tune_request'}, {'type': 'clock'}, {'type': 'start'}
     # {'type': 'continue'}, {'type': 'stop'}, {'type': 'active_sensing'}
@@ -584,23 +590,23 @@ class MidiKeys(PartialEvent):
 
     def _all_sounds_off(self):
         return {
-            'type': 'control_change',
-            'channel': self('channel'),
-            'control': 120  # All Sounds Off.
+            "type": "control_change",
+            "channel": self("channel"),
+            "control": 120,  # All Sounds Off.
         }
 
     def _reset_all_controllers(self):
         return {
-            'type': 'control_change',
-            'channel': self('channel'),
-            'control': 121  # Reset All Controllers
+            "type": "control_change",
+            "channel": self("channel"),
+            "control": 121,  # Reset All Controllers
         }
 
     def _all_notes_off(self):
         return {
-            'type': 'control_change',
-            'channel': self('channel'),
-            'control': 123  # All Notes Off.
+            "type": "control_change",
+            "channel": self("channel"),
+            "control": 123,  # All Notes Off.
         }
 
     # TODO: mido.midifiles.meta._META_SPEC_BY_TYPE. There is 'smpte_offset'.
@@ -626,112 +632,126 @@ class EventType(EventDict):
         return id(self)
 
 
-class NoteEvent(EventType, partial_events=(
-        PitchKeys, AmplitudeKeys, DurationKeys, ServerKeys)):
-    type = 'note'
+class NoteEvent(
+    EventType, partial_events=(PitchKeys, AmplitudeKeys, DurationKeys, ServerKeys)
+):
+    type = "note"
     is_playing = False
 
     def play(self):  # NOTE: No server parameter.
         # NOTE: Later, if events are not for storing data there
         # is no need to update its fields. I haven't decided yet.
-        self['freq'] = self._detuned_freq()  # Before _get_msg_params.
+        self["freq"] = self._detuned_freq()  # Before _get_msg_params.
         param_list = self._get_msg_params()  # Populates synth_desc.
-        self['instrument'] = instrument = self._synthdef_name()
-        self['server'] = server = self('server')
+        self["instrument"] = instrument = self._synthdef_name()
+        self["server"] = server = self("server")
 
-        self['node_id'] = node_id = server._next_node_id()
-        add_action = nod.Node._action_number_for(self('add_action'))
-        self['group'] = group = gpp.node_param(
-            self('group'))._as_control_input()
+        self["node_id"] = node_id = server._next_node_id()
+        add_action = nod.Node._action_number_for(self("add_action"))
+        self["group"] = group = gpp.node_param(self("group"))._as_control_input()
 
-        msg = ['/s_new', instrument, node_id, add_action, group, *param_list]
+        msg = ["/s_new", instrument, node_id, add_action, group, *param_list]
         msg = gpp.node_param(msg)._as_osc_arg_list()
 
-        server.addr.send_bundle(server.latency, msg)  # Missing ~latency, ~lag and ~timingOffset.
-        if self('send_gate'):
+        server.addr.send_bundle(
+            server.latency, msg
+        )  # Missing ~latency, ~lag and ~timingOffset.
+        if self("send_gate"):
             server.addr.send_bundle(
-                server.latency + self('sustain'),
-                ['/n_set', node_id, 'gate', 0])
+                server.latency + self("sustain"), ["/n_set", node_id, "gate", 0]
+            )
 
-        self['is_playing'] = True
+        self["is_playing"] = True
 
 
-class MidiEvent(EventType, partial_events=(
-        PitchKeys, AmplitudeKeys, DurationKeys, MidiKeys)):
-    type = 'midi'
+class MidiEvent(
+    EventType, partial_events=(PitchKeys, AmplitudeKeys, DurationKeys, MidiKeys)
+):
+    type = "midi"
     is_playing = False
 
     def play(self):
-        freq = self['freq'] = self._detuned_freq()
-        self['midinote'] = int(bi.round(bi.cpsmidi(freq), 1))
-        midiout = self['midiout']
-        midicmd = self('midicmd')
-        msgargs = getattr(self, '_' + midicmd)()
-        midiout.send_msg(msgargs.pop('type'), **msgargs)
-        has_gate = self.get('has_gate', True)  # Server compatibility.
-        if has_gate and midicmd == 'note_on':
+        freq = self["freq"] = self._detuned_freq()
+        self["midinote"] = int(bi.round(bi.cpsmidi(freq), 1))
+        midiout = self["midiout"]
+        midicmd = self("midicmd")
+        msgargs = getattr(self, "_" + midicmd)()
+        midiout.send_msg(msgargs.pop("type"), **msgargs)
+        has_gate = self.get("has_gate", True)  # Server compatibility.
+        if has_gate and midicmd == "note_on":
             clk.SystemClock.sched(  # Clock's sched degrade performance.
-                self('sustain'),  # Missing ~latency, ~lag.
-                lambda: midiout.send_msg('note_off', **msgargs))
+                self("sustain"),  # Missing ~latency, ~lag.
+                lambda: midiout.send_msg("note_off", **msgargs),
+            )
 
-class _MonoOnEvent(EventType, partial_events=(
-        PitchKeys, AmplitudeKeys, DurationKeys, ServerKeys)):
-    type = '_mono_on'
+
+class _MonoOnEvent(
+    EventType, partial_events=(PitchKeys, AmplitudeKeys, DurationKeys, ServerKeys)
+):
+    type = "_mono_on"
     is_playing = False
 
     def play(self):
-        self['add_action'] = nod.Node._action_number_for(self('add_action'))
-        self['group'] = gpp.node_param(self('group'))._as_control_input()
+        self["add_action"] = nod.Node._action_number_for(self("add_action"))
+        self["group"] = gpp.node_param(self("group"))._as_control_input()
         msg = [
-            '/s_new', self['instrument'], self['node_id'],
-            self['add_action'], self['group'], *self['msg_params']]
+            "/s_new",
+            self["instrument"],
+            self["node_id"],
+            self["add_action"],
+            self["group"],
+            *self["msg_params"],
+        ]
         msg = gpp.node_param(msg)._as_osc_arg_list()
-        self['server'].addr.send_bundle(self['server'].latency, msg)  # Missing ~latency, ~lag and ~timingOffset.
-        self['is_playing'] = True
+        self["server"].addr.send_bundle(
+            self["server"].latency, msg
+        )  # Missing ~latency, ~lag and ~timingOffset.
+        self["is_playing"] = True
 
     def _prepare_event(self, instrument):
-        self['instrument'] = instrument
-        self['freq'] = self._detuned_freq()  # Before _get_msg_params.
-        self['msg_params'] = self._get_msg_params()  # Populates synth_desc.
-        self['has_gate'] = self('has_gate')
-        self['server'] = self('server')
-        self['node_id'] = self['server']._next_node_id()
+        self["instrument"] = instrument
+        self["freq"] = self._detuned_freq()  # Before _get_msg_params.
+        self["msg_params"] = self._get_msg_params()  # Populates synth_desc.
+        self["has_gate"] = self("has_gate")
+        self["server"] = self("server")
+        self["node_id"] = self["server"]._next_node_id()
 
 
-class _MonoSetEvent(EventType, partial_events=(
-        PitchKeys, AmplitudeKeys, DurationKeys, ServerKeys)):
-    type = '_mono_set'
+class _MonoSetEvent(
+    EventType, partial_events=(PitchKeys, AmplitudeKeys, DurationKeys, ServerKeys)
+):
+    type = "_mono_set"
     is_playing = True
     mono_params = None
 
     def play(self):
-        self['freq'] = self._detuned_freq()
-        self['server'] = self('server')
-        msg = ['/n_set', self['node_id'], *self._update_msg_params()]
+        self["freq"] = self._detuned_freq()
+        self["server"] = self("server")
+        msg = ["/n_set", self["node_id"], *self._update_msg_params()]
         msg = gpp.node_param(msg)._as_osc_arg_list()
-        self['server'].addr.send_bundle(self['server'].latency, msg)
+        self["server"].addr.send_bundle(self["server"].latency, msg)
 
     def _update_msg_params(self):
         msg_params = []
-        for arg in self['mono_params']:
+        for arg in self["mono_params"]:
             msg_params.extend([arg, self(arg)])
-        self['msg_params'] = msg_params
+        self["msg_params"] = msg_params
         return msg_params
 
 
 class _MonoOffEvent(EventType, partial_events=(ServerKeys,)):
-    type = '_mono_off'
+    type = "_mono_off"
     is_playing = True
     has_gate = False
     gate = 0
     delay = 0
 
     def play(self):
-        if self('has_gate'):
-            msg = ['/n_set', self['node_id'], 'gate', self('gate')]
+        if self("has_gate"):
+            msg = ["/n_set", self["node_id"], "gate", self("gate")]
         else:
-            msg = ['/n_free', self['node_id']]
+            msg = ["/n_free", self["node_id"]]
         msg = gpp.node_param(msg)._as_osc_arg_list()
-        server = self('server')
-        server.addr.send_bundle(server.latency + self('delay'), msg)
-        self['is_playing'] = False
+        server = self("server")
+        server.addr.send_bundle(server.latency + self("delay"), msg)
+        self["is_playing"] = False

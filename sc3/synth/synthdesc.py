@@ -19,10 +19,10 @@ from . import _fmtrw as frw
 from .ugens import inout as iou
 
 
-__all__ = ['SynthDescLib']
+__all__ = ["SynthDescLib"]
 
 
-class MdPlugin():
+class MdPlugin:
     # Metadata is just a JSON object represented as a Python dictionary.
     # The parameter ``codec`` is a dict containing 'key codecs' ordered by key.
     # Key codecs are objects of three fields, key, encoder and decoder,
@@ -38,14 +38,14 @@ class MdPlugin():
     # organizations can be differentiated just by its content (e.g. special
     # keys, format keys, version keys or similar).
 
-    SUFFIX = 'scjsonmd'  # The only extension.
-    _default_codec = {'specs': spc.spec_codec}
+    SUFFIX = "scjsonmd"  # The only extension.
+    _default_codec = {"specs": spc.spec_codec}
 
     def __init__(self, codec=None):
         self.codec = codec or type(self)._default_codec
 
     def write(self, synthdef, path):  # Was *write_metadata.
-        path = pathlib.Path(path) / f'{synthdef.name}.{self.SUFFIX}'
+        path = pathlib.Path(path) / f"{synthdef.name}.{self.SUFFIX}"
         try:
             path.unlink()
         except FileNotFoundError:
@@ -55,16 +55,16 @@ class MdPlugin():
             for key in self.codec:
                 if key in metadata:
                     metadata[key] = self.codec[key].encoder(metadata[key])
-            with open(path, 'w') as file:
+            with open(path, "w") as file:
                 json.dump(metadata, file)
 
     def read(self, synthdef, path):  # Was *read_metadata.
-        path = pathlib.Path(path) / f'{synthdef.name}.{self.SUFFIX}'
+        path = pathlib.Path(path) / f"{synthdef.name}.{self.SUFFIX}"
         return self.read_file(path)
 
     def read_file(self, path):
         try:
-            with open(path, 'r') as file:
+            with open(path, "r") as file:
                 metadata = json.load(file)
             for key in self.codec:
                 if key in metadata:
@@ -74,7 +74,7 @@ class MdPlugin():
             return None
 
     def delete(self, synthdef, path):  # Was *clear_metadata.
-        path = pathlib.Path(path) / f'{synthdef.name}.{self.SUFFIX}'
+        path = pathlib.Path(path) / f"{synthdef.name}.{self.SUFFIX}"
         try:
             path.unlink()
         except FileNotFoundError:
@@ -89,11 +89,11 @@ class SynthDescError(Exception):
     pass
 
 
-class IODesc():
+class IODesc:
     def __init__(self, rate, channels, starting_channel, type):
         self.rate = rate
         self.channels = channels
-        self.starting_channel = starting_channel or '?'
+        self.starting_channel = starting_channel or "?"
         self.type = type
 
     def __repr__(self):  # Was printOn.
@@ -101,11 +101,12 @@ class IODesc():
             f"{type(self).__name__}(rate='{self.rate}', "
             f"channels={self.channels}, "
             f"starting_channel={self.starting_channel}, "
-            f"type={self.type.__name__})")
+            f"type={self.type.__name__})"
+        )
 
 
-class SynthDesc():
-    _RATE_NAME = ('scalar', 'control', 'audio', 'demand')  # Used by index.
+class SynthDesc:
+    _RATE_NAME = ("scalar", "control", "audio", "demand")  # Used by index.
 
     md_plugin = MdPlugin()  # TODO: // override in your startup file.
     populate_metadata_func = lambda desc: None
@@ -148,7 +149,7 @@ class SynthDesc():
         path = pathlib.Path(path)
         ret = []
         for filename in path.parent.glob(path.name):
-            with open(filename, 'rb') as file:
+            with open(filename, "rb") as file:
                 ret.extend(cls._read_stream(file, keep_defs, filename))
         return ret
 
@@ -168,24 +169,23 @@ class SynthDesc():
             ret.append(desc)
             if path:
                 desc.metadata = cls.md_plugin.read_file(
-                    path.parent / f'{path.stem}.{type(cls.md_plugin).SUFFIX}')
+                    path.parent / f"{path.stem}.{type(cls.md_plugin).SUFFIX}"
+                )
             cls.populate_metadata_func(desc)
             in_memory_stream = isinstance(stream, io.BytesIO)
             if desc.sdef is not None and not in_memory_stream:
                 if desc.metadata is None:
                     desc.metadata = dict()
-                desc.metadata['reconstructed'] = True  # Was 'shouldNotSend'.
-                desc.metadata['load_path'] = str(path)
+                desc.metadata["reconstructed"] = True  # Was 'shouldNotSend'.
+                desc.metadata["load_path"] = str(path)
                 desc.sdef.metadata = desc.metadata
         return ret
 
     def _read_synthdef(self, stream, keep_def=False):  # TODO
-        raise NotImplementedError(
-            'read_synthdef format version 1 not implemented')
+        raise NotImplementedError("read_synthdef format version 1 not implemented")
 
     def _read_ugen_spec(self, stream):  # TODO
-        raise NotImplementedError(
-            'read_ugen_spec format version 1 not implemented')
+        raise NotImplementedError("read_ugen_spec format version 1 not implemented")
 
     def _read_synthdef2(self, stream, keep_def=False):
         with _libsc3.main._def_build_lock:
@@ -206,8 +206,9 @@ class SynthDesc():
                 num_controls = frw.read_i32(stream)
                 self.sdef._controls = frw.read_f32_list(stream, num_controls)
                 self.controls = [
-                    iou.ControlName('?', i, '?', self.sdef._controls[i], None)
-                    for i in range(num_controls)]
+                    iou.ControlName("?", i, "?", self.sdef._controls[i], None)
+                    for i in range(num_controls)
+                ]
 
                 num_control_names = frw.read_i32(stream)
                 for _ in range(num_control_names):
@@ -215,8 +216,7 @@ class SynthDesc():
                     control_index = frw.read_i32(stream)
                     self.controls[control_index].name = control_name
                     self.control_names.append(control_name)
-                    self.control_dict[control_name] = \
-                        self.controls[control_index]
+                    self.control_dict[control_name] = self.controls[control_index]
 
                 num_ugens = frw.read_i32(stream)
                 for _ in range(num_ugens):
@@ -226,7 +226,7 @@ class SynthDesc():
                 # control to the fist ControlName default value.
                 aux_ctrl = None
                 for ctrl in self.controls:
-                    if ctrl.name == '?':
+                    if ctrl.name == "?":
                         default_value = utl.as_list(aux_ctrl.default_value)
                         default_value.append(ctrl.default_value)
                         aux_ctrl.default_value = default_value
@@ -234,9 +234,9 @@ class SynthDesc():
                         aux_ctrl = ctrl
 
                 self.sdef._control_names = [
-                    x for x in self.controls if x.name is not None]
-                self.has_array_args = any(
-                    cn.name == '?' for cn in self.controls)
+                    x for x in self.controls if x.name is not None
+                ]
+                self.has_array_args = any(cn.name == "?" for cn in self.controls)
 
                 num_variants = frw.read_i16(stream)
                 self.has_variants = num_variants > 0
@@ -263,7 +263,8 @@ class SynthDesc():
         except KeyError as e:
             raise Exception(
                 f"no UGen class found for '{ugen_class}' which was "
-                f"specified in synthdef file: {self.name}") from e
+                f"specified in synthdef file: {self.name}"
+            ) from e
 
         rate_index = frw.read_i8(stream)
         num_inputs = frw.read_i32(stream)
@@ -289,16 +290,14 @@ class SynthDesc():
             ugen_inputs.append(input)
 
         rate = self._RATE_NAME[rate_index]
-        ugen = ugen_class._new_from_desc(
-            rate, num_outputs, ugen_inputs, special_index)
+        ugen = ugen_class._new_from_desc(rate, num_outputs, ugen_inputs, special_index)
         if isinstance(ugen, ugn.OutputProxy):
             ugen = ugen.source_ugen
         ugen._add_to_synth()
 
         def add_iodesc(iolst, nchan):  # lambda
             b = ugen.inputs[0]
-            if type(b) is ugn.OutputProxy\
-            and isinstance(b.source_ugen, iou.Control):
+            if type(b) is ugn.OutputProxy and isinstance(b.source_ugen, iou.Control):
                 control = None
                 cmp_index = b._output_index + b.source_ugen._special_index
                 for item in self.controls:  # detect
@@ -332,19 +331,19 @@ class SynthDesc():
         # an error. This can be review later.
         for cname in self.controls:
             nm = cname.name
-            if nm != '?' and nm in names:
+            if nm != "?" and nm in names:
                 raise SynthDescError(
-                    f"SynthDesc '{self.name}' has duplicated "
-                    f"control name '{nm}'")
+                    f"SynthDesc '{self.name}' has duplicated " f"control name '{nm}'"
+                )
             else:
                 names.add(nm)
 
         if len(names) > 255:
             raise SynthDescError(
-                "a SynthDef cannot have more than 255 "
-                f"control names ('{self.name}')")
+                "a SynthDef cannot have more than 255 " f"control names ('{self.name}')"
+            )
 
-        if 'gate' in names:
+        if "gate" in names:
             self.has_gate = True
 
     def send(self, server, completion_msg=None):
@@ -376,11 +375,11 @@ class SynthDesc():
     def __str__(self):  # Was printOn.
         string = f"SynthDesc '{self.name}':"
         for control in self.controls:
-            string += f'\n  K {repr(control)}'
+            string += f"\n  K {repr(control)}"
         for input in self.inputs:
-            string += f'\n  I {repr(input)}'
+            string += f"\n  I {repr(input)}"
         for output in self.outputs:
-            string += f'\n  O {repr(output)}'
+            string += f"\n  O {repr(output)}"
         return string
 
 
@@ -389,11 +388,10 @@ class MetaSynthDescLib(type):
         cls.all = dict()
 
         def init_func(cls):
-            cls.default = cls('default')  # Was global in sclang.
-            sac.ServerBoot.add('all', cls.__on_server_boot)
+            cls.default = cls("default")  # Was global in sclang.
+            sac.ServerBoot.add("all", cls.__on_server_boot)
 
         clb.ClassLibrary.add(cls, init_func)
-
 
     ### System Actions ###
 
@@ -422,10 +420,10 @@ class SynthDescLib(metaclass=MetaSynthDescLib):
 
     def add(self, synth_desc):
         self.synth_descs[synth_desc.name] = synth_desc
-        mdl.NotificationCenter.notify(self, 'sdesc_added', synth_desc)
+        mdl.NotificationCenter.notify(self, "sdesc_added", synth_desc)
 
     def remove_at(self, name):
-        self.synth_descs.pop(name) #, None) # Throw KeyError.
+        self.synth_descs.pop(name)  # , None) # Throw KeyError.
 
     def add_server(self, server):
         self.servers.add(server)
@@ -438,8 +436,8 @@ class SynthDescLib(metaclass=MetaSynthDescLib):
 
     def match(self, name):
         # This method is not being used here, no PmonoStream.printIn.
-        if '.' in name:
-            dot_index = name.index('.')
+        if "." in name:
+            dot_index = name.index(".")
         else:
             return self.synth_descs[name]  # KeyError, nil in sclang.
 
@@ -454,14 +452,14 @@ class SynthDescLib(metaclass=MetaSynthDescLib):
         server_list = utl.as_list(server) or self.servers
         for s in server_list:
             for desc in self.synth_descs.values():
-                if not desc.sdef.metadata.get('reconstructed', False):
+                if not desc.sdef.metadata.get("reconstructed", False):
                     desc.send(s)
                 elif try_reconstructed:
                     desc.sdef._load_reconstructed(s)
 
     def read(self, path=None, keep_defs=True):
-        path = path or plf.Platform.synthdef_dir / f'*.{sdf.SynthDef._SUFFIX}'
+        path = path or plf.Platform.synthdef_dir / f"*.{sdf.SynthDef._SUFFIX}"
         path = pathlib.Path(path)
         for desc in SynthDesc.read(path, keep_defs):
             self.add(desc)
-            mdl.NotificationCenter.notify(self, 'sdesc_added', desc)
+            mdl.NotificationCenter.notify(self, "sdesc_added", desc)

@@ -22,11 +22,11 @@ from . import builtins as bi
 from . import responders as rpd
 
 
-__all__ = ['main', 'RtMain', 'NrtMain']
+__all__ = ["main", "RtMain", "NrtMain"]
 
 
 main = None
-'''Default main class global variable set by sc3.init().'''
+"""Default main class global variable set by sc3.init()."""
 
 
 ### Kernel.sc ###
@@ -37,7 +37,8 @@ class Process(type):
     NRT_MODE = 1
 
     class _atexitprio(enum.IntEnum):
-        ''' Library predefined _atexitq priority numbers.'''
+        """Library predefined _atexitq priority numbers."""
+
         CUSTOM = 0
         SERVERS = 500
         PLATFORM = 700
@@ -46,7 +47,7 @@ class Process(type):
         MIDI = 1000
 
     _atexitq = tsq.TaskQueue()
-    '''Functions registered in atexit with order by priority numbers.'''
+    """Functions registered in atexit with order by priority numbers."""
 
     def __init__(cls, *_):
         # Main library lock (guards clock's threads).
@@ -63,16 +64,16 @@ class Process(type):
         atexit.register(cls._shutdown)
 
     def _init_platform(cls):
-        if sys.platform.startswith('linux'):
+        if sys.platform.startswith("linux"):
             cls._platform = plf.LinuxPlatform()
-        elif sys.platform.startswith('darwin'):
+        elif sys.platform.startswith("darwin"):
             cls._platform = plf.DarwinPlatform()
-        elif sys.platform.startswith('win32'):
+        elif sys.platform.startswith("win32"):
             cls._platform = plf.Win32Platform()
-        elif sys.platform.startswith('cygwin'):
+        elif sys.platform.startswith("cygwin"):
             cls._platform = plf.CygwinPlatform()
         else:
-            raise RuntimeError('platform not defined')
+            raise RuntimeError("platform not defined")
         cls._platform._startup()
         cls._atexitq.add(cls._atexitprio.PLATFORM, cls.platform._shutdown)
 
@@ -86,10 +87,10 @@ class Process(type):
         if sc3.LIB_SETUP_FILE:
             path = pathlib.Path(sc3.LIB_SETUP_FILE)
         else:
-            path = plf.Platform.config_dir / 'startup.py'
+            path = plf.Platform.config_dir / "startup.py"
         try:
-            with open(path, 'r') as file:
-                ast = compile(file.read(), path, 'exec')
+            with open(path, "r") as file:
+                ast = compile(file.read(), path, "exec")
                 exec(ast, dict(), dict())
         except FileNotFoundError:
             pass
@@ -110,20 +111,22 @@ class Process(type):
         return cls._platform
 
     def open_udp_port(cls, port):
-        '''Open extra UDP port.'''
+        """Open extra UDP port."""
         with cls._main_lock:
-            local_addr = (socket.gethostbyname('localhost'), port)
+            local_addr = (socket.gethostbyname("localhost"), port)
             if local_addr in osci.OscInterface._local_endpoints:
                 return
             interface = osci.OscUdpInterface(port)
             interface.start()
 
     def close_udp_port(cls, port):
-        '''Close extra UDP port. Default library port can't be closed.'''
+        """Close extra UDP port. Default library port can't be closed."""
         with cls._main_lock:
-            local_addr = (socket.gethostbyname('localhost'), port)
-            if cls._osc_interface.port == port\
-            or local_addr not in osci.OscInterface._local_endpoints:
+            local_addr = (socket.gethostbyname("localhost"), port)
+            if (
+                cls._osc_interface.port == port
+                or local_addr not in osci.OscInterface._local_endpoints
+            ):
                 return
             interface = osci.OscInterface._local_endpoints[local_addr]
             interface.stop()
@@ -156,8 +159,7 @@ class RtMain(metaclass=Process):
         cls.main_tt = stm._MainTimeThread()
         cls.current_tt = cls.main_tt
 
-        cls._osc_interface = osci.OscUdpInterface(
-            sc3.LIB_PORT, sc3.LIB_PORT_RANGE)
+        cls._osc_interface = osci.OscUdpInterface(sc3.LIB_PORT, sc3.LIB_PORT_RANGE)
         cls._osc_interface.start()
 
         cls._midi_interface = mii.MidiRtInterface()
@@ -175,13 +177,14 @@ class RtMain(metaclass=Process):
     @classmethod
     def _startup(cls):
         import sc3.synth.systemdefs as sds
+
         sds.SystemDefs.add_all()
         cls._exec_startup_file()
         sac.StartUp.run()
 
     @classmethod
     def elapsed_time(cls):
-        '''Physical time since library initialization.'''
+        """Physical time since library initialization."""
         return time.time() - cls._init_time
 
     @classmethod
@@ -202,7 +205,6 @@ class RtMain(metaclass=Process):
             if not cls._in_awake_call:
                 cls.main_tt._m_seconds = seconds
 
-
     # Main thread blocking control for scripts.
 
     @classmethod
@@ -214,7 +216,7 @@ class RtMain(metaclass=Process):
 
     @classmethod
     def wait(cls, timeout=None, tasks=1, tailtime=0):
-        '''Main thread lock until timeout or notified by ``resume``.
+        """Main thread lock until timeout or notified by ``resume``.
 
         This method doesn't have to acquire a lock before calling.
         Internally it uses a counter to follow the calls to `main.resume()`
@@ -239,10 +241,10 @@ class RtMain(metaclass=Process):
         -------
         bool
             The value is False if `timeout` expired otherwise is True.
-        '''
+        """
 
         if not cls._is_main_thread():
-            raise Exception('main.wait() must be called from the main thread')
+            raise Exception("main.wait() must be called from the main thread")
         not_expired = True  # It may not even enter the while loops.
         with cls._wait_cond:
             try:
@@ -272,22 +274,21 @@ class RtMain(metaclass=Process):
 
     @classmethod
     def resume(cls):
-        '''Unlock the main thread.
+        """Unlock the main thread.
 
         This method must be called from another thread, e.g. from a routine
         scheduled by a clock using `play`.
-        '''
+        """
 
         if cls._is_main_thread():
-            raise Exception(
-                'main.resume() cannot be called from the main thread')
+            raise Exception("main.resume() cannot be called from the main thread")
         with cls._wait_cond:
             cls._wait_count -= 1
             cls._wait_cond.notify()
 
     @classmethod
     def sync(cls, server, timeout=None):
-        '''Main thread blocking sync command.
+        """Main thread blocking sync command.
 
         Parameters
         ----------
@@ -299,10 +300,10 @@ class RtMain(metaclass=Process):
         -------
         bool
             The value is False if ``timeout`` expired otherwise is True.
-        '''
+        """
 
         if not cls._is_main_thread():
-            raise Exception('main.sync() must be called from the main thread')
+            raise Exception("main.sync() must be called from the main thread")
 
         id = bi.uid()
 
@@ -312,10 +313,10 @@ class RtMain(metaclass=Process):
                 with cls._wait_cond:
                     cls._wait_cond.notify()
 
-        resp = rpd.OscFunc(resp_func, '/synced', server.addr)
+        resp = rpd.OscFunc(resp_func, "/synced", server.addr)
 
         with cls._wait_cond:
-            server.addr.send_msg('/sync', id)
+            server.addr.send_msg("/sync", id)
             try:
                 return cls._wait_cond.wait(timeout)
             except KeyboardInterrupt:
@@ -342,6 +343,7 @@ class NrtMain(metaclass=Process):
     def _startup(cls):
         # Server setup and boot is only for user convenience.
         import sc3.synth.server as srv
+
         srv.Server.default.latency = 0
         srv.Server.default.options.sample_rate = 48000
         srv.Server.default.boot()  # Sets _status_watcher._has_booted = True
@@ -350,7 +352,7 @@ class NrtMain(metaclass=Process):
 
     @classmethod
     def elapsed_time(cls):
-        '''Return main time thread's seconds.'''
+        """Return main time thread's seconds."""
         return float(cls.main_tt._seconds)
 
     @classmethod
@@ -359,8 +361,8 @@ class NrtMain(metaclass=Process):
         cls.main_tt._m_seconds = seconds
 
     @classmethod
-    def process(cls, tailtime=0, proto='osc'):
-        '''Generate and return OSC or MIDI command scores.
+    def process(cls, tailtime=0, proto="osc"):
+        """Generate and return OSC or MIDI command scores.
 
         Parameters
         ----------
@@ -374,21 +376,21 @@ class NrtMain(metaclass=Process):
         -------
         An instance of either OscScore or MidiScore.
 
-        '''
+        """
 
         cls._clock_scheduler.run()
-        if proto == 'osc':
+        if proto == "osc":
             cls._osc_interface._osc_score.finish(tailtime)
             return cls._osc_interface._osc_score
-        elif proto == 'midi':
+        elif proto == "midi":
             cls._midi_interface._midi_score.finish()
             return cls._midi_interface._midi_score
         else:
-            ValueError(f'invalid protocol name {repr(proto)}')
+            ValueError(f"invalid protocol name {repr(proto)}")
 
     @classmethod
     def reset(cls):
-        '''Reset sc3 time, scheduler and command scores to initial state.'''
+        """Reset sc3 time, scheduler and command scores to initial state."""
 
         cls.main_tt._m_seconds = 0.0
         cls._clock_scheduler.reset()

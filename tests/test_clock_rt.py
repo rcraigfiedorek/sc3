@@ -1,9 +1,9 @@
-
 import unittest
 import math
 
 import sc3
-sc3.init('rt')
+
+sc3.init("rt")
 
 from sc3.base.main import main
 from sc3.base.clock import SystemClock, TempoClock
@@ -13,6 +13,7 @@ from sc3.base.responders import OscFunc
 
 
 # NOTE: These tests are duplicated for test_clock_nrt.py and need sync.
+
 
 class ClockTestCase(unittest.TestCase):
     def test_time_unit_conversion(self):
@@ -62,7 +63,6 @@ class ClockTestCase(unittest.TestCase):
         main.wait(tasks=2)
 
     def test_initial_values(self):
-
         @routine
         def example():
             offset = 5
@@ -83,15 +83,15 @@ class ClockTestCase(unittest.TestCase):
     def test_logical_and_bundle_time(self):
         ltime = []
         btime = []
-        naddr = NetAddr('127.0.0.1', NetAddr.lang_port())
-        ofunc = OscFunc(lambda *args: btime.append(args[1]), '/test')
+        naddr = NetAddr("127.0.0.1", NetAddr.lang_port())
+        ofunc = OscFunc(lambda *args: btime.append(args[1]), "/test")
 
         @routine
         def r(inval):
             _, clock = inval
             for _ in range(100):
                 ltime.append(clock.seconds)
-                naddr.send_bundle(0, ['/test'])
+                naddr.send_bundle(0, ["/test"])
                 yield 0.0001
             main.resume()
 
@@ -107,5 +107,5 @@ class ClockTestCase(unittest.TestCase):
         ofunc.free()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

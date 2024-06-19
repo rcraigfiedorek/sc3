@@ -21,14 +21,15 @@ from . import _specialindex as _si
 from . import _fmtrw as frw
 
 
-srv = hks.late_import(__name__, 'sc3.synth.server', 'srv')
-nod = hks.late_import(__name__, 'sc3.synth.node', 'nod')
-lne = hks.late_import(__name__, 'sc3.synth.ugens.line', 'lne')
+srv = hks.late_import(__name__, "sc3.synth.server", "srv")
+nod = hks.late_import(__name__, "sc3.synth.node", "nod")
+lne = hks.late_import(__name__, "sc3.synth.ugens.line", "lne")
 
 
 ### Graphs Parameter Base Class ###
 
-class GraphParameter():
+
+class GraphParameter:
     def __init__(self, value):
         self.__param_value = value
 
@@ -42,12 +43,13 @@ class GraphParameter():
 
     def __repr__(self):
         if self is self._param_value:
-            return super().__repr__()   # *** BUG: MRO/MULTIPLE INHERITANCE
+            return super().__repr__()  # *** BUG: MRO/MULTIPLE INHERITANCE
         else:
-            return f'{type(self).__name__}({repr(self._param_value)})'
+            return f"{type(self).__name__}({repr(self._param_value)})"
 
 
 ### UGen graph parameter interface ###
+
 
 class UGenParameter(GraphParameter):
     def _is_valid_ugen_input(self):
@@ -57,7 +59,7 @@ class UGenParameter(GraphParameter):
         return self._param_value
 
     def _as_audio_rate_input(self):
-        if self._as_ugen_rate() != 'audio':
+        if self._as_ugen_rate() != "audio":
             return lne.K2A.ar(self._param_value)
         else:
             return self._param_value
@@ -67,25 +69,28 @@ class UGenParameter(GraphParameter):
             return self.rate
         except AttributeError as e:
             raise AttributeError(
-                f'{type(self).__name__} does not implement '
-                'rate attribute or _as_ugen_rate method') from e
+                f"{type(self).__name__} does not implement "
+                "rate attribute or _as_ugen_rate method"
+            ) from e
 
     def _perform_binary_op_on_ugen(self, selector, ugen):
         selector = _si.sc_opname(selector.__name__)
         raise TypeError(
             f"operation '{selector}' is not supported between "
-            f"UGen and {type(self._param_value).__name__}")
+            f"UGen and {type(self._param_value).__name__}"
+        )
 
     def _r_perform_binary_op_on_ugen(self, selector, ugen):
         selector = _si.sc_opname(selector.__name__)
         raise TypeError(
             f"operation '{selector}' is not supported between "
-            f"{type(self._param_value).__name__} and UGen")
+            f"{type(self._param_value).__name__} and UGen"
+        )
 
     def _write_input_spec(self, file, synthdef):
         raise NotImplementedError(
-            f'{type(self).__name__} does '
-            'not implement _write_input_spec()')
+            f"{type(self).__name__} does " "not implement _write_input_spec()"
+        )
 
 
 class UGenNone(UGenParameter):
@@ -103,7 +108,7 @@ class UGenString(UGenParameter):
         return (str,)
 
     def _as_ugen_rate(self):
-        return 'scalar'
+        return "scalar"
 
 
 class UGenScalar(UGenParameter):
@@ -121,7 +126,7 @@ class UGenScalar(UGenParameter):
             return lne.DC.ar(self._param_value)
 
     def _as_ugen_rate(self):
-        return 'scalar'
+        return "scalar"
 
     def _write_input_spec(self, file, synthdef):
         try:
@@ -130,9 +135,8 @@ class UGenScalar(UGenParameter):
             frw.write_i32(file, const_index)
         except KeyError as e:
             raise Exception(
-                '_write_input_spec constant not found: '
-                f'{float(self._param_value)}') from e
-
+                "_write_input_spec constant not found: " f"{float(self._param_value)}"
+            ) from e
 
     ### UGen convenience methods (keep in sync) ###
     # These methods are only for ChannelList _multichannel_perform (multichannel
@@ -171,7 +175,9 @@ class UGenScalar(UGenParameter):
     def blend(self, other, frac=0.5):
         return bi.blend(self._param_value, other, frac)
 
-    def lag(self, time=0.1):  # SimpleNumber (^this) SequenceableCollection and UGen, idem until prune.
+    def lag(
+        self, time=0.1
+    ):  # SimpleNumber (^this) SequenceableCollection and UGen, idem until prune.
         return self._param_value
 
     def lag2(self, time=0.1):
@@ -195,43 +201,39 @@ class UGenScalar(UGenParameter):
     def slew(self, up=1, down=1):
         return self._param_value
 
-    def prune(self, min, max, type='minmax'):
+    def prune(self, min, max, type="minmax"):
         return self._param_value
 
     # snap is not implemented
     # softround is not implemented
 
-    def linlin(self, inmin, inmax, outmin, outmax, clip='minmax'):
+    def linlin(self, inmin, inmax, outmin, outmax, clip="minmax"):
         return bi.linlin(self._param_value, inmin, inmax, outmin, outmax, clip)
 
-    def linexp(self, inmin, inmax, outmin, outmax, clip='minmax'):
+    def linexp(self, inmin, inmax, outmin, outmax, clip="minmax"):
         return bi.linexp(self._param_value, inmin, inmax, outmin, outmax, clip)
 
-    def explin(self, inmin, inmax, outmin, outmax, clip='minmax'):
+    def explin(self, inmin, inmax, outmin, outmax, clip="minmax"):
         return bi.explin(self._param_value, inmin, inmax, outmin, outmax, clip)
 
-    def expexp(self, inmin, inmax, outmin, outmax, clip='minmax'):
+    def expexp(self, inmin, inmax, outmin, outmax, clip="minmax"):
         return bi.expexp(self._param_value, inmin, inmax, outmin, outmax, clip)
 
-    def lincurve(self, inmin, inmax, outmin, outmax, curve=-4, clip='minmax'):
-        return bi.lincurve(
-            self._param_value, inmin, inmax, outmin, outmax, curve, clip)
+    def lincurve(self, inmin, inmax, outmin, outmax, curve=-4, clip="minmax"):
+        return bi.lincurve(self._param_value, inmin, inmax, outmin, outmax, curve, clip)
 
-    def curvelin(self, inmin, inmax, outmin, outmax, curve=-4, clip='minmax'):
-        return bi.curvelin(
-            self._param_value, inmin, inmax, outmin, outmax, curve, clip)
+    def curvelin(self, inmin, inmax, outmin, outmax, curve=-4, clip="minmax"):
+        return bi.curvelin(self._param_value, inmin, inmax, outmin, outmax, curve, clip)
 
-    def bilin(self, incenter, inmin, inmax, outcenter, outmin, outmax,
-              clip='minmax'):
+    def bilin(self, incenter, inmin, inmax, outcenter, outmin, outmax, clip="minmax"):
         return bi.bilin(
-            self._param_value, incenter, inmin, inmax,
-            outcenter, outmin, outmax, clip)
+            self._param_value, incenter, inmin, inmax, outcenter, outmin, outmax, clip
+        )
 
-    def biexp(self, incenter, inmin, inmax, outcenter, outmin, outmax,
-              clip='minmax'):
+    def biexp(self, incenter, inmin, inmax, outcenter, outmin, outmax, clip="minmax"):
         return bi.biexp(
-            self._param_value, incenter, inmin, inmax,
-            outcenter, outmin, outmax, clip)
+            self._param_value, incenter, inmin, inmax, outcenter, outmin, outmax, clip
+        )
 
     def moddif(self, that=0.0, mod=1.0):
         return bi.moddif(self._param_value, that, mod)
@@ -245,18 +247,18 @@ class UGenSequence(UGenParameter):
         return (list, tuple)
 
     def _is_valid_ugen_input(self):
-        return True if self._param_value else False  # *** BUG: en sclang, debería comprobar isEmpty porque tira error en SynthDesc (SinOsc.ar() * []). O tal vez cuando construye BinaryOpUGen? Ver el grafo generado, tal vez deba ser None.
+        return (
+            True if self._param_value else False
+        )  # *** BUG: en sclang, debería comprobar isEmpty porque tira error en SynthDesc (SinOsc.ar() * []). O tal vez cuando construye BinaryOpUGen? Ver el grafo generado, tal vez deba ser None.
 
     def _as_ugen_input(self, *ugen_cls):
-        m = map(
-            lambda x: ugen_param(x)._as_ugen_input(*ugen_cls),
-            self._param_value)
+        m = map(lambda x: ugen_param(x)._as_ugen_input(*ugen_cls), self._param_value)
         return type(self._param_value)(m)
 
     def _as_audio_rate_input(self, *ugen_cls):
         m = map(
-            lambda x: ugen_param(x)._as_audio_rate_input(*ugen_cls),
-            self._param_value)
+            lambda x: ugen_param(x)._as_audio_rate_input(*ugen_cls), self._param_value
+        )
         return type(self._param_value)(m)
 
     def _as_ugen_rate(self):
@@ -264,8 +266,11 @@ class UGenSequence(UGenParameter):
             return ugen_param(self._param_value[0])._as_ugen_rate()
         else:
             return utl.list_min(
-                [ugen_param(item)._as_ugen_rate() or 'scalar'
-                for item in self._param_value])
+                [
+                    ugen_param(item)._as_ugen_rate() or "scalar"
+                    for item in self._param_value
+                ]
+            )
 
     def _write_input_spec(self, file, synthdef):
         for item in self._param_value:
@@ -274,12 +279,13 @@ class UGenSequence(UGenParameter):
 
 ### Node Graph Parameters ###
 
+
 class NodeParameter(GraphParameter):
     # asTarget.sc interface
     def _as_target(self):
         raise TypeError(
-            'invalid value for Node target: '
-            f'{type(self._param_value).__name__}')
+            "invalid value for Node target: " f"{type(self._param_value).__name__}"
+        )
 
     def _as_control_input(self):
         return self._param_value
@@ -331,7 +337,8 @@ class NodeSequence(NodeParameter):
 
     def _as_control_input(self):
         return type(self._param_value)(
-            node_param(x)._as_control_input() for x in self._param_value)
+            node_param(x)._as_control_input() for x in self._param_value
+        )
 
     def _as_osc_arg_list(self):
         lst = []
@@ -340,10 +347,10 @@ class NodeSequence(NodeParameter):
         return lst
 
     def _embed_as_osc_arg(self, lst):
-        lst.append('[')
+        lst.append("[")
         for e in self._param_value:
             node_param(e)._embed_as_osc_arg(lst)
-        lst.append(']')
+        lst.append("]")
 
 
 class NodeDictionary(NodeParameter):
@@ -356,20 +363,23 @@ class NodeDictionary(NodeParameter):
     def _as_control_input(self):
         return list(
             node_param(x)._as_control_input()
-            for items in self._param_value.items() for x in items)
+            for items in self._param_value.items()
+            for x in items
+        )
 
     def _as_osc_arg_list(self):
         return self._as_control_input()
 
     def _embed_as_osc_arg(self, lst):
-        lst.append('[')
+        lst.append("[")
         for item in self._param_value.items():
             for e in item:
                 node_param(e)._embed_as_osc_arg(lst)
-        lst.append(']')
+        lst.append("]")
 
 
 ### Module functions ###
+
 
 def _graph_param(obj, param_cls):
     new_cls = None
@@ -379,7 +389,8 @@ def _graph_param(obj, param_cls):
             break
     if new_cls is None:
         raise TypeError(
-            f"{param_cls.__name__}: type '{type(obj).__name__}' not supported")
+            f"{param_cls.__name__}: type '{type(obj).__name__}' not supported"
+        )
     return new_cls(obj)
 
 

@@ -19,7 +19,7 @@ from . import node as nod
 _logger = logging.getLogger(__name__)
 
 
-class Recorder():
+class Recorder:
     def __init__(self, server):
         self._server = server
         self._bus = None
@@ -37,7 +37,7 @@ class Recorder():
         self._paused = False
         self._duration = 0
         self.notify_server = False
-        self.file_prefix = 'SC_'
+        self.file_prefix = "SC_"
 
         self._responder = None
         self._id = None
@@ -66,51 +66,55 @@ class Recorder():
     def path(self):
         return self._path
 
-    def record(self, path=None, bus=None, channels=None,
-               node=None, duration=None):
-        if self._server._status_watcher.unresponsive\
-        or not self._server._status_watcher.server_running:
+    def record(self, path=None, bus=None, channels=None, node=None, duration=None):
+        if (
+            self._server._status_watcher.unresponsive
+            or not self._server._status_watcher.server_running
+        ):
             _logger.error(f"server '{self.server.name}' is not running")
             return
         bus = bus if bus is not None else 0
         self._bus = gpp.node_param(bus)._as_control_input()
 
         if self._record_buf is None:
+
             def record_setup():
                 self.prepare(path, channels)
                 yield from self._server.sync()
                 self.record(path, self._bus, channels, node, duration)
+
             stm.Routine.run(record_setup)
         else:
             if channels is not None and channels != self._channels:
                 _logger.warning(
-                    'cannot change recording number of channels while running')
+                    "cannot change recording number of channels while running"
+                )
                 return
 
             if path is not None and path != self.path:
                 raise ValueError(
-                    'recording was prepared already with a different '
-                    f'path: {self.path}, tried with this path: {path}')
+                    "recording was prepared already with a different "
+                    f"path: {self.path}, tried with this path: {path}"
+                )
 
             if not self.is_recording:
                 self._record(self._bus, node, duration)
-                self._changed_server('recording', True)
+                self._changed_server("recording", True)
                 _logger.info(
                     f"recording {self._channels} channel(s) from "
-                    f"bus {self._bus} on path: '{self._path}'")
+                    f"bus {self._bus} on path: '{self._path}'"
+                )
             else:
                 if self._paused:
                     self.resume()
                 else:
-                    _logger.warning(
-                        f'recording already ({self._duration} seconds)')
+                    _logger.warning(f"recording already ({self._duration} seconds)")
 
-    def record_bus(self, bus, duration=None, path=None,
-                   channels=None, node=None):
+    def record_bus(self, bus, duration=None, path=None, channels=None, node=None):
         if self.is_recording:
             _logger.warning(
-                f'already recording from bus {self._bus} '
-                f'({self._duration} seconds)')
+                f"already recording from bus {self._bus} " f"({self._duration} seconds)"
+            )
             return
         n = bus.channels
         if channels is not None:  # and n is not None:
@@ -133,28 +137,28 @@ class Recorder():
     def pause(self):
         if self.is_recording:
             self._record_node.run(False)
-            self._changed_server('pause')
-            _logger.info(f'recording paused: {self._path}')
+            self._changed_server("pause")
+            _logger.info(f"recording paused: {self._path}")
         else:
-            _logger.warning('not recording')
+            _logger.warning("not recording")
         self._paused = True
 
     def resume(self):
         if self.is_recording:
             if self._paused:
                 self._record_node.run(True)
-                self._changed_server('recording', True)
-                _logger.info(f'recording resumed: {self._path}')
+                self._changed_server("recording", True)
+                _logger.info(f"recording resumed: {self._path}")
         else:
-            _logger.warning('not recording')
+            _logger.warning("not recording")
         self._paused = False
 
     def stop(self):
         if self._synthdef is not None:
             self._stop()
-            self._changed_server('recording', False)
+            self._changed_server("recording", False)
         else:
-            _logger.warning('not recording')
+            _logger.warning("not recording")
 
     def prepare(self, path=None, channels=None):
         if not self._server._status_watcher.server_running:
@@ -182,10 +186,20 @@ class Recorder():
         dir.mkdir(exist_ok=True)
 
         self._record_buf = bff.Buffer(
-            buf_size, channels, self._server,
+            buf_size,
+            channels,
+            self._server,
             completion_msg=lambda buf: [
-                '/b_write', buf.bufnum, path, self.rec_header_format,
-                self.rec_sample_format, 0, 0, True])
+                "/b_write",
+                buf.bufnum,
+                path,
+                self.rec_header_format,
+                self.rec_sample_format,
+                0,
+                0,
+                True,
+            ],
+        )
 
         # if self._record_buf is None: raise Exception("could not allocate buffer")  # *** BUG: it can't be nil in sclang either
         self._path = path
@@ -197,7 +211,7 @@ class Recorder():
             timer = ugns.PulseCount.kr(tick) - 1
             done_action = 0 if self._duration <= 0 else 2
             ugns.Line.kr(0, 0, self._duration, done_action=done_action)
-            ugns.SendReply.kr(tick, '/recording_duration', (timer,), self._id)
+            ugns.SendReply.kr(tick, "/recording_duration", (timer,), self._id)
             ugns.DiskOut.ar(bufnum, ugns.In.ar(input, channels))
 
         self._synthdef = sdf.SynthDef(sdf.SynthDef.generate_tmp_name(), func)
@@ -207,18 +221,23 @@ class Recorder():
 
     def _record(self, bus, node, dur):
         self._record_node = nod.Synth.tail(
-            node or 0, self._synthdef.name,
-            ['input', bus, 'bufnum', self._record_buf, 'duration', dur])
+            node or 0,
+            self._synthdef.name,
+            ["input", bus, "bufnum", self._record_buf, "duration", dur],
+        )
         self._record_node.register(True)
         self._record_node.on_free(lambda: self.stop())
 
         if self._responder is None:
+
             def resp_recording_func(msg, *_):
                 if msg[2] == self._id:
                     self._duration = msg[3]
-                    self._changed_server('/recording_duration', self._duration)
+                    self._changed_server("/recording_duration", self._duration)
+
             self._responder = rpd.OscFunc(
-                resp_recording_func, '/recording_duration', self._server.addr)
+                resp_recording_func, "/recording_duration", self._server.addr
+            )
         else:
             self._responder.enable()
 
@@ -227,11 +246,11 @@ class Recorder():
             self._record_node.unregister()
             self._record_node.free()
             self._record_node = None
-        self._server.addr.send_msg('/d_free', self._synthdef.name)
+        self._server.addr.send_msg("/d_free", self._synthdef.name)
         self._synthdef = None
         if self._record_buf is not None:
-            self._record_buf.close(lambda buf: ['/b_free', buf.bufnum])
-            _logger.info(f'recording stopped: {pathlib.Path(self._path).name}')
+            self._record_buf.close(lambda buf: ["/b_free", buf.bufnum])
+            _logger.info(f"recording stopped: {pathlib.Path(self._path).name}")
             self._record_buf = None
         self._bus = None
         self._channels = None
@@ -239,13 +258,19 @@ class Recorder():
         self._responder.disable()
         self._paused = False
         self._duration = 0
-        self._changed_server('/recording_duration', 0)
+        self._changed_server("/recording_duration", 0)
 
     def _make_path(self):
         dir = str(_libsc3.main.platform.recording_dir)
-        timestamp = time.strftime('%Y%m%d_%H%M%S')
-        return (dir + '/' + self.file_prefix + timestamp +
-                '.' + self._server.options.rec_header_format)
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        return (
+            dir
+            + "/"
+            + self.file_prefix
+            + timestamp
+            + "."
+            + self._server.options.rec_header_format
+        )
 
     def _changed_server(self, msg, *args):
         if self.notify_server:

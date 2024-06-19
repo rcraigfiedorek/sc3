@@ -5,10 +5,10 @@ import weakref
 from . import functions as fn
 
 
-__all__ = ['NotificationCenter']
+__all__ = ["NotificationCenter"]
 
 
-class NotificationCenter():
+class NotificationCenter:
     _registrations = weakref.WeakKeyDictionary()
 
     def __new__(cls):
@@ -38,24 +38,26 @@ class NotificationCenter():
                 del cls._registrations[obj][msg]
             else:
                 del cls._registrations[obj][msg][listener]
-        except KeyError as e:
+        except KeyError:
             err = True
         if err:
-            raise KeyError(
-                f'no registration found for ({obj}, {msg}, {listener})')
+            raise KeyError(f"no registration found for ({obj}, {msg}, {listener})")
 
     @classmethod
     def register_one_shot(cls, obj, msg, listener, action):
         def one_shot_action(*args):
             action(*args)
             cls.unregister(obj, msg, listener)
+
         cls.register(obj, msg, listener, one_shot_action)
 
     @classmethod
     def registration_exists(cls, obj, msg, listener):
-        if obj in cls._registrations\
-        and msg in cls._registrations[obj]\
-        and listener in cls._registrations[obj][msg]:
+        if (
+            obj in cls._registrations
+            and msg in cls._registrations[obj]
+            and listener in cls._registrations[obj][msg]
+        ):
             return True
         else:
             return False

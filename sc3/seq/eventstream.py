@@ -5,7 +5,6 @@ import logging
 from ..base import main as _libsc3
 from ..base import stream as stm
 from ..base import systemactions as sac
-from ..base import clock as clk
 from . import event as evt
 
 
@@ -27,11 +26,11 @@ _logger = logging.getLogger(__name__)
 ### EventStreamCleanup.sc ###
 
 
-class CleanupEntry():
+class CleanupEntry:
     def __init__(self):
         thread_player = _libsc3.main.current_tt.thread_player
         if not isinstance(thread_player, EventStreamPlayer):
-            raise TypeError(f'{thread_player} is not an EventStreamPlayer')
+            raise TypeError(f"{thread_player} is not an EventStreamPlayer")
         self._cleanup = thread_player.cleanup
         self._cleanup.add(self)
         self._events = set()
@@ -64,7 +63,7 @@ class CleanupEntry():
         self._functions = dict()
 
 
-class EventStreamCleanup():
+class EventStreamCleanup:
     def __init__(self):
         self._entries = set()
         sac.CmdPeriod.add(self.__on_cmd_period)
@@ -73,7 +72,7 @@ class EventStreamCleanup():
         if isinstance(entry, CleanupEntry):
             self._entries.add(entry)
         else:
-            raise TypeError('entry is not a CleanupEntry')
+            raise TypeError("entry is not a CleanupEntry")
 
     def remove(self, entry):
         self._entries.discard(entry)
@@ -87,12 +86,10 @@ class EventStreamCleanup():
         self.clear()
         sac.CmdPeriod.remove(self.__on_cmd_period)
 
-
     ### System Actions ###
 
     def __on_cmd_period(self):  # Instead of removed_from_scheduler.
         self.run()
-
 
 
 class EventStreamPlayer(stm.Routine):
@@ -136,7 +133,9 @@ class EventStreamPlayer(stm.Routine):
             try:
                 while True:
                     outevent = self._stream.next(self._event.copy())
-                    outevent = evt.event(outevent)  # Create the appropriate event type note/midi.
+                    outevent = evt.event(
+                        outevent
+                    )  # Create the appropriate event type note/midi.
                     yield self._play_and_delta(outevent)
             except stm.StopStream:
                 self._cleanup.run()
@@ -146,14 +145,13 @@ class EventStreamPlayer(stm.Routine):
     def _play_and_delta(self, outevent):  # Was Event.playAndDelta.
         if not (self._is_muted or evt.is_rest(outevent)):
             outevent.play()
-        return outevent('delta')
+        return outevent("delta")
 
     def play(self, clock=None, quant=None, reset=False):
         if reset:
             self.reset()
         with self._state_lock:
-            if self.state == self.State.Init\
-            or self.state == self.state.Paused:
+            if self.state == self.State.Init or self.state == self.state.Paused:
                 self.state = self.State.Suspended
                 clock = clock or _libsc3.main.current_tt._clock
                 clock.play(self, quant)
@@ -166,14 +164,11 @@ class EventStreamPlayer(stm.Routine):
 
 
 class PatternValueStream(stm.Stream):
-    '''Create a stream from value patterns.
-
-    '''
+    """Create a stream from value patterns."""
 
     def __init__(self, pattern):
         self.pattern = pattern
         self._stream = None
-
 
     ### Stream protocol ###
 
@@ -190,15 +185,12 @@ class PatternValueStream(stm.Stream):
     def reset(self):
         self._stream = None
 
-
     def __repr__(self):
-        return f'{type(self).__name__}({self.pattern})'
+        return f"{type(self).__name__}({self.pattern})"
 
 
 class PatternEventStream(PatternValueStream):
-    '''Create a stream from event patterns.
-
-    '''
+    """Create a stream from event patterns."""
 
     ### Stream protocol ###
 

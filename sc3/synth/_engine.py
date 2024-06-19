@@ -9,13 +9,13 @@ from ..base import builtins as bi
 _logger = logging.getLogger(__name__)
 
 
-class NodeIDAllocator():
+class NodeIDAllocator:
     def __init__(self, user=0, init_temp=1000):
         if user > 31:
             raise Exception("NodeIDAllocator user id > 31")
         self.user = user
         self._init_temp = init_temp
-        self.num_ids = (2 ** 32 // 2 - 1) // 64  # +int32, 64 logins safe range.
+        self.num_ids = (2**32 // 2 - 1) // 64  # +int32, 64 logins safe range.
         self.reset()
 
     def id_offset(self):
@@ -48,14 +48,14 @@ class NodeIDAllocator():
             self._perm_freed.add(id)
 
 
-class PowerOfTwoBlock():
+class PowerOfTwoBlock:
     def __init__(self, addr, size):
         self.addr = addr
         self.size = size
         self.next = None
 
 
-class PowerOfTwoAllocator():
+class PowerOfTwoAllocator:
     # // THIS IS THE RECOMMENDED ALLOCATOR FOR BUSES AND BUFFERS
     def __init__(self, size, pos=0):
         self._size = size
@@ -66,8 +66,8 @@ class PowerOfTwoAllocator():
     def alloc(self, n):
         # TODO: NEXTPOWEROFTWO está en: /include/common/clz.h
         # nextPowerOf en sclang: pow(2, math.ceil(math.log(x) / math.log(2))) -> int
-        n = pow(2, math.ceil(math.log(n) / math.log(2))) # nextPowerOfTwo
-        size_class = math.ceil(math.log2(n)) # log2Ceil primitive
+        n = pow(2, math.ceil(math.log(n) / math.log(2)))  # nextPowerOfTwo
+        size_class = math.ceil(math.log2(n))  # log2Ceil primitive
         node = self._free_lists[size_class]
         if node is not None:
             self._free_lists[size_class] = node.next
@@ -82,7 +82,7 @@ class PowerOfTwoAllocator():
     def free(self, addr):
         node = self._array[addr]
         if node is not None:
-            size_class = math.ceil(math.log2(node.size)) # log2Ceil primitive
+            size_class = math.ceil(math.log2(node.size))  # log2Ceil primitive
             node.next = self._free_lists[size_class]
             self._free_lists[size_class] = node
             self._array[addr] = None
@@ -91,7 +91,7 @@ class PowerOfTwoAllocator():
         return [x for x in self._array if x is not None]
 
 
-class LRUNumberAllocator():
+class LRUNumberAllocator:
     # // implements a least recently used ID allocator.
     def __init__(self, lo, hi):
         self._lo = lo
@@ -108,7 +108,7 @@ class LRUNumberAllocator():
 
     def alloc(self):
         if self._head == self._tail:
-            return None # // empty
+            return None  # // empty
         id = self._array[self._tail]
         self._tail = (self._tail + 1) % self._size
         return id
@@ -116,12 +116,12 @@ class LRUNumberAllocator():
     def free(self, id):
         next_index = (self._head + 1) % self._size
         if next_index == self._tail:
-            return None # // full
+            return None  # // full
         self._array[self._head] = id
         self._head = next_index
 
 
-class StackNumberAllocator():
+class StackNumberAllocator:
     def __init__(self, lo, hi):
         self._lo = lo
         self._hi = hi
@@ -143,7 +143,7 @@ class StackNumberAllocator():
         self._free_list.append(index)
 
 
-class RingNumberAllocator():
+class RingNumberAllocator:
     def __init__(self, lo, hi):
         self._lo = lo
         self._hi = hi
@@ -159,7 +159,8 @@ class RingNumberAllocator():
 
 # // by hjh: for better handling of dynamic allocation
 
-class ContiguousBlock():
+
+class ContiguousBlock:
     def __init__(self, start, size):
         self.start = start
         self.size = size
@@ -188,17 +189,18 @@ class ContiguousBlock():
         if span < self.size:
             return [
                 type(self)(self.start, span),
-                type(self)(self.start + span, self.size - span)]
+                type(self)(self.start + span, self.size - span),
+            ]
         elif span == self.size:
             return [self, None]
         else:
             return [None, None]
 
     def __repr__(self):
-        return f'{type(self).__name__}({self.start}, {self.size})'
+        return f"{type(self).__name__}({self.start}, {self.size})"
 
 
-class ContiguousBlockAllocator():
+class ContiguousBlockAllocator:
     def __init__(self, size, pos=0, addr_offset=0):
         # // pos is offset for reserved numbers,
         # // addr_offset is offset for client_id * size
@@ -226,8 +228,9 @@ class ContiguousBlockAllocator():
         if block is not None and block.used and addr + size > block.start:
             if warn:
                 _logger.warning(
-                    f'The block at ({addr}, {size}) is '
-                    'already in use and cannot be reserved.')
+                    f"The block at ({addr}, {size}) is "
+                    "already in use and cannot be reserved."
+                )
         elif block.start == addr:
             return self._reserve(addr, size, block)
 
@@ -235,8 +238,9 @@ class ContiguousBlockAllocator():
         if block is not None and block.used and block.start + block.size > addr:
             if warn:
                 _logger.warning(
-                    f'The block at ({addr}, {size}) is '
-                    'already in use and cannot be reserved')
+                    f"The block at ({addr}, {size}) is "
+                    "already in use and cannot be reserved"
+                )
         else:
             return self._reserve(addr, size, None, block)
 
@@ -255,24 +259,28 @@ class ContiguousBlockAllocator():
                 tmp = prev.join(block)
                 if tmp is not None:
                     # // if block is the last one, reduce the top
-                    if block.start == self.top: self.top = tmp.start
+                    if block.start == self.top:
+                        self.top = tmp.start
                     self._array[tmp.start - self.addr_offset] = tmp
                     self._array[block.start - self.addr_offset] = None
                     self._remove_from_freed(prev)
                     self._remove_from_freed(block)
-                    if self.top > tmp.start: self._add_to_freed(tmp)
+                    if self.top > tmp.start:
+                        self._add_to_freed(tmp)
                     block = tmp
             next = self._find_next(block.start)
             if next is not None and not next.used:
                 tmp = next.join(block)
                 if tmp is not None:
                     # // if next is the last one, reduce the top
-                    if next.start == self.top: self.top = tmp.start
+                    if next.start == self.top:
+                        self.top = tmp.start
                     self._array[tmp.start - self.addr_offset] = tmp
                     self._array[next.start - self.addr_offset] = None
                     self._remove_from_freed(next)
                     self._remove_from_freed(block)
-                    if self.top > tmp.start: self._add_to_freed(tmp)
+                    if self.top > tmp.start:
+                        self._add_to_freed(tmp)
 
     def blocks(self):
         return [x for x in self._array if x is not None and x.used]
@@ -283,8 +291,10 @@ class ContiguousBlockAllocator():
         for size, set_ in self._freed.items():
             if size >= n and len(set_) > 0:
                 return bi.choice(list(set_))
-        if self.top + n - self.addr_offset > self.size\
-        or self._array[self.top - self.addr_offset].used:
+        if (
+            self.top + n - self.addr_offset > self.size
+            or self._array[self.top - self.addr_offset].used
+        ):
             return None
         return self._array[self.top - self.addr_offset]
 
@@ -327,12 +337,13 @@ class ContiguousBlockAllocator():
         if avail_block is None:
             avail_block = prev_block
         if avail_block.start < addr:
-            avail_block = self._split(
-                avail_block, addr - avail_block.start, False)[1]
+            avail_block = self._split(avail_block, addr - avail_block.start, False)[1]
         return self._split(avail_block, size, True)[0]
 
     def _split(self, avail_block, n, used=True):
-        new, leftover = avail_block.split(n)  # Should not return [None, None] if n <= avail_block.size.
+        new, leftover = avail_block.split(
+            n
+        )  # Should not return [None, None] if n <= avail_block.size.
         new.used = used
         self._remove_from_freed(avail_block)
         if not used:

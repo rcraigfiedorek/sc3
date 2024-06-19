@@ -1,8 +1,8 @@
-
 import unittest
 import shutil
 
 import sc3
+
 sc3.init()
 
 from sc3.base.main import main
@@ -12,7 +12,7 @@ from sc3.synth.synthdef import synthdef
 from sc3.synth.ugens import Out, SinOsc
 
 
-@unittest.skipIf(not shutil.which(s.options.program), 'no server available')
+@unittest.skipIf(not shutil.which(s.options.program), "no server available")
 class NodeTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -35,12 +35,14 @@ class NodeTestCase(unittest.TestCase):
             main.resume()
 
         g = Group()
-        x = Synth('default', {'amp': 0}, g)
+        x = Synth("default", {"amp": 0}, g)
         test = {
-            'Group(0)': {
-                'Group(1)': {
-                    f'Group({g.node_id})': {
-                        f'Synth({x.node_id}, default)': {} }}}}
+            "Group(0)": {
+                "Group(1)": {
+                    f"Group({g.node_id})": {f"Synth({x.node_id}, default)": {}}
+                }
+            }
+        }
 
         s.query_tree(action=load_info)
         main.wait()
@@ -86,7 +88,6 @@ class NodeTestCase(unittest.TestCase):
     #     self.assertEqual(data, test)
     #     s.free_nodes()
 
-
     def test_synth(self):
         data = None
 
@@ -107,19 +108,28 @@ class NodeTestCase(unittest.TestCase):
 
         data = None
         with s.bind():
+
             @synthdef
             def testdef(freq=(220, 330, 440), amp=0):
                 Out.ar(0, SinOsc.ar(freq).sum() * amp)
+
             yield s.sync()
             x = testdef()
-            x.seti('freq', 0, [110, 220, 330, 440], 'amp', 0, 1)  # One more freq.
+            x.seti("freq", 0, [110, 220, 330, 440], "amp", 0, 1)  # One more freq.
             s.query_tree(True, action=load_info)
 
         test = {
-            'Group(0)': {
-                'Group(1)': {
-                    f'Synth({x.node_id}, {x.def_name})': {
-                        'freq': 110.0, '1': 220.0, '2': 330.0, 'amp': 1.0}}}}
+            "Group(0)": {
+                "Group(1)": {
+                    f"Synth({x.node_id}, {x.def_name})": {
+                        "freq": 110.0,
+                        "1": 220.0,
+                        "2": 330.0,
+                        "amp": 1.0,
+                    }
+                }
+            }
+        }
 
         main.wait()
         self.assertEqual(data, test)
@@ -137,5 +147,5 @@ class NodeTestCase(unittest.TestCase):
         # s.free_nodes()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

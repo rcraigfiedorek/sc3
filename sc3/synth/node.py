@@ -13,14 +13,14 @@ from . import synthdesc as sdc
 from . import _graphparam as gpp
 
 
-__all__ = ['Group', 'ParGroup', 'Synth']
+__all__ = ["Group", "ParGroup", "Synth"]
 
 
 _logger = logging.getLogger(__name__)
 
 
 class Node(gpp.NodeParameter):
-    '''Base class for ``Group`` and ``Synth``.
+    """Base class for ``Group`` and ``Synth``.
 
     This class is not used directly but though its subclasses, ``Synth``
     and ``Group`` (or ``ParGroup``), which represent synth or group
@@ -39,25 +39,33 @@ class Node(gpp.NodeParameter):
     enable two variables, ``is_playing`` and ``is_running``, which you
     can use for checking purposes.
 
-    '''
+    """
 
     add_actions = {
         # Traditional.
-        'addToHead': 0,
-        'addToTail': 1,
-        'addBefore': 2,
-        'addAfter': 3,
-        'addReplace': 4,
+        "addToHead": 0,
+        "addToTail": 1,
+        "addBefore": 2,
+        "addAfter": 3,
+        "addReplace": 4,
         # Simple.
-        'head': 0,
-        'tail': 1,
-        'before': 2,
-        'after': 3,
-        'replace': 4,
+        "head": 0,
+        "tail": 1,
+        "before": 2,
+        "after": 3,
+        "replace": 4,
         # Shortcut.
-        'h': 0, 't': 1, 'b': 2, 'a': 3, 'r': 4,
+        "h": 0,
+        "t": 1,
+        "b": 2,
+        "a": 3,
+        "r": 4,
         # // valid action numbers should stay the same
-        0: 0, 1: 1, 2: 2, 3: 3, 4: 4
+        0: 0,
+        1: 1,
+        2: 2,
+        3: 3,
+        4: 4,
     }
 
     _register_all = False
@@ -73,29 +81,29 @@ class Node(gpp.NodeParameter):
 
     @property
     def is_playing(self):
-        '''bool : Return `True` if the node is in the server.
+        """bool : Return `True` if the node is in the server.
 
         The node must have been registered for this property to be active.
 
-        '''
+        """
 
         return self._is_playing
 
     @property
     def is_running(self):
-        '''bool : Return `True` if the node is running, i.e. not paused.
+        """bool : Return `True` if the node is running, i.e. not paused.
 
         Nodes can be paused by sending a '/n_run' message using the
         method ``run``. The node must have been registered for this
         property to be active.
 
-        '''
+        """
 
         return self._is_running
 
     @classmethod
     def basic_new(cls, server=None, node_id=None):
-        '''Instantiate a node object without creating it on the server.
+        """Instantiate a node object without creating it on the server.
 
         Parameters
         ----------
@@ -106,7 +114,7 @@ class Node(gpp.NodeParameter):
             the server's ``NodeIDAllocator``. Normally there is no need
             to supply an ID. Default is `None`.
 
-        '''
+        """
 
         obj = cls.__new__(cls)  # basic_new doesn't send therefore can't call __init__
         super(gpp.NodeParameter, obj).__init__(obj)
@@ -122,7 +130,7 @@ class Node(gpp.NodeParameter):
         return cls.add_actions[add_action]
 
     def free(self, send_flag=True):
-        '''Stop this node and free it from its parent group on the server.
+        """Stop this node and free it from its parent group on the server.
 
         Once a node has been freed, is not possible to restart it.
 
@@ -134,14 +142,14 @@ class Node(gpp.NodeParameter):
             node's server, but its is_playing and is_running properties
             will be set to false. Default is `True`.
 
-        '''
+        """
 
         if send_flag:
-            self.server.addr.send_msg('/n_free', self.node_id) # 11
+            self.server.addr.send_msg("/n_free", self.node_id)  # 11
         self.group = None
 
     def run(self, flag=True):
-        '''Set the running state of this node.
+        """Set the running state of this node.
 
         Parameters
         ----------
@@ -149,12 +157,12 @@ class Node(gpp.NodeParameter):
             `False` will pause the node without freeing it.
             Default is `True`.
 
-        '''
+        """
 
-        self.server.addr.send_msg('/n_run', self.node_id, int(flag)) # 12
+        self.server.addr.send_msg("/n_run", self.node_id, int(flag))  # 12
 
     def map(self, *args):
-        '''Map controls in this node to read from control rate buses.
+        """Map controls in this node to read from control rate buses.
 
         Parameters
         ----------
@@ -175,14 +183,14 @@ class Node(gpp.NodeParameter):
         If the node is a group, mapping propagates recursively to the
         controls of all nodes within the group.
 
-        '''
+        """
 
         self.server.addr.send_msg(
-            '/n_map', self.node_id,
-            *gpp.node_param(args)._as_control_input())
+            "/n_map", self.node_id, *gpp.node_param(args)._as_control_input()
+        )
 
     def mapa(self, *args):
-        '''Map controls in this node to read from audio rate buses.
+        """Map controls in this node to read from audio rate buses.
 
         Parameters
         ----------
@@ -203,14 +211,14 @@ class Node(gpp.NodeParameter):
         If the node is a group, mapping propagates recursively to the
         controls of all nodes within the group.
 
-        '''
+        """
 
         self.server.addr.send_msg(
-            '/n_mapa', self.node_id,
-            *gpp.node_param(args)._as_control_input())
+            "/n_mapa", self.node_id, *gpp.node_param(args)._as_control_input()
+        )
 
     def mapn(self, *args):
-        '''Map adjacent controls in this node to read from control rate buses.
+        """Map adjacent controls in this node to read from control rate buses.
 
         .. warning::
             This message only maps adjacent controls from multichannel
@@ -229,13 +237,13 @@ class Node(gpp.NodeParameter):
         if the control is specified by index (position).
         See also ``map``.
 
-        '''
+        """
 
         data = self._process_mn_args(args)
-        self.server.addr.send_msg(*(['/n_mapn', self.node_id] + data))
+        self.server.addr.send_msg(*(["/n_mapn", self.node_id] + data))
 
     def mapan(self, *args):
-        '''Map adjacent controls in this node to read from audio rate buses.
+        """Map adjacent controls in this node to read from audio rate buses.
 
         .. warning::
             This message only maps adjacent controls from multichannel
@@ -254,26 +262,29 @@ class Node(gpp.NodeParameter):
         if the control is specified by index (position).
         See also ``mapa``.
 
-        '''
+        """
 
         data = self._process_mn_args(args)
-        self.server.addr.send_msg(*(['/n_mapan', self.node_id] + data))
+        self.server.addr.send_msg(*(["/n_mapan", self.node_id] + data))
 
     @staticmethod
     def _process_mn_args(tpl):
         data = []
         for control, bus in utl.gen_cclumps(tpl, 2):
             if isinstance(bus, int):
-                data.extend([
-                    gpp.node_param(control)._as_control_input(), bus, 1])
+                data.extend([gpp.node_param(control)._as_control_input(), bus, 1])
             else:
-                data.extend([
-                    gpp.node_param(control)._as_control_input(),
-                    bus.index, bus.channels])
+                data.extend(
+                    [
+                        gpp.node_param(control)._as_control_input(),
+                        bus.index,
+                        bus.channels,
+                    ]
+                )
         return data
 
     def set(self, *args):
-        '''Set controls' values for this node.
+        """Set controls' values for this node.
 
         .. warning::
             This message only maps adjacent controls if they are set
@@ -295,18 +306,20 @@ class Node(gpp.NodeParameter):
         If the node is a group, mapping propagates recursively to the
         controls of all nodes within the group.
 
-        '''
+        """
 
         self.server.addr.send_msg(
-            '/n_set', self.node_id,  # 15
-            *gpp.node_param(args)._as_osc_arg_list())
+            "/n_set",
+            self.node_id,  # 15
+            *gpp.node_param(args)._as_osc_arg_list(),
+        )
 
     def setn(self, *args):
-        '''Set ranges of adjacent controls in this node to values.
+        """Set ranges of adjacent controls in this node to values.
 
         See  the``set`` method.
 
-        '''
+        """
 
         arg_list = []
         args = gpp.node_param(args)._as_control_input()
@@ -316,10 +329,10 @@ class Node(gpp.NodeParameter):
             else:
                 arg_list.extend([control, 1, more_vals])
 
-        self.server.addr.send_msg('/n_setn', self.node_id, *arg_list)  # 16
+        self.server.addr.send_msg("/n_setn", self.node_id, *arg_list)  # 16
 
     def fill(self, cname, num_controls, value, *args):
-        '''Set sequential ranges of controls in this node to a single value.
+        """Set sequential ranges of controls in this node to a single value.
 
         Parameters
         ----------
@@ -332,15 +345,19 @@ class Node(gpp.NodeParameter):
         *args : tuple(cname, num_controls, value)
             More control.
 
-        '''
+        """
 
         self.server.addr.send_msg(
-            '/n_fill', self.node_id,  # 17
-            cname, num_controls, value,
-            *gpp.node_param(args)._as_control_input())
+            "/n_fill",
+            self.node_id,  # 17
+            cname,
+            num_controls,
+            value,
+            *gpp.node_param(args)._as_control_input(),
+        )
 
     def release(self, time=None):
-        '''Free the node using the `'gate'` control.
+        """Free the node using the `'gate'` control.
 
         Parameters
         ----------
@@ -368,7 +385,7 @@ class Node(gpp.NodeParameter):
         If the receiver is a group, all nodes within the group will be
         released.
 
-        '''
+        """
 
         if time is not None:
             if time <= 0:
@@ -381,22 +398,23 @@ class Node(gpp.NodeParameter):
         # Sends a bundle so it can be used as
         # counterpart of SynthDef__call__.
         self.server.addr.send_bundle(
-            self.server.latency, ['/n_set', self.node_id, 'gate', time])  # 15
+            self.server.latency, ["/n_set", self.node_id, "gate", time]
+        )  # 15
 
     def trace(self):
-        '''Dump internal synth or group information to stdout.
+        """Dump internal synth or group information to stdout.
 
         Causes a synth to print out the values of the inputs and
         outputs of its unit generators for one control period to the
         post window. Causes a group to print the node IDs and names of
         each node in the group for one control period.
 
-        '''
+        """
 
-        self.server.addr.send_msg('/n_trace', self.node_id) # 10
+        self.server.addr.send_msg("/n_trace", self.node_id)  # 10
 
     def query(self, action=None):
-        '''Retrieve information about this node within the server tree.
+        """Retrieve information about this node within the server tree.
 
         Sends an '/n_query' message to the server, which will reply
         with a message containing information about this node and its
@@ -423,30 +441,35 @@ class Node(gpp.NodeParameter):
 
         See also the ``query_tree`` method of ``Server``.
 
-        '''
+        """
 
         if action is None:
-            def action(cmd, node_id, parent, prev, next,
-                       is_group, head=None, tail=None):
+
+            def action(
+                cmd, node_id, parent, prev, next, is_group, head=None, tail=None
+            ):
                 group = is_group == 1
-                node_type = 'Group' if group else 'Synth'
-                msg = (f'{node_type}: {node_id}'
-                       f'\n   parent: {parent}'
-                       f'\n   prev: {prev}'
-                       f'\n   next: {next}')
+                node_type = "Group" if group else "Synth"
+                msg = (
+                    f"{node_type}: {node_id}"
+                    f"\n   parent: {parent}"
+                    f"\n   prev: {prev}"
+                    f"\n   next: {next}"
+                )
                 if group:
-                    msg += (f'\n   head: {head}'
-                            f'\n   tail: {tail}')
+                    msg += f"\n   head: {head}" f"\n   tail: {tail}"
                 print(msg)
 
         rpd.OscFunc(
             lambda msg, *_: action(*msg),
-            '/n_info', self.server.addr,
-            arg_template=[self.node_id]).one_shot()
-        self.server.addr.send_msg('/n_query', self.node_id)
+            "/n_info",
+            self.server.addr,
+            arg_template=[self.node_id],
+        ).one_shot()
+        self.server.addr.send_msg("/n_query", self.node_id)
 
     def register(self, playing=True, running=True):
-        '''Registers the node at the ``NodeWatcher`` object.
+        """Registers the node at the ``NodeWatcher`` object.
 
         Parameters
         ----------
@@ -462,47 +485,45 @@ class Node(gpp.NodeParameter):
         also be enabled at instantiation time setting the
         `register`` parameter to `True`.
 
-        '''
+        """
 
         self.server._node_watcher.register(self, playing, running)
 
     def unregister(self):
-        '''Unregisters the node at the ``NodeWatcher`` object.
-
-        '''
+        """Unregisters the node at the ``NodeWatcher`` object."""
 
         self.server._node_watcher.unregister(self)
 
     def on_free(self, action):
-        '''Evaluate a function when this node is freed.
+        """Evaluate a function when this node is freed.
 
         Parameters
         ----------
         action : callable
             A function that optionaly receives this node as argument.
 
-        '''
+        """
 
         def action_wrapper():
             fn.value(action, self)
-            mdl.NotificationCenter.unregister(self, '/n_end', self)
+            mdl.NotificationCenter.unregister(self, "/n_end", self)
 
         self.register()
-        mdl.NotificationCenter.register(self, '/n_end', self, action_wrapper)
+        mdl.NotificationCenter.register(self, "/n_end", self, action_wrapper)
 
     def wait_for_free(self):
-        '''Wait until this Node is freed.
+        """Wait until this Node is freed.
 
         Should be yield from inside a routine.
 
-        '''
+        """
 
         condition = stm.Condition()
         self.on_free(lambda: condition.unhang())
         yield from condition.wait()
 
     def move_before(self, target):
-        '''Move this node to be directly before ``target``.
+        """Move this node to be directly before ``target``.
 
         Parameters
         ----------
@@ -518,14 +539,13 @@ class Node(gpp.NodeParameter):
         target or this node have already been freed. If you will need
         to check, you may register the relevant nodes.
 
-        '''
+        """
 
         self.group = target.group
-        self.server.addr.send_msg(
-            '/n_before', self.node_id, target.node_id)  # 18
+        self.server.addr.send_msg("/n_before", self.node_id, target.node_id)  # 18
 
     def move_after(self, target):
-        '''Move this node to be directly after ``target``.
+        """Move this node to be directly after ``target``.
 
         Parameters
         ----------
@@ -541,14 +561,13 @@ class Node(gpp.NodeParameter):
         target or this node have already been freed. If you will need
         to check, you may register the relevant nodes.
 
-        '''
+        """
 
         self.group = target.group
-        self.server.addr.send_msg(
-            '/n_after', self.node_id, target.node_id)  # 19
+        self.server.addr.send_msg("/n_after", self.node_id, target.node_id)  # 19
 
     def move_to_head(self, target=None):
-        '''Move this node to head of the ``target`` group.
+        """Move this node to head of the ``target`` group.
 
         Parameters
         ----------
@@ -561,13 +580,13 @@ class Node(gpp.NodeParameter):
         to the head of that group. If it is `None` this will move this
         node to the head of the default group of this node's server.
 
-        '''
+        """
 
         target = target or self.server.default_group
         target._move_node_to_head(self)
 
     def move_to_tail(self, target=None):
-        '''Move this node to tail of the ``target`` group.
+        """Move this node to tail of the ``target`` group.
 
         Parameters
         ----------
@@ -580,11 +599,10 @@ class Node(gpp.NodeParameter):
         to the tail of that group. If it is `None` this will move this
         node to the tail of the default group of this node's server.
 
-        '''
+        """
 
         target = target or self.server.default_group
         target._move_node_to_tail(self)
-
 
     ### Node parameter interface ###
 
@@ -596,12 +614,10 @@ class Node(gpp.NodeParameter):
 
 
 class AbstractGroup(Node):
-    '''Base class for ``Group`` and ``ParGroup``.
+    """Base class for ``Group`` and ``ParGroup``."""
 
-    '''
-
-    def __init__(self, target=None, add_action='addToHead', register=False):
-        '''Create a group node in the server.
+    def __init__(self, target=None, add_action="addToHead", register=False):
+        """Create a group node in the server.
 
         Parameters
         ----------
@@ -614,7 +630,7 @@ class AbstractGroup(Node):
             Register the node at the ``NodeWatcher`` object.
             Default is `False`.
 
-        '''
+        """
 
         # // Immediately sends.
         super().__init__()
@@ -625,90 +641,78 @@ class AbstractGroup(Node):
         self.group = target if add_action_id < 2 else target.group
         self._init_register(register)
         self.server.addr.send_msg(
-            self.creation_cmd(), self.node_id,
-            add_action_id, target.node_id)
+            self.creation_cmd(), self.node_id, add_action_id, target.node_id
+        )
 
     @classmethod
     def after(cls, target):
-        '''Create a group after ``target``. Convenience constructor.
+        """Create a group after ``target``. Convenience constructor."""
 
-        '''
-
-        return cls(target, 'addAfter')
+        return cls(target, "addAfter")
 
     @classmethod
     def before(cls, target):
-        '''Create a group before ``target``. Convenience constructor.
+        """Create a group before ``target``. Convenience constructor."""
 
-        '''
-
-        return cls(target, 'addBefore')
+        return cls(target, "addBefore")
 
     @classmethod
     def head(cls, target):
-        '''Create a group at the head of ``target``. Convenience constructor.
+        """Create a group at the head of ``target``. Convenience constructor."""
 
-        '''
-
-        return cls(target, 'addToHead')
+        return cls(target, "addToHead")
 
     @classmethod
     def tail(cls, target):
-        '''Create a group at the tail of ``target``. Convenience constructor.
+        """Create a group at the tail of ``target``. Convenience constructor."""
 
-        '''
-
-        return cls(target, 'addToTail')
+        return cls(target, "addToTail")
 
     @classmethod
     def replace(cls, target):
-        '''Create a group and replace ``target``. Convenience constructor.
+        """Create a group and replace ``target``. Convenience constructor."""
 
-        '''
-
-        return cls(target, 'addReplace')
+        return cls(target, "addReplace")
 
     # // move Nodes to this group
 
     def _move_node_to_head(self, node):
         node.group = self
-        self.server.addr.send_msg('/g_head', self.node_id, node.node_id) # 22
+        self.server.addr.send_msg("/g_head", self.node_id, node.node_id)  # 22
 
     def _move_node_to_tail(self, node):
         node.group = self
-        self.server.addr.send_msg('/g_tail', self.node_id, node.node_id) # 23
+        self.server.addr.send_msg("/g_tail", self.node_id, node.node_id)  # 23
 
     def free_all(self):
-        '''Free all children nodes.
+        """Free all children nodes."""
 
-        '''
-
-        self.server.addr.send_msg('/g_freeAll', self.node_id) # 24
+        self.server.addr.send_msg("/g_freeAll", self.node_id)  # 24
 
     def deep_free(self):
-        '''Free all synth nodes in this group and all its sub groups.
+        """Free all synth nodes in this group and all its sub groups.
 
         Traverses all groups below this group and frees all the synths.
         Sub groups are not freed.
 
-        '''
+        """
 
-        self.server.addr.send_msg('/g_deepFree', self.node_id) # 50
+        self.server.addr.send_msg("/g_deepFree", self.node_id)  # 50
 
     def dump_tree(self, controls=False):
-        '''Ask the server to dump this node tree to stdout.
+        """Ask the server to dump this node tree to stdout.
 
         Parameters
         ----------
         controls: bool
             If `True` also print synth controls with current values.
 
-        '''
+        """
 
-        self.server.addr.send_msg('/g_dumpTree', self.node_id, int(controls))
+        self.server.addr.send_msg("/g_dumpTree", self.node_id, int(controls))
 
     def query_tree(self, controls=False, action=None, timeout=3):
-        '''Query the groups's node tree.
+        """Query the groups's node tree.
 
         Parameters
         ----------
@@ -719,18 +723,19 @@ class AbstractGroup(Node):
         timeout: int | float
             Request timeout in seconds.
 
-        '''
+        """
 
         done = False
 
         def resp_func(msg, *_):
             print_controls = bool(msg[1])
-            key_name = f'Group({msg[2]})'
+            key_name = f"Group({msg[2]})"
             outdct = dict()
             outdct[key_name] = dict()
             i = 2
 
             if msg[3] > 0:
+
                 def dump_func(outdct, num_children):
                     nonlocal i
                     for _ in range(num_children):
@@ -740,20 +745,21 @@ class AbstractGroup(Node):
                             if print_controls:
                                 i += msg[i + 3] * 2 + 1
                             i += 3
-                        node_id = f'{msg[i]}'
+                        node_id = f"{msg[i]}"
                         if msg[i + 1] >= 0:
-                            key_name = f'Group({node_id})'
+                            key_name = f"Group({node_id})"
                             outdct[key_name] = dict()
                             if msg[i + 1] > 0:
                                 dump_func(outdct[key_name], msg[i + 1])
                         else:
-                            key_name = f'Synth({node_id}, {msg[i + 2]})'
+                            key_name = f"Synth({node_id}, {msg[i + 2]})"
                             outdct[key_name] = dict()
                             if print_controls:
                                 j = 0
                                 for _ in range(msg[i + 3]):
-                                    outdct[key_name][f'{msg[i + 4 + j]}'] =\
-                                        msg[i + 5 + j]
+                                    outdct[key_name][f"{msg[i + 4 + j]}"] = msg[
+                                        i + 5 + j
+                                    ]
                                     j += 2
 
                 dump_func(outdct[key_name], msg[3])
@@ -766,7 +772,7 @@ class AbstractGroup(Node):
             else:
                 self._pretty_tree(outdct)
 
-        resp = rpd.OscFunc(resp_func, '/g_queryTree.reply', self.server.addr)
+        resp = rpd.OscFunc(resp_func, "/g_queryTree.reply", self.server.addr)
         resp.one_shot()
 
         def timeout_func():
@@ -774,54 +780,53 @@ class AbstractGroup(Node):
                 resp.free()
                 _logger.warning(
                     f"server '{self.server.name}' failed to respond "
-                    f"to '/g_queryTree' after {timeout} seconds")
+                    f"to '/g_queryTree' after {timeout} seconds"
+                )
 
-        self.server.addr.send_msg('/g_queryTree', self.node_id, int(controls))
+        self.server.addr.send_msg("/g_queryTree", self.node_id, int(controls))
         clk.SystemClock.sched(timeout, timeout_func)
 
     def _pretty_tree(self, d, indent=0, tab=2):
         for key, value in d.items():
-            _logger.info(' ' * tab * indent + str(key))
-            if key.startswith('Synth'):
-                log = ' ' * tab * (indent + 1)
+            _logger.info(" " * tab * indent + str(key))
+            if key.startswith("Synth"):
+                log = " " * tab * (indent + 1)
                 for k, v in value.items():
-                    log += f'{k}: {v} '
+                    log += f"{k}: {v} "
                 _logger.info(log)
             elif isinstance(value, dict):
-                self._pretty_tree(value, indent+1)
+                self._pretty_tree(value, indent + 1)
 
     @staticmethod
     def creation_cmd():
         raise NotImplementedError()
 
     def __repr__(self):
-        return f'{type(self).__name__}({self.node_id})'
+        return f"{type(self).__name__}({self.node_id})"
 
 
 class Group(AbstractGroup):
-    '''Client-side representation of a group node on the server.
-
-    '''
+    """Client-side representation of a group node on the server."""
 
     @staticmethod
     def creation_cmd():
-        return '/g_new' # 21
+        return "/g_new"  # 21
 
 
 class ParGroup(AbstractGroup):
-    '''Client-side representation of a parallel group node on the server.
+    """Client-side representation of a parallel group node on the server.
 
     Parallel groups are only supported by supernova.
 
-    '''
+    """
 
     @staticmethod
     def creation_cmd():
-        return '/p_new' # 63
+        return "/p_new"  # 63
 
 
 class RootNode(Group):
-    '''Persistent root node group on the server.
+    """Persistent root node group on the server.
 
     For each booted server the node tree structure is initialized with
     a root node of ID 0. This is intended for internal use only and
@@ -847,7 +852,7 @@ class RootNode(Group):
     node unless that is explicitly specified. See ``default group`` for
     more information.
 
-    '''
+    """
 
     roots = dict()
 
@@ -869,41 +874,38 @@ class RootNode(Group):
         super(gpp.NodeParameter, self).__init__(self)
 
     def run(self):
-        _logger.warning('run has no effect on RootNode')
+        _logger.warning("run has no effect on RootNode")
 
     def free(self):
-        _logger.warning('free has no effect on RootNode')
+        _logger.warning("free has no effect on RootNode")
 
     def move_before(self):
-        _logger.warning('moveBefore has no effect on RootNode')
+        _logger.warning("moveBefore has no effect on RootNode")
 
     def move_after(self):
-        _logger.warning('move_after has no effect on RootNode')
+        _logger.warning("move_after has no effect on RootNode")
 
     def move_to_head(self):
-        _logger.warning('move_to_head has no effect on RootNode')
+        _logger.warning("move_to_head has no effect on RootNode")
 
     def move_to_tail(self):
-        _logger.warning('move_to_tail has no effect on RootNode')
+        _logger.warning("move_to_tail has no effect on RootNode")
 
     @classmethod
     def free_all_roots(cls):  # Was freeAll, collision with instance method.
-        '''Free all root nodes of all servers.
-
-        '''
+        """Free all root nodes of all servers."""
 
         for rn in cls.roots.values():
             rn.free_all()
 
 
 class Synth(Node):
-    '''Client-side representation of a synth node on the server.
+    """Client-side representation of a synth node on the server."""
 
-    '''
-
-    def __init__(self, def_name, args=None, target=None,
-                 add_action='addToHead', register=False):
-        '''Create a synth node in the server.
+    def __init__(
+        self, def_name, args=None, target=None, add_action="addToHead", register=False
+    ):
+        """Create a synth node in the server.
 
         Parameters
         ----------
@@ -922,7 +924,7 @@ class Synth(Node):
             Register the node at the ``NodeWatcher`` object.
             Default is `False`.
 
-        '''
+        """
 
         # // Immediately sends.
         super().__init__()
@@ -934,15 +936,18 @@ class Synth(Node):
         self.def_name = def_name
         self._init_register(register)
         self.server.addr.send_msg(
-            '/s_new', # 9
-            self.def_name, self.node_id,
-            add_action_id, target.node_id,
-            *gpp.node_param(args or [])._as_osc_arg_list())
+            "/s_new",  # 9
+            self.def_name,
+            self.node_id,
+            add_action_id,
+            target.node_id,
+            *gpp.node_param(args or [])._as_osc_arg_list(),
+        )
 
     # // does not send (used for bundling)
     @classmethod
     def basic_new(cls, def_name, server=None, node_id=None):
-        '''Instantiate a synth object without creating it on the server.
+        """Instantiate a synth object without creating it on the server.
 
         Parameters
         ----------
@@ -956,21 +961,22 @@ class Synth(Node):
             the server's ``NodeIDAllocator``. Normally there is no need
             to supply an ID. Default is `None`.
 
-        '''
+        """
 
         obj = super().basic_new(server, node_id)
         obj.def_name = def_name
         return obj
 
     @classmethod
-    def new_paused(cls, def_name, args=None, target=None,
-                   add_action='addToHead', register=False):
-        '''Create a node which is paused.
+    def new_paused(
+        cls, def_name, args=None, target=None, add_action="addToHead", register=False
+    ):
+        """Create a node which is paused.
 
         A paused synth can be started by calling ``run`` on it.
         All parameters are the same as ``__init__``.
 
-        '''
+        """
 
         target = gpp.node_param(target)._as_target()
         server = target.server
@@ -981,86 +987,86 @@ class Synth(Node):
         synth.server.addr.send_bundle(
             None,
             [
-                '/s_new', # 9
-                synth.def_name, synth.node_id,
-                add_action_id, target.node_id,
-                *gpp.node_param(args or [])._as_osc_arg_list()
+                "/s_new",  # 9
+                synth.def_name,
+                synth.node_id,
+                add_action_id,
+                target.node_id,
+                *gpp.node_param(args or [])._as_osc_arg_list(),
             ],
             [
-                '/n_run', # 12
-                synth.node_id, 0
-            ]
+                "/n_run",  # 12
+                synth.node_id,
+                0,
+            ],
         )
         return synth
 
     @classmethod
-    def grain(cls, def_name, args=None, target=None, add_action='addToHead'):
-        '''Create a transitory synth node.
+    def grain(cls, def_name, args=None, target=None, add_action="addToHead"):
+        """Create a transitory synth node.
 
         Create a synth node with a node ID of -1. Such a node cannot
         be messaged after creation. As such this method does not create
         an object, and returns `None`. Parameters are the same as
         ``__init__``.
 
-        '''
+        """
 
         target = gpp.node_param(target)._as_target()
         server = target.server
         server.addr.send_msg(
-            '/s_new', def_name, -1,  # 9
-            cls.add_actions[add_action], target.node_id,
-            *gpp.node_param(args or [])._as_osc_arg_list())
+            "/s_new",
+            def_name,
+            -1,  # 9
+            cls.add_actions[add_action],
+            target.node_id,
+            *gpp.node_param(args or [])._as_osc_arg_list(),
+        )
 
     @classmethod
     def after(cls, target, def_name, args=None):
-        '''Create a synth after ``target``. Convenience constructor.
+        """Create a synth after ``target``. Convenience constructor."""
 
-        '''
-
-        return cls(def_name, args, target, 'addAfter')
+        return cls(def_name, args, target, "addAfter")
 
     @classmethod
     def before(cls, target, def_name, args=None):
-        '''Create a synth before ``target``. Convenience constructor.
+        """Create a synth before ``target``. Convenience constructor."""
 
-        '''
-
-        return cls(def_name, args, target, 'addBefore')
+        return cls(def_name, args, target, "addBefore")
 
     @classmethod
     def head(cls, target, def_name, args=None):
-        '''Create a synth at the head of ``target``. Convenience constructor.
+        """Create a synth at the head of ``target``. Convenience constructor."""
 
-        '''
-
-        return cls(def_name, args, target, 'addToHead')
+        return cls(def_name, args, target, "addToHead")
 
     @classmethod
     def tail(cls, target, def_name, args=None):
-        '''Create a synth at the tail of ``target``. Convenience constructor.
+        """Create a synth at the tail of ``target``. Convenience constructor."""
 
-        '''
-
-        return cls(def_name, args, target, 'addToTail')
+        return cls(def_name, args, target, "addToTail")
 
     @classmethod
     def replace(cls, target, def_name, args=None, same_id=False):
-        '''Create a synth and replace ``target``. Convenience constructor.
-
-        '''
+        """Create a synth and replace ``target``. Convenience constructor."""
 
         new_node_id = target.node_id if same_id else None
         server = target.server
         synth = cls.basic_new(def_name, server, new_node_id)
         synth.server.addr.send_msg(
-            '/s_new', # 9
-            synth.def_name, synth.node_id,
-            4, target.node_id, # 4 -> 'addReplace'
-            *gpp.node_param(args or [])._as_osc_arg_list())
+            "/s_new",  # 9
+            synth.def_name,
+            synth.node_id,
+            4,
+            target.node_id,  # 4 -> 'addReplace'
+            *gpp.node_param(args or [])._as_osc_arg_list(),
+        )
         return synth
 
     def get(self, index, action):
-        '''Query the current value of a control for this node.
+        """Query the current value of a control for this node.
 
         Parameters
         ----------
@@ -1070,7 +1076,7 @@ class Synth(Node):
             A function which will be evaluated with the value passed as
             an argument when the reply is received.
 
-        '''
+        """
 
         def resp_func(msg, *_):
             # // The server replies with a message of the
@@ -1079,13 +1085,13 @@ class Synth(Node):
             fn.value(action, msg[3])
 
         rpd.OscFunc(
-            resp_func, '/n_set', self.server.addr,
-            arg_template=[self.node_id, index]).one_shot()
+            resp_func, "/n_set", self.server.addr, arg_template=[self.node_id, index]
+        ).one_shot()
 
-        self.server.addr.send_msg('/s_get', self.node_id, index)  # 44
+        self.server.addr.send_msg("/s_get", self.node_id, index)  # 44
 
     def getn(self, index, count, action):
-        '''Query the current values of a range of controls for this node.
+        """Query the current values of a range of controls for this node.
 
         Parameters
         ----------
@@ -1098,7 +1104,7 @@ class Synth(Node):
             A function which will be evaluated with a list containing
             the values passed as an argument when the reply is received.
 
-        '''
+        """
 
         def resp_func(msg, *_):
             # // The server replies with a message of the form
@@ -1107,13 +1113,13 @@ class Synth(Node):
             fn.value(action, msg[4:])
 
         rpd.OscFunc(
-            resp_func, '/n_setn', self.server.addr,
-            arg_template=[self.node_id, index]).one_shot()
+            resp_func, "/n_setn", self.server.addr, arg_template=[self.node_id, index]
+        ).one_shot()
 
-        self.server.addr.send_msg('/s_getn', self.node_id, index, count)  # 45
+        self.server.addr.send_msg("/s_getn", self.node_id, index, count)  # 45
 
-    def seti(self, *args): # // args are [key, index, value, key, index, value ...]
-        '''Set part of an `arrayed control`.
+    def seti(self, *args):  # // args are [key, index, value, key, index, value ...]
+        """Set part of an `arrayed control`.
 
         Parameters
         ----------
@@ -1129,14 +1135,15 @@ class Synth(Node):
             the ``SynthDescLib`` to check the control names and set
             the values.
 
-        '''
+        """
 
         osc_msg = []
         synth_desc = sdc.SynthDescLib.default.at(self.def_name)  # Was global_.
         if synth_desc is None:
             _logger.warning(
                 f"message seti failed, SynthDef '{self.def_name}' "
-                "not found in SynthDescLib")
+                "not found in SynthDescLib"
+            )
             return
         for key, offset, value in utl.gen_cclumps(args, 3):
             if key in synth_desc.control_dict:
@@ -1144,12 +1151,12 @@ class Synth(Node):
                 if offset < cname.channels:
                     osc_msg.append(cname.index + offset)
                     if isinstance(value, list):
-                        osc_msg.append(value[:cname.channels - offset]) # keep
+                        osc_msg.append(value[: cname.channels - offset])  # keep
                     else:
                         osc_msg.append(value)
         self.server.addr.send_msg(
-            '/n_set', self.node_id,
-            *gpp.node_param(osc_msg)._as_osc_arg_list())
+            "/n_set", self.node_id, *gpp.node_param(osc_msg)._as_osc_arg_list()
+        )
 
     def __repr__(self):
-        return f'{type(self).__name__}({self.def_name} : {self.node_id})'
+        return f"{type(self).__name__}({self.def_name} : {self.node_id})"

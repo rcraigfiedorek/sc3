@@ -1,9 +1,9 @@
-
 import unittest
 import operator
 import platform
 
 import sc3
+
 sc3.init()
 
 import sc3.base.builtins as bi
@@ -49,7 +49,8 @@ class SeqOpTestCase(unittest.TestCase):
 
         # nested tuples and lists
         case = list_unop(
-            operator.neg, [(10, 20, [30, 40]), 50, [60, [[70], (80,)], 90]])
+            operator.neg, [(10, 20, [30, 40]), 50, [60, [[70], (80,)], 90]]
+        )
         self.assertIs(type(case), list)
         self.assertIs(type(case[0]), tuple)
         self.assertIs(type(case[0][2]), list)
@@ -61,7 +62,8 @@ class SeqOpTestCase(unittest.TestCase):
         self.assertIs(type(case[2][1][1]), tuple)
         self.assertIs(type(case[2][2]), int)
         self.assertEqual(
-            case, [(-10, -20, [-30, -40]), -50, [-60, [[-70], (-80,)], -90]])
+            case, [(-10, -20, [-30, -40]), -50, [-60, [[-70], (-80,)], -90]]
+        )
 
         # case builtins
 
@@ -106,7 +108,8 @@ class SeqOpTestCase(unittest.TestCase):
 
         # nested tuples and lists
         case = list_binop(
-            operator.mul, [(10, 20, [30, 40]), 50, [60, [[70], (80,)], 90]], -1)
+            operator.mul, [(10, 20, [30, 40]), 50, [60, [[70], (80,)], 90]], -1
+        )
         self.assertIs(type(case), list)
         self.assertIs(type(case[0]), tuple)
         self.assertIs(type(case[0][2]), list)
@@ -118,11 +121,13 @@ class SeqOpTestCase(unittest.TestCase):
         self.assertIs(type(case[2][1][1]), tuple)
         self.assertIs(type(case[2][2]), int)
         self.assertEqual(
-            case, [(-10, -20, [-30, -40]), -50, [-60, [[-70], (-80,)], -90]])
+            case, [(-10, -20, [-30, -40]), -50, [-60, [[-70], (-80,)], -90]]
+        )
 
         # cases seq op seq mixed list and tuple
         case = list_binop(
-            operator.add, [[1], (2, (2,)), 3], (([10], (10,)), [20], [30, [30]]))
+            operator.add, [[1], (2, (2,)), 3], (([10], (10,)), [20], [30, [30]])
+        )
         self.assertIs(type(case), list)  # default type
         self.assertIs(type(case[0]), tuple)
         self.assertIs(type(case[1]), tuple)
@@ -131,7 +136,8 @@ class SeqOpTestCase(unittest.TestCase):
 
         # cases seq op seq type conversion in three levels
         case = list_binop(
-            operator.sub, [([(1,)], ([1],)), [([2],), [(2,)]]], [[1], (2,)])
+            operator.sub, [([(1,)], ([1],)), [([2],), [(2,)]]], [[1], (2,)]
+        )
         self.assertIs(type(case), list)  # default type
         self.assertIs(type(case[0]), tuple)
         self.assertIs(type(case[0][0]), list)
@@ -183,7 +189,8 @@ class SeqOpTestCase(unittest.TestCase):
 
         # nested tuples and lists
         case = list_narop(
-            bi.clip, [(10, 20, [30, 40]), 50, [60, [[70], (80,)], 90]], 0, 9)
+            bi.clip, [(10, 20, [30, 40]), 50, [60, [[70], (80,)], 90]], 0, 9
+        )
         self.assertIs(type(case), list)
         self.assertIs(type(case[0]), tuple)
         self.assertIs(type(case[0][2]), list)
@@ -194,14 +201,16 @@ class SeqOpTestCase(unittest.TestCase):
         self.assertIs(type(case[2][1][0]), list)
         self.assertIs(type(case[2][1][1]), tuple)
         self.assertIs(type(case[2][2]), int)
-        self.assertEqual(
-            case, [(9, 9, [9, 9]), 9, [9, [[9], (9,)], 9]])
+        self.assertEqual(case, [(9, 9, [9, 9]), 9, [9, [[9], (9,)], 9]])
 
         # other cases
 
 
 # FIXME: This shouldn't happen in PyPy.
-@unittest.skipIf(platform.python_implementation() == 'PyPy', 'PyPy operators are know to fail for ChannelList after commit 36331df86c4c95eba84fac044e6b51791863c28d')
+@unittest.skipIf(
+    platform.python_implementation() == "PyPy",
+    "PyPy operators are know to fail for ChannelList after commit 36331df86c4c95eba84fac044e6b51791863c28d",
+)
 class ChannelListTestCase(unittest.TestCase):
     def test_constructor(self):
         # int
@@ -263,13 +272,13 @@ class ChannelListTestCase(unittest.TestCase):
         # multichannel
 
         # from list of scalars
-        l2c = ChannelList([1, '234'])
+        l2c = ChannelList([1, "234"])
         self.assertIs(type(l2c), ChannelList)
         self.assertEqual(len(l2c), 2)
         self.assertIs(type(l2c[0]), int)
         self.assertEqual(l2c[0], 1)
         self.assertIs(type(l2c[1]), str)
-        self.assertEqual(l2c[1], '234')
+        self.assertEqual(l2c[1], "234")
 
         # from list of tuples (as if were scalars)
         l2c = ChannelList([(1, 2, 3), (4, 5, 6)])
@@ -281,11 +290,11 @@ class ChannelListTestCase(unittest.TestCase):
         self.assertEqual(l2c[1], (4, 5, 6))
 
         # from list with list (as if were scalars, only base level matters)
-        l2c = ChannelList(['123', [4, 5, 6]])
+        l2c = ChannelList(["123", [4, 5, 6]])
         self.assertIs(type(l2c), ChannelList)
         self.assertEqual(len(l2c), 2)
         self.assertIs(type(l2c[0]), str)
-        self.assertEqual(l2c[0], '123')
+        self.assertEqual(l2c[0], "123")
         self.assertIs(type(l2c[1]), list)
         self.assertEqual(l2c[1], [4, 5, 6])
 
@@ -361,5 +370,5 @@ class ChannelListTestCase(unittest.TestCase):
         # other cases/op
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

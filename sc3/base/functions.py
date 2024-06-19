@@ -6,16 +6,16 @@ from . import absobject as aob
 from . import builtins as bi
 
 
-__all__ = ['value', 'Function', 'function']
+__all__ = ["value", "Function", "function"]
 
 
 def value(obj, *args, **kwargs):
-    '''
+    """
     Utility function for optional value/function parameters like
     `completion_msg`. If obj is a function it gets evaluated with `*args`
     and `**kwargs` and the result is returned, else obj is returned as is.
     Spare parameters are discarded.
-    '''
+    """
 
     if callable(obj):
         parameters = inspect.signature(obj).parameters
@@ -30,9 +30,7 @@ def value(obj, *args, **kwargs):
 
 class AbstractFunction(aob.AbstractObject):
     def __call__(self, *args):
-        raise NotImplementedError(
-            f'{type(self).__name__} does not implement __call__')
-
+        raise NotImplementedError(f"{type(self).__name__} does not implement __call__")
 
     ### AbstractObject interface ###
 
@@ -64,7 +62,9 @@ class AbstractFunction(aob.AbstractObject):
         def sampled_func(x):
             pos = (bi.clip(x, from_, to) - from_) / (to - from_) * (n - 1)
             i = bi.ceil(pos) - 1  # i = int(bi.roundup(pos)) - 1  # ceil(x) -> int
-            return bi.blend(values[i], values[i + 1], bi.absdif(pos, i))  # uses blendAt from Object.
+            return bi.blend(
+                values[i], values[i + 1], bi.absdif(pos, i)
+            )  # uses blendAt from Object.
 
         return sampled_func
 
@@ -98,7 +98,7 @@ class UnopFunction(AbstractFunction):
         return self.selector(self.a(*args, **kwargs))
 
     def __repr__(self):
-        return f'{type(self).__name__}({self.selector.__name__}, {self.a})'
+        return f"{type(self).__name__}({self.selector.__name__}, {self.a})"
 
 
 class BinopFunction(AbstractFunction):
@@ -114,8 +114,8 @@ class BinopFunction(AbstractFunction):
 
     def __repr__(self):
         return (
-            f'{type(self).__name__}({self.selector.__name__}, '
-            f'{self.a}, {self.b})')
+            f"{type(self).__name__}({self.selector.__name__}, " f"{self.a}, {self.b})"
+        )
 
 
 class NaropFunction(AbstractFunction):
@@ -126,14 +126,15 @@ class NaropFunction(AbstractFunction):
 
     def __call__(self, *args, **kwargs):
         evaluated_args = [
-            x(*args, **kwargs) if isinstance(x, Function)
-            else x for x in self.args]
+            x(*args, **kwargs) if isinstance(x, Function) else x for x in self.args
+        ]
         return self.selector(self.a(*args, **kwargs), *evaluated_args)
 
     def __repr__(self):
         return (
-            f'{type(self).__name__}({self.selector.__name__}, '
-            f'{self.a}, {self.args})')
+            f"{type(self).__name__}({self.selector.__name__}, "
+            f"{self.a}, {self.args})"
+        )
 
 
 # class FunctionList(AbstractFunction):
@@ -142,8 +143,9 @@ class NaropFunction(AbstractFunction):
 
 ### Function.sc ###
 
+
 class Function(AbstractFunction):
-    '''
+    """
     This class is a wrapper for ordinary function which adds lazy
     evaluation capabilities (`AbstractObject` interface) and the interface
     needed to scheduled functions in clocks.
@@ -151,7 +153,7 @@ class Function(AbstractFunction):
     Note that any user defined function scheduled in clocks are internally
     wrapped in this class and there is no need to wrap them explicitly
     for that purpose.
-    '''
+    """
 
     def __init__(self, func):
         if inspect.isfunction(func):
@@ -161,27 +163,26 @@ class Function(AbstractFunction):
             self.func = func
             self._clock = None  # Internal compatibility as Clock item.
         else:
-            raise TypeError(
-                'Function wrapper only apply to user-defined functions')
+            raise TypeError("Function wrapper only apply to user-defined functions")
 
     def __call__(self, *args, **kwargs):
         kwargs = {k: kwargs[k] for k in kwargs.keys() & self._kwords}
-        return self.func(*args[:self._nargs], **kwargs)
+        return self.func(*args[: self._nargs], **kwargs)
 
     def __awake__(self, clock):
-        return self.func(*(self, clock)[:self._nargs])
+        return self.func(*(self, clock)[: self._nargs])
 
     def __repr__(self):
-        return f'{type(self).__name__}({self.func.__qualname__})'
+        return f"{type(self).__name__}({self.func.__qualname__})"
 
 
 # decorator syntax
 def function(func):
-    '''Decorator to wrap ordinary function types as `AbstractObject`.
+    """Decorator to wrap ordinary function types as `AbstractObject`.
 
     This function is redundant with the `Function` class, it returns an
     instance of that class, but its use is recommended when used as decorator.
-    '''
+    """
 
     return Function(func)
 

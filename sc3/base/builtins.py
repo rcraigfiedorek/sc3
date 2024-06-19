@@ -13,29 +13,29 @@ import builtins
 from ..base import _hooks as hks
 
 
-_libsc3 = hks.late_import(__name__, 'sc3.base.main', '_libsc3')
+_libsc3 = hks.late_import(__name__, "sc3.base.main", "_libsc3")
 
 
 # Module Constants
 # /include/plugin_interface/SC_Constants.h
-pi = math.acos(-1.)
-pi2 = pi * .5
+pi = math.acos(-1.0)
+pi2 = pi * 0.5
 pi32 = pi * 1.5
-twopi = pi * 2.
-rtwopi = 1. / twopi
+twopi = pi * 2.0
+rtwopi = 1.0 / twopi
 log001 = math.log(0.001)
 log01 = math.log(0.01)
 log1 = math.log(0.1)
-rlog2 = 1. / math.log(2.)
-sqrt2 = math.sqrt(2.)
-rsqrt2 = 1. / sqrt2
+rlog2 = 1.0 / math.log(2.0)
+sqrt2 = math.sqrt(2.0)
+rsqrt2 = 1.0 / sqrt2
 
 
-class scbuiltin():
+class scbuiltin:
     @staticmethod
     def unop(func):
         def scbuiltin_(x):
-            if hasattr(x, '_compose_unop'):
+            if hasattr(x, "_compose_unop"):
                 return x._compose_unop(func)
             return func(x)
 
@@ -46,9 +46,9 @@ class scbuiltin():
     @staticmethod
     def binop(func):
         def scbuiltin_(a, b):
-            if hasattr(a, '_compose_binop'):
+            if hasattr(a, "_compose_binop"):
                 return a._compose_binop(func, b)
-            if hasattr(b, '_rcompose_binop'):
+            if hasattr(b, "_rcompose_binop"):
                 return b._rcompose_binop(func, a)
             return func(a, b)
 
@@ -59,7 +59,7 @@ class scbuiltin():
     @staticmethod
     def narop(func):
         def scbuiltin_(x, *args):
-            if hasattr(x, '_compose_narop'):
+            if hasattr(x, "_compose_narop"):
                 return x._compose_narop(func, *args)
             return func(x, *args)
 
@@ -71,6 +71,7 @@ class scbuiltin():
 ### Random ###
 
 # Have special index.
+
 
 @scbuiltin.unop
 def rand(x):
@@ -85,6 +86,7 @@ def rand(x):
             return 0
     raise TypeError
 
+
 @scbuiltin.unop
 def rand2(x):
     if type(x) is float:
@@ -95,6 +97,7 @@ def rand2(x):
         else:
             return _libsc3.main._rgen.randint(x, -x)
     raise TypeError
+
 
 @scbuiltin.unop
 def linrand(x):
@@ -115,6 +118,7 @@ def linrand(x):
             return 0
     raise TypeError
 
+
 @scbuiltin.unop
 def bilinrand(x):
     if type(x) is float:
@@ -134,14 +138,21 @@ def bilinrand(x):
             return 0
     raise TypeError
 
+
 @scbuiltin.unop
 def sum3rand(x):
     # // Larry Polansky's poor man's gaussian generator.
     return (
-        (_libsc3.main._rgen.random() +
-        _libsc3.main._rgen.random() +
-        _libsc3.main._rgen.random() - 1.5) *
-        0.666666667 * x)
+        (
+            _libsc3.main._rgen.random()
+            + _libsc3.main._rgen.random()
+            + _libsc3.main._rgen.random()
+            - 1.5
+        )
+        * 0.666666667
+        * x
+    )
+
 
 @scbuiltin.unop
 def coin(x):
@@ -153,6 +164,7 @@ def coin(x):
         else:
             return True
     raise TypeError
+
 
 @scbuiltin.binop
 def rrand(a, b):
@@ -168,17 +180,21 @@ def rrand(a, b):
             return _libsc3.main._rgen.randrange(a, b, -1)
     raise TypeError
 
+
 @scbuiltin.binop
 def exprand(a, b):  # exprandrng
     return a * exp(log(b / a) * _libsc3.main._rgen.random())
 
+
 # Don't have special index.
+
 
 @scbuiltin.binop
 def xrand(x, exclude=0):
     if type(x) is type(exclude) is int:
-        return mod(exclude + rand(x - 1) + 1, x);
+        return mod(exclude + rand(x - 1) + 1, x)
     raise TypeError
+
 
 @scbuiltin.binop
 def xrand2(x, exclude=0):
@@ -192,13 +208,16 @@ def xrand2(x, exclude=0):
 
 ### Unary ###
 
+
 @scbuiltin.unop
 def as_int(x):
     return int(x)
 
+
 @scbuiltin.unop
 def as_float(x):
     return float(x)
+
 
 # // this is a function for preventing pathological math operations in ugens.
 # // can be used at the end of a block to fix any recirculating filter values.
@@ -211,63 +230,81 @@ def zapgremlins(x):
     # // Not-a-Numbers fail both tests and are eliminated.
     # return (absx > (float32)1e-15 && absx < (float32)1e15) ? x : (float32)0.;
     absx = math.abs(x)
-    if absx > 1e-15 and absx < 1e15: return x
-    return 0.
+    if absx > 1e-15 and absx < 1e15:
+        return x
+    return 0.0
+
 
 @scbuiltin.unop
 def log2(x):
-    if x == 0: return float('-inf')
+    if x == 0:
+        return float("-inf")
     return math.log2(x)
+
 
 @scbuiltin.unop
 def log10(x):
-    if x == 0: return float('-inf')
+    if x == 0:
+        return float("-inf")
     return math.log10(x)
 
+
 @scbuiltin.unop
-def log(x):  #, base=math.e):  # In SI is unary, can't change the base.
-    if x == 0: return float('-inf')
+def log(x):  # , base=math.e):  # In SI is unary, can't change the base.
+    if x == 0:
+        return float("-inf")
     return math.log(x)
+
 
 @scbuiltin.unop
 def exp(x):
     return math.exp(x)
 
+
 @scbuiltin.unop
 def sin(x):
     return math.sin(x)
+
 
 @scbuiltin.unop
 def cos(x):
     return math.cos(x)
 
+
 @scbuiltin.unop
 def tan(x):
     return math.tan(x)
+
 
 @scbuiltin.unop
 def asin(x):
     return math.asin(x)
 
+
 @scbuiltin.unop
 def acos(x):
     return math.acos(x)
+
 
 @scbuiltin.unop
 def atan(x):
     return math.atan(x)
 
+
 @scbuiltin.unop
 def sinh(x):
     return math.sinh(x)
+
 
 @scbuiltin.unop
 def cosh(x):
     return math.cosh(x)
 
+
 @scbuiltin.unop
 def tanh(x):
     return math.tanh(x)
+
 
 # Python math module.
 # @scbuiltin.unop
@@ -283,138 +320,172 @@ def tanh(x):
 # def atanh(x):  # Has no opcode.
 #     return math.atanh(x)
 
-_ONETWELFTH = 1. / 12.
-_ONE440TH = 1. / 440.
+_ONETWELFTH = 1.0 / 12.0
+_ONE440TH = 1.0 / 440.0
+
 
 @scbuiltin.unop
 def midicps(note):
     # return (float64)440. * std::pow((float64)2., (note - (float64)69.) * (float64)0.08333333333333333333333333);
-    return 440. * pow(2., (note - 69.) * _ONETWELFTH)
+    return 440.0 * pow(2.0, (note - 69.0) * _ONETWELFTH)
+
 
 @scbuiltin.unop
 def cpsmidi(freq):
     # return sc_log2(freq * (float64)0.002272727272727272727272727) * (float64)12. + (float64)69.;
-    return log2(freq * _ONE440TH) * 12. + 69.
+    return log2(freq * _ONE440TH) * 12.0 + 69.0
+
 
 @scbuiltin.unop
 def midiratio(midi):
-    #return std::pow((float32)2. , midi * (float32)0.083333333333);
-    return pow(2., midi * _ONETWELFTH)
+    # return std::pow((float32)2. , midi * (float32)0.083333333333);
+    return pow(2.0, midi * _ONETWELFTH)
+
 
 @scbuiltin.unop
 def ratiomidi(ratio):
-    #return (float32)12. * sc_log2(ratio);
-    return 12. * log2(ratio)
+    # return (float32)12. * sc_log2(ratio);
+    return 12.0 * log2(ratio)
+
 
 @scbuiltin.unop
 def octcps(note):
     # return (float32)440. * std::pow((float32)2., note - (float32)4.75);
-    return 440. * pow(2., note - 4.75)
+    return 440.0 * pow(2.0, note - 4.75)
+
 
 @scbuiltin.unop
 def cpsoct(freq):
     # return sc_log2(freq * (float32)0.0022727272727) + (float32)4.75;
     return log2(freq * _ONE440TH + 4.75)
 
+
 @scbuiltin.unop
 def ampdb(amp):
     # return std::log10(amp) * (float32)20.;
-    return log10(amp) * 20.
+    return log10(amp) * 20.0
+
 
 @scbuiltin.unop
 def dbamp(db):
     # return std::pow((float32)10., db * (float32).05);
-    return pow(10., db * .05)
+    return pow(10.0, db * 0.05)
+
 
 @scbuiltin.unop
 def squared(x):
-    return x * x;
+    return x * x
+
 
 @scbuiltin.unop
 def cubed(x):
-    return x * x * x;
+    return x * x * x
+
 
 @scbuiltin.unop
 def sqrt(x):
-    if x < 0.:
+    if x < 0.0:
         return -math.sqrt(-x)
     else:
         return math.sqrt(x)
+
 
 @scbuiltin.unop
 def hanwindow(x):
     # if (x < (float32)0. || x > (float32)1.) return (float32)0.;
     # return (float32)0.5 - (float32)0.5 * static_cast<float32>(cos(x * (float32)twopi));
-    if x < 0. or x > 1.: return 0.
+    if x < 0.0 or x > 1.0:
+        return 0.0
     return 0.5 - 0.5 * cos(x * twopi)
+
 
 @scbuiltin.unop
 def welwindow(x):
     # if (x < (float32)0. || x > (float32)1.) return (float32)0.;
     # return static_cast<float32>(sin(x * pi));
-    if x < 0. or x > 1.: return 0.
+    if x < 0.0 or x > 1.0:
+        return 0.0
     return sin(x * pi)
+
 
 @scbuiltin.unop
 def triwindow(x):
     # if (x < (float32)0. || x > (float32)1.) return (float32)0.;
     # if (x < (float32)0.5) return (float32)2. * x;
     # else return (float32)-2. * x + (float32)2.;
-    if x < 0. or x > 1.: return 0.
-    if x < 0.5: return 2. * x
-    return -2. * x + 2.
+    if x < 0.0 or x > 1.0:
+        return 0.0
+    if x < 0.5:
+        return 2.0 * x
+    return -2.0 * x + 2.0
+
 
 @scbuiltin.unop
 def bitriwindow(x):  # not used in sclang
     # float32 ax = (float32)1. - std::abs(x);
     # if (ax <= (float32)0.) return (float32)0.;
     # return ax;
-    ax = 1. - abs(x)
-    if ax <= 0.: return 0.
+    ax = 1.0 - abs(x)
+    if ax <= 0.0:
+        return 0.0
     return ax
+
 
 @scbuiltin.unop
 def rectwindow(x):
     # if (x < (float32)0. || x > (float32)1.) return (float32)0.;
     # return (float32)1.;
-    if x < 0. or x > 1.: return 0.
-    return 1.
+    if x < 0.0 or x > 1.0:
+        return 0.0
+    return 1.0
+
 
 @scbuiltin.unop
 def scurve(x):
     # if (x <= (float32)0.) return (float32)0.;
     # if (x >= (float32)1.) return (float32)1.;
     # return x * x * ((float32)3. - (float32)2. * x);
-    if x <= 0.: return 0.
-    if x >= 1.: return 1.
-    return x * x * (3. - 2. * x)
+    if x <= 0.0:
+        return 0.0
+    if x >= 1.0:
+        return 1.0
+    return x * x * (3.0 - 2.0 * x)
+
 
 @scbuiltin.unop
 def scurve0(x):  # not used in sclang
     # // assumes that x is in range
     # return x * x * ((float32)3. - (float32)2. * x);
-    return x * x * (3. - 2. * x)
+    return x * x * (3.0 - 2.0 * x)
+
 
 @scbuiltin.unop
 def ramp(x):
     # if (x <= (float32)0.) return (float32)0.;
     # if (x >= (float32)1.) return (float32)1.;
     # return x;
-    if x <= 0.: return 0.
-    if x >= 1.: return 1.
+    if x <= 0.0:
+        return 0.0
+    if x >= 1.0:
+        return 1.0
     return x
+
 
 @scbuiltin.unop
 def sign(x):
     # return x < (float32)0. ? (float32)-1. : (x > (float32)0. ? (float32)1.f : (float32)0.f);
-    if x < 0.: return -1.
-    if x > 0.: return 1.
-    return 0.
+    if x < 0.0:
+        return -1.0
+    if x > 0.0:
+        return 1.0
+    return 0.0
+
 
 @scbuiltin.unop
 def distort(x):
     # return x / ((float32)1. + std::abs(x));
-    return x / (1. + abs(x))
+    return x / (1.0 + abs(x))
+
 
 @scbuiltin.unop
 def distortneg(x):  # not used in sclang
@@ -422,8 +493,10 @@ def distortneg(x):  # not used in sclang
     #     return x/((float32)1. - x);
     # else
     #     return x;
-    if x < 0.: return x / (1. - x)
+    if x < 0.0:
+        return x / (1.0 - x)
     return x
+
 
 @scbuiltin.unop
 def softclip(x):
@@ -431,16 +504,20 @@ def softclip(x):
     # if (absx <= (float32)0.5) return x;
     # else return (absx - (float32)0.25) / x;
     absx = abs(x)
-    if absx <= 0.5: return x
+    if absx <= 0.5:
+        return x
     return (absx - 0.25) / x
+
 
 @scbuiltin.unop
 def even(x):
     return int(x) & 1 == 0
 
+
 @scbuiltin.unop
 def odd(x):
     return int(x) & 1 == 1
+
 
 @scbuiltin.unop
 def taylorsin(x):
@@ -456,32 +533,41 @@ def taylorsin(x):
     #         + 1.0));
     x = pi2 - abs(pi2 - x)
     x2 = x * x
-    return (x*(x2*(x2*(x2*(x2*(1.0/362880.0)\
-        - (1.0/5040.0))\
-        + (1.0/120.0))\
-        - (1.0/6.0))\
-        + 1.0))
+    return x * (
+        x2
+        * (
+            x2 * (x2 * (x2 * (1.0 / 362880.0) - (1.0 / 5040.0)) + (1.0 / 120.0))
+            - (1.0 / 6.0)
+        )
+        + 1.0
+    )
+
 
 # @scbuiltin.unop
 # def trunc(x):  # duplicated as unary and binary, AbstractFunction use binary, see below.
 #     return math.trunc(x);
 
+
 @scbuiltin.unop
 def ceil(x):
     return math.ceil(x)
+
 
 @scbuiltin.unop
 def floor(x):
     return math.floor(x)
 
+
 @scbuiltin.unop
 def reciprocal(x):
-    return 1. / x
+    return 1.0 / x
+
 
 @scbuiltin.unop
 def bitnot(x):
-    #return (float32) ~ (int)x;
+    # return (float32) ~ (int)x;
     return float(~int(x))
+
 
 @scbuiltin.unop
 def frac(x):
@@ -489,10 +575,12 @@ def frac(x):
     # return math.fmod(x)[0]
     return x - floor(x)
 
-_ONESIXTH = 1. / 6.
+
+_ONESIXTH = 1.0 / 6.0
+
 
 @scbuiltin.narop
-def lg3interp(x1, a, b, c, d): # sc_lg3interp solo la define para float32
+def lg3interp(x1, a, b, c, d):  # sc_lg3interp solo la define para float32
     # // cubic lagrange interpolator
     # float32 x0 = x1 + 1.f;
     # float32 x2 = x1 - 1.f;
@@ -502,12 +590,13 @@ def lg3interp(x1, a, b, c, d): # sc_lg3interp solo la define para float32
     # float32 x12 = x1 * x2 * 0.16666666666666667f;
     #
     # return x12 * (d * x0 - a * x3) + x03 * (b * x2 - c * x1);
-    x0 = x1 + 1.
-    x2 = x1 - 1.
-    x3 = x1 - 2.
+    x0 = x1 + 1.0
+    x2 = x1 - 1.0
+    x3 = x1 - 2.0
     x03 = x0 * x3 * 0.5
     x12 = x1 * x2 * _ONESIXTH
     return x12 * (d * x0 - a * x3) + x03 * (b * x2 - c * x1)
+
 
 @scbuiltin.binop
 def calcfeedback(delay_time, decay_time):  # CalcFeedback, solo la define para float32
@@ -517,50 +606,62 @@ def calcfeedback(delay_time, decay_time):  # CalcFeedback, solo la define para f
     # float32 absret = static_cast<float32>( std::exp(log001 * delay_time / std::abs(decay_time)));
     # float32 ret = std::copysign(absret, decay_time);
     # return ret;
-    if delay_time == 0. or decay_time == 0.:
-        return 0.
+    if delay_time == 0.0 or decay_time == 0.0:
+        return 0.0
     absret = math.exp(log001 * delay_time / abs(decay_time))
     return math.copysign(absret, decay_time)
+
 
 @scbuiltin.unop
 def wrap1(x):
     # if (x >= (float32) 1.) return x + (float32)-2.;
     # if (x <  (float32)-1.) return x + (float32) 2.;
     # return x;
-    if x >= 1.: return x - 2.
-    if x < -1.: return x + 2.
+    if x >= 1.0:
+        return x - 2.0
+    if x < -1.0:
+        return x + 2.0
     return x
+
 
 @scbuiltin.unop
 def fold1(x):
     # if (x >= (float32) 1.) return (float32) 2. - x;
     # if (x <  (float32)-1.) return (float32)-2. - x;
     # return x;
-    if x >= 1.: return 2 - x
-    if x < -1.: return -2 - x
+    if x >= 1.0:
+        return 2 - x
+    if x < -1.0:
+        return -2 - x
     return x
 
+
 @scbuiltin.unop
-def graycode(x): # grayCode, está abajo de todo y es para int32
+def graycode(x):  # grayCode, está abajo de todo y es para int32
     # return x ^ (x >> 1);
     x = int(x)
     return x ^ (x >> 1)
 
+
 @scbuiltin.unop
 def degrad(x):
-    return x * pi / 180.
+    return x * pi / 180.0
+
 
 @scbuiltin.unop
 def raddeg(x):
-    return x * 180. / pi
+    return x * 180.0 / pi
+
 
 @scbuiltin.unop
 def next_power_of_two(x):  # Integer _NextPowerOfTwo
     return 2 ** ceil(log(x) / log(2))
 
+
 @scbuiltin.binop
 def next_near_power(x, base=2):  # SimpleNumber.nextPowerOf
     return base ** ceil(log(x) / log(base))
+
 
 @scbuiltin.binop
 def previous_near_power(x, base=2):  # SimpleNumber.previousPowerOf
@@ -568,6 +669,7 @@ def previous_near_power(x, base=2):  # SimpleNumber.previousPowerOf
 
 
 ### Binary ###
+
 
 @scbuiltin.binop
 def mod(a, b):
@@ -594,37 +696,44 @@ def mod(a, b):
     zero = 0
     if a >= b:
         a -= b
-        if a < b: return a
+        if a < b:
+            return a
     elif a < zero:
         a += b
-        if a >= zero: return a
+        if a >= zero:
+            return a
     else:
         return a
 
-    if b == zero: return zero
+    if b == zero:
+        return zero
 
     if type(a) is float or type(b) is float:
-        return a - b * floor(a/b)
+        return a - b * floor(a / b)
 
     c = int(math.fmod(a, b))
-    if c < 0: c += b
+    if c < 0:
+        c += b
     return c
 
+
 @scbuiltin.narop
-def wrap(x, lo, hi, range=None): # *** BUG: AbstractFunction usa sin range. tiene dos firmas, sin y con range, la implementación varía sutilmente.
-# INT: abajo define wrap para int sin range como:
-# return sc_mod(in - lo, hi - lo + 1) + lo;
+def wrap(
+    x, lo, hi, range=None
+):  # *** BUG: AbstractFunction usa sin range. tiene dos firmas, sin y con range, la implementación varía sutilmente.
+    # INT: abajo define wrap para int sin range como:
+    # return sc_mod(in - lo, hi - lo + 1) + lo;
     if type(x) is int:
         lo = int(lo)
         hi = int(hi)
         return mod(x - lo, hi - lo + 1) + lo
     # // avoid the divide if possible
     # if (in >= hi) {
-# range = hi - lo; # sin range
+    # range = hi - lo; # sin range
     #     in -= range;
     #     if (in < hi) return in;
     # } else if (in < lo) {
-# range = hi - lo; # sin range
+    # range = hi - lo; # sin range
     #     in += range;
     #     if (in >= lo) return in;
     # } else return in;
@@ -635,33 +744,38 @@ def wrap(x, lo, hi, range=None): # *** BUG: AbstractFunction usa sin range. tien
         if range is None:
             range = hi - lo
         x -= range
-        if x < hi: return x
+        if x < hi:
+            return x
     elif x < lo:
         if range is None:
             range = hi - lo
         x += range
-        if x >= lo: return x
+        if x >= lo:
+            return x
     else:
         return x
 
-    if hi == lo: return lo
+    if hi == lo:
+        return lo
     return x - range * floor((x - lo) / range)
 
+
 @scbuiltin.narop
-def fold(x, lo, hi, range=None, range2=None): # *** BUG: ídem wrap con range y range2
-# INT: abajo define fold para int sin range ni range2
-# int b = hi - lo;
-# int b2 = b+b;
-# int c = sc_mod(in - lo, b2);
-# if (c>b) c = b2-c;
-# return c + lo;
+def fold(x, lo, hi, range=None, range2=None):  # *** BUG: ídem wrap con range y range2
+    # INT: abajo define fold para int sin range ni range2
+    # int b = hi - lo;
+    # int b2 = b+b;
+    # int c = sc_mod(in - lo, b2);
+    # if (c>b) c = b2-c;
+    # return c + lo;
     if type(x) is int:
         lo = int(lo)
         hi = int(hi)
         b = hi - lo
         b2 = b + b
         c = mod(x - lo, b2)
-        if c > b: c = b2 - c
+        if c > b:
+            c = b2 - c
         return c + lo
     # double x, c;
     # x = in - lo;
@@ -677,22 +791,25 @@ def fold(x, lo, hi, range=None, range2=None): # *** BUG: ídem wrap con range y 
     #
     # if (hi == lo) return lo;
     # // ok do the divide
-# range = hi - lo; # sin range
-# range2 = range + range; # sin range2
+    # range = hi - lo; # sin range
+    # range2 = range + range; # sin range2
     # c = x - range2 * sc_floor(x / range2);
     # if (c>=range) c = range2 - c;
     # return c + lo;
     x2 = x - lo
     if x >= hi:
         x = hi + hi - x
-        if x >= lo: return x
+        if x >= lo:
+            return x
     elif x < lo:
         x = lo + lo - x
-        if x < hi: return x
+        if x < hi:
+            return x
     else:
         return x
 
-    if hi == lo: return lo
+    if hi == lo:
+        return lo
     if range is None:
         range = hi - lo
         range2 = range + range
@@ -701,15 +818,19 @@ def fold(x, lo, hi, range=None, range2=None): # *** BUG: ídem wrap con range y 
         c = range2 - c
     return c + lo
 
+
 @scbuiltin.binop
 def pow(a, b):
     # return a >= 0.f ? std::pow(a, b) : -std::pow(-a, b);
     return math.pow(a, b) if a >= 0.0 else math.pow(-a, b)
 
+
 @scbuiltin.binop
-def div(a, b): # TODO: define div para int devolviendo el dividendo si el divisor es cero, en sclang es el comportamiento de 1 div: 0, en Python 1 // 0 es error.
-               # TODO: ver si se usa para las ugens o qué cómo, lo mismo con mod.
-               # TODO: si lo sargumentos son float sclang realiza las operaciones y castead el valor de retorno.
+def div(
+    a, b
+):  # TODO: define div para int devolviendo el dividendo si el divisor es cero, en sclang es el comportamiento de 1 div: 0, en Python 1 // 0 es error.
+    # TODO: ver si se usa para las ugens o qué cómo, lo mismo con mod.
+    # TODO: si lo sargumentos son float sclang realiza las operaciones y castead el valor de retorno.
     # int c;
     # if (b) {
     #     if (a<0) c = (a+1)/b - 1;
@@ -717,19 +838,24 @@ def div(a, b): # TODO: define div para int devolviendo el dividendo si el diviso
     # } else c = a;
     # return c;
     if b:
-        if a < 0: c = (a + 1) / b - 1
-        else: c = a / b
+        if a < 0:
+            c = (a + 1) / b - 1
+        else:
+            c = a / b
     else:
         c = a
     return int(c)
+
 
 @scbuiltin.binop
 def min(a, b):
     return builtins.min(a, b)
 
+
 @scbuiltin.binop
 def max(a, b):
     return builtins.max(a, b)
+
 
 @scbuiltin.binop
 def round(x, quant=1):
@@ -741,10 +867,11 @@ def round(x, quant=1):
             return float(x)
         else:
             return float(div(x + quant // 2, quant) * quant)
-    if quant == 0.:
+    if quant == 0.0:
         return float(x)
     else:
-        return float(floor(x / quant + .5) * quant)
+        return float(floor(x / quant + 0.5) * quant)
+
 
 @scbuiltin.binop
 def roundup(x, quant=1):
@@ -756,10 +883,11 @@ def roundup(x, quant=1):
             return float(x)
         else:
             return float(div(x + quant - 1, quant) * quant)
-    if quant == 0.:
+    if quant == 0.0:
         return float(x)
     else:
         return float(ceil(x / quant) * quant)
+
 
 @scbuiltin.binop
 def trunc(x, quant=1):
@@ -771,28 +899,35 @@ def trunc(x, quant=1):
             return float(x)
         else:
             return float(div(x, quant) * quant)
-    if quant == 0.:
+    if quant == 0.0:
         return float(x)
     else:
         return float(floor(x / quant) * quant)
 
+
 @scbuiltin.binop
-def atan2(a, b): # TODO: Solo la define para float. Pero creo que no define sin/cos y las demás.
+def atan2(
+    a, b
+):  # TODO: Solo la define para float. Pero creo que no define sin/cos y las demás.
     # return std::atan2(a, b);
     return math.atan2(a, b)
 
-_SQRT2M1 = math.sqrt(2.) - 1.;
+
+_SQRT2M1 = math.sqrt(2.0) - 1.0
+
 
 @scbuiltin.narop
 def clip(x, lo, hi):
-    #./common/SC_BoundsMacros.h:
-    #inline T sc_clip(T x, U lo, V hi) return std::max(std::min(x, (T)hi), (T)lo);
+    # ./common/SC_BoundsMacros.h:
+    # inline T sc_clip(T x, U lo, V hi) return std::max(std::min(x, (T)hi), (T)lo);
     T = type(x)
     return max(min(x, T(hi)), T(lo))
+
 
 @scbuiltin.binop
 def hypot(x, y):
     return math.hypot(x, y)
+
 
 @scbuiltin.binop
 def hypotx(x, y):  # hypotenuse aproximation C name, hypotApx in sclang.
@@ -806,10 +941,11 @@ def hypotx(x, y):  # hypotenuse aproximation C name, hypotApx in sclang.
     minxy = min(x, y)
     return x + y - _SQRT2M1 * minxy
 
+
 @scbuiltin.binop
 def gcd(a, b):
-# FLOAT: abajo define para float gcd(u, v)
-# return (float) sc_gcd((long) std::trunc(u), (long) std::trunc(v));
+    # FLOAT: abajo define para float gcd(u, v)
+    # return (float) sc_gcd((long) std::trunc(u), (long) std::trunc(v));
     # if (a == 0)
     #     return b;
     # if (b == 0)
@@ -843,14 +979,18 @@ def gcd(a, b):
         b = int(b)
     T = type(a)
 
-    if a == 0: return b
-    if b == 0: return a
-    negative = a <= 0 and b <=0
+    if a == 0:
+        return b
+    if b == 0:
+        return a
+    negative = a <= 0 and b <= 0
     a = abs(a)
     b = abs(b)
     if a == 1 or b == 1:
-        if negative: return -1
-        else: return 1
+        if negative:
+            return -1
+        else:
+            return 1
     if a < b:
         t = a
         a = b
@@ -864,10 +1004,11 @@ def gcd(a, b):
 
     return T(a)
 
+
 @scbuiltin.binop
 def lcm(a, b):
-# FLOAT: abajo define para float lcm(u, v)
-# return (float) sc_lcm((long) std::trunc(u), (long) std::trunc(v));
+    # FLOAT: abajo define para float lcm(u, v)
+    # return (float) sc_lcm((long) std::trunc(u), (long) std::trunc(v));
     # if (a == 0 || b == 0)
     #     return (long)0;
     # else
@@ -880,6 +1021,7 @@ def lcm(a, b):
         return 0
     else:
         return (a * b) // gcd(a, b)
+
 
 # @scbuiltin.binop
 # def bitand(a, b):  # has special index
@@ -900,10 +1042,12 @@ def lcm(a, b):
 # def rshift(a, b):  # has special index
 #     return a >> b
 
+
 @scbuiltin.binop
 def urshift(a, b):
     # return (uint32)a >> b;
-    raise NotImplementedError('urshift only works with ugens')
+    raise NotImplementedError("urshift only works with ugens")
+
 
 # @scbuiltin.binop # only used in /server/plugins/LFUGens.cpp and example in ServerPluginAPI.schelp
 # def powi(x, n):
@@ -920,36 +1064,46 @@ def urshift(a, b):
 #     # return z;
 #     pass
 
-@scbuiltin.binop
-def thresh(a, b): # sc_thresh(T a, U b)
-    # return a < b ? (T)0 : a;
-    T = type(a)
-    if a < b: return T(0)
-    return a
 
 @scbuiltin.binop
-def clip2(a, b): # sc_clip2(T a, T b) # Estas son las que usa como operadores integrados de las UGens.
+def thresh(a, b):  # sc_thresh(T a, U b)
+    # return a < b ? (T)0 : a;
+    T = type(a)
+    if a < b:
+        return T(0)
+    return a
+
+
+@scbuiltin.binop
+def clip2(
+    a, b
+):  # sc_clip2(T a, T b) # Estas son las que usa como operadores integrados de las UGens.
     # return sc_clip(a, -b, b);
     return clip(a, -b, b)
 
+
 @scbuiltin.binop
-def wrap2(a, b): # wrap2(T a, T b)
+def wrap2(a, b):  # wrap2(T a, T b)
     # return sc_wrap(a, -b, b);
     return wrap(a, -b, b)
 
+
 @scbuiltin.binop
-def fold2(a, b): # sc_fold2(T a, T b)
+def fold2(a, b):  # sc_fold2(T a, T b)
     # return sc_fold(a, -b, b);
     return fold(a, -b, b)
 
+
 @scbuiltin.binop
-def excess(a, b): # sc_excess(T a, T b)
+def excess(a, b):  # sc_excess(T a, T b)
     # return a - sc_clip(a, -b, b);
     return a - clip(a, -b, b)
+
 
 @scbuiltin.binop
 def first_arg(a, b):
     return a
+
 
 @scbuiltin.binop
 def scaleneg(a, b):
@@ -962,10 +1116,12 @@ def scaleneg(a, b):
     # b = 0.5 * b + 0.5;
     # return (std::abs(a) - a) * b + a;
     if type(a) is int and type(b) is int:
-        if a < 0: return a * b
+        if a < 0:
+            return a * b
         return a
     b = 0.5 * b + 0.5
     return (abs(a) - a) * b + a
+
 
 @scbuiltin.binop
 def amclip(a, b):
@@ -977,43 +1133,53 @@ def amclip(a, b):
     # DOUBLE/FLOAT
     # return a * 0.5 * (b + std::abs(b));
     if type(a) is int and type(b) is int:
-        if b < 0: return 0
+        if b < 0:
+            return 0
         return a * b
     return a * 0.5 * (b + abs(b))
+
 
 @scbuiltin.binop
 def ring1(a, b):
     return a * b + a
 
+
 @scbuiltin.binop
 def ring2(a, b):
     return a * b + a + b
+
 
 @scbuiltin.binop
 def ring3(a, b):
     return a * a * b
 
+
 @scbuiltin.binop
 def ring4(a, b):
     return a * a * b - a * b * b
+
 
 @scbuiltin.binop
 def difsqr(a, b):
     return a * a - b * b
 
+
 @scbuiltin.binop
 def sumsqr(a, b):
     return a * a + b * b
+
 
 @scbuiltin.binop
 def sqrsum(a, b):
     z = a + b
     return z * z
 
+
 @scbuiltin.binop
 def sqrdif(a, b):
     z = a - b
     return z * z
+
 
 @scbuiltin.binop
 def absdif(a, b):
@@ -1022,10 +1188,12 @@ def absdif(a, b):
 
 ### Nary ###
 
+
 @scbuiltin.narop
 def blend(a, b, frac=0.5):
     # // frac should be from zero to one
     return a + (frac * (b - a))
+
 
 @scbuiltin.narop
 def snap(x, resolution=1.0, margin=0.05, strength=1.0):
@@ -1036,6 +1204,7 @@ def snap(x, resolution=1.0, margin=0.05, strength=1.0):
     else:
         return x
 
+
 @scbuiltin.narop
 def softround(x, resolution=1.0, margin=0.05, strength=1.0):
     round_ = round(x, resolution)
@@ -1045,63 +1214,89 @@ def softround(x, resolution=1.0, margin=0.05, strength=1.0):
     else:
         return x
 
+
 @scbuiltin.narop
-def linlin(x, inmin, inmax, outmin, outmax, clip='minmax'):
-    if clip == 'minmax':
-        if x <= inmin: return outmin
-        if x >= inmax: return outmax
-    elif clip == 'min':
-        if x <= inmin: return outmin
-    elif clip == 'max':
-        if x >= inmax: return outmax
+def linlin(x, inmin, inmax, outmin, outmax, clip="minmax"):
+    if clip == "minmax":
+        if x <= inmin:
+            return outmin
+        if x >= inmax:
+            return outmax
+    elif clip == "min":
+        if x <= inmin:
+            return outmin
+    elif clip == "max":
+        if x >= inmax:
+            return outmax
     return (x - inmin) / (inmax - inmin) * (outmax - outmin) + outmin
 
+
 @scbuiltin.narop
-def linexp(x, inmin, inmax, outmin, outmax, clip='minmax'):
-    if clip == 'minmax':
-        if x <= inmin: return outmin
-        if x >= inmax: return outmax
-    elif clip == 'min':
-        if x <= inmin: return outmin
-    elif clip == 'max':
-        if x >= inmax: return outmax
+def linexp(x, inmin, inmax, outmin, outmax, clip="minmax"):
+    if clip == "minmax":
+        if x <= inmin:
+            return outmin
+        if x >= inmax:
+            return outmax
+    elif clip == "min":
+        if x <= inmin:
+            return outmin
+    elif clip == "max":
+        if x >= inmax:
+            return outmax
     return math.pow(outmax / outmin, (x - inmin) / (inmax - inmin)) * outmin
 
-@scbuiltin.narop
-def explin(x, inmin, inmax, outmin, outmax, clip='minmax'):
-    if clip == 'minmax':
-        if x <= inmin: return outmin
-        if x >= inmax: return outmax
-    elif clip == 'min':
-        if x <= inmin: return outmin
-    elif clip == 'max':
-        if x >= inmax: return outmax
-    return log(x / inmin, math.e) / log(inmax / inmin, math.e)\
-           * (outmax - outmin) + outmin
 
 @scbuiltin.narop
-def expexp(x, inmin, inmax, outmin, outmax, clip='minmax'):
-    if clip == 'minmax':
-        if x <= inmin: return outmin
-        if x >= inmax: return outmax
-    elif clip == 'min':
-        if x <= inmin: return outmin
-    elif clip == 'max':
-        if x >= inmax: return outmax
-    return math.pow(
-        outmax / outmin,
-        log(x / inmin, math.e) / log(inmax / inmin, math.e)
-    ) * outmin
+def explin(x, inmin, inmax, outmin, outmax, clip="minmax"):
+    if clip == "minmax":
+        if x <= inmin:
+            return outmin
+        if x >= inmax:
+            return outmax
+    elif clip == "min":
+        if x <= inmin:
+            return outmin
+    elif clip == "max":
+        if x >= inmax:
+            return outmax
+    return (
+        log(x / inmin, math.e) / log(inmax / inmin, math.e) * (outmax - outmin) + outmin
+    )
+
 
 @scbuiltin.narop
-def lincurve(x, inmin, inmax, outmin, outmax, curve=-4, clip='minmax'):
-    if clip == 'minmax':
-        if x <= inmin: return outmin
-        if x >= inmax: return outmax
-    elif clip == 'min':
-        if x <= inmin: return outmin
-    elif clip == 'max':
-        if x >= inmax: return outmax
+def expexp(x, inmin, inmax, outmin, outmax, clip="minmax"):
+    if clip == "minmax":
+        if x <= inmin:
+            return outmin
+        if x >= inmax:
+            return outmax
+    elif clip == "min":
+        if x <= inmin:
+            return outmin
+    elif clip == "max":
+        if x >= inmax:
+            return outmax
+    return (
+        math.pow(outmax / outmin, log(x / inmin, math.e) / log(inmax / inmin, math.e))
+        * outmin
+    )
+
+
+@scbuiltin.narop
+def lincurve(x, inmin, inmax, outmin, outmax, curve=-4, clip="minmax"):
+    if clip == "minmax":
+        if x <= inmin:
+            return outmin
+        if x >= inmax:
+            return outmax
+    elif clip == "min":
+        if x <= inmin:
+            return outmin
+    elif clip == "max":
+        if x >= inmax:
+            return outmax
     if abs(curve) < 0.001:
         # // If the value should be clipped, it has already been clipped (above).
         # // If we got this far, then linlin does not need to do any clipping.
@@ -1113,15 +1308,20 @@ def lincurve(x, inmin, inmax, outmin, outmax, curve=-4, clip='minmax'):
     scaled = (x - inmin) / (inmax - inmin)
     return b - a * math.pow(grow, scaled, math.e)
 
+
 @scbuiltin.narop
-def curvelin(x, inmin, inmax, outmin, outmax, curve=-4, clip='minmax'):
-    if clip == 'minmax':
-        if x <= inmin: return outmin
-        if x >= inmax: return outmax
-    elif clip == 'min':
-        if x <= inmin: return outmin
-    elif clip == 'max':
-        if x >= inmax: return outmax
+def curvelin(x, inmin, inmax, outmin, outmax, curve=-4, clip="minmax"):
+    if clip == "minmax":
+        if x <= inmin:
+            return outmin
+        if x >= inmax:
+            return outmax
+    elif clip == "min":
+        if x <= inmin:
+            return outmin
+    elif clip == "max":
+        if x >= inmax:
+            return outmax
     if abs(curve):
         # // If the value should be clipped, it has already been clipped (above).
         return (x - inmin) / (inmax - inmin) * (outmax - outmin) + outmin
@@ -1130,33 +1330,44 @@ def curvelin(x, inmin, inmax, outmin, outmax, curve=-4, clip='minmax'):
     b = inmin + a
     return log((b - x) / a, math.e) * (outmax - outmin) / curve + outmin
 
+
 @scbuiltin.narop
-def bilin(x, incenter, inmin, inmax, outcenter, outmin, outmax, clip='minmax'):
-    if clip == 'minmax':
-        if x <= inmin: return outmin
-        if x >= inmax: return outmax
-    elif clip == 'min':
-        if x <= inmin: return outmin
-    elif clip == 'max':
-        if x >= inmax: return outmax
+def bilin(x, incenter, inmin, inmax, outcenter, outmin, outmax, clip="minmax"):
+    if clip == "minmax":
+        if x <= inmin:
+            return outmin
+        if x >= inmax:
+            return outmax
+    elif clip == "min":
+        if x <= inmin:
+            return outmin
+    elif clip == "max":
+        if x >= inmax:
+            return outmax
     if x >= incenter:
         return linlin(x, incenter, inmax, outcenter, outmax, None)
     else:
         return linlin(inmin, incenter, outmin, outcenter, None)
 
+
 @scbuiltin.narop
-def biexp(x, incenter, inmin, inmax, outcenter, outmin, outmax, clip='minmax'):
-    if clip == 'minmax':
-        if x <= inmin: return outmin
-        if x >= inmax: return outmax
-    elif clip == 'min':
-        if x <= inmin: return outmin
-    elif clip == 'max':
-        if x >= inmax: return outmax
+def biexp(x, incenter, inmin, inmax, outcenter, outmin, outmax, clip="minmax"):
+    if clip == "minmax":
+        if x <= inmin:
+            return outmin
+        if x >= inmax:
+            return outmax
+    elif clip == "min":
+        if x <= inmin:
+            return outmin
+    elif clip == "max":
+        if x >= inmax:
+            return outmax
     if x >= incenter:
         return explin(incenter, inmax, outcenter, outmax, None)
     else:
         return explin(inmin, incenter, outmin, outcenter, None)
+
 
 @scbuiltin.narop
 def moddif(a, b, mod=1.0):
@@ -1164,22 +1375,26 @@ def moddif(a, b, mod=1.0):
     modhalf = mod * 0.5
     return modhalf - absdif(diff, modhalf)
 
+
 @scbuiltin.narop
 def lcurve(x, a=1.0, m=0.0, n=1.0, tau=1.0):
     x = -x
     if tau == 1.0:
         return a * (m * exp(x) + 1) / (n * exp(x) + 1)
     else:
-        rtau = 1. / tau
+        rtau = 1.0 / tau
         return a * (m * exp(x) * rtau + 1) / (n * exp(x) * rtau + 1)
+
 
 @scbuiltin.narop  # binop
 def gauss(x, stdev):  # standard_deviation
     return sqrt(-2 * log(rand(1.0))) * sin(rand(twopi)) * stdev + x
 
+
 @scbuiltin.narop
 def gauss_curve(x, a=1.0, b=0.0, c=1.0):
     return a * exp(squared(x - b) / (-2.0 * squared(c)))
+
 
 # digitValue  # ?
 # thru ??  # ?
@@ -1207,33 +1422,38 @@ def normalize(lst, min=0.0, max=1.0):
     outmax = itertools.repeat(builtins.max(lst))
     return list(map(linlin, lst, outmin, outmax, min, max))
 
+
 def normsum(lst):  # normalizeSum/normalize_sum
     return list(map(operator.truediv, lst, itertools.repeat(sum(lst))))
 
+
 def shuffle(lst, random=None):
-    '''Shuffle a list in place and return `None`.
+    """Shuffle a list in place and return `None`.
 
     This function is a wrapper of `random.shuffle` which takes routines'
     random state into account.
 
-    '''
+    """
 
     _libsc3.main._rgen.shuffle(lst, random)
 
+
 def scramble(lst, random=None):
-    '''Return a new shuffled list from `lst`.
+    """Return a new shuffled list from `lst`.
 
     This function uses `random.shuffle` internally and takes routines'
     random state into account.
 
-    '''
+    """
 
     lst = lst.copy()
     _libsc3.main._rgen.shuffle(lst, random)
     return lst
 
+
 # mirror, mirror1, mirror2  # one mirror with mode.
 # stutter, rotate, pyramid, pyramidg, sputter(rand), etc.
+
 
 def blend_at(lst, index):
     imin = int(roundup(index)) - 1
@@ -1242,19 +1462,23 @@ def blend_at(lst, index):
     b = lst[clip(imin + 1, 0, imax)]
     return blend(a, b, abs(index - imin))
 
+
 def resamp0(lst, new_size):
     factor = (len(lst) - 1) / builtins.max(new_size - 1, 1)
     return list(lst[int(round(i * factor))] for i in range(new_size))
 
+
 def resamp1(lst, new_size):
     factor = (len(lst) - 1) / builtins.max(new_size - 1, 1)
     return list(blend_at(lst, i * factor) for i in range(new_size))
+
 
 def index_of_greater_than(lst, val, start=0):
     for i, n in enumerate(lst[start:]):
         if n > val:
             return i + start
     return len(lst) - 1
+
 
 def index_in_between(lst, val):
     # // Collection is sorted, returns linearly interpolated index.
@@ -1270,6 +1494,7 @@ def index_in_between(lst, val):
         return i
     return ((val - a) / div) + i - 1
 
+
 def as_random_table(lst, size=None):
     if size is None:
         size = len(lst)
@@ -1282,13 +1507,14 @@ def as_random_table(lst, size=None):
     for i in range(size):
         # indexInBetween wit start and rescale to 0..1
         lasti = index_of_greater_than(norm, i, lasti)
-        a = norm[lasti-1]
+        a = norm[lasti - 1]
         div = norm[lasti] - a
         if div == 0:
             res.append(lasti / size)
         else:
-            res.append( (((i - a) / div) + lasti - 1) / size )
+            res.append((((i - a) / div) + lasti - 1) / size)
     return res
+
 
 def table_rand(lst):
     return blend_at(lst, rand(float(len(lst) - 1)))
@@ -1296,12 +1522,14 @@ def table_rand(lst):
 
 ### SequenceableCollection ###
 
+
 def choice(lst):  # choose
     return _libsc3.main._rgen.choice(lst)
 
+
 def choices(lst, weights=None, *, cum_weights=None, k=1):  # wchoose
-    return _libsc3.main._rgen.choices(
-        lst, weights, cum_weights=cum_weights, k=k)
+    return _libsc3.main._rgen.choices(lst, weights, cum_weights=cum_weights, k=k)
+
 
 # ...
 
@@ -1311,14 +1539,15 @@ def choices(lst, weights=None, *, cum_weights=None, k=1):  # wchoose
 
 _uid_counter = itertools.count()
 
+
 def uid():
-    '''Library wise counter used to get unique ids for server replies.'''
+    """Library wise counter used to get unique ids for server replies."""
     return next(_uid_counter)
 
 
 def counter(stop):
-    '''Possibly infinite counter, range replacement for patterns.'''
-    if stop == float('inf'):
+    """Possibly infinite counter, range replacement for patterns."""
+    if stop == float("inf"):
         return itertools.count()
     else:
         return range(stop)

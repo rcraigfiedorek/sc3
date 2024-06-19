@@ -11,24 +11,30 @@ from . import clock as clk
 
 
 __all__ = [
-    'Routine', 'routine', 'FunctionStream',
-    'Condition', 'FlowVar', 'stream', 'embed']
+    "Routine",
+    "routine",
+    "FunctionStream",
+    "Condition",
+    "FlowVar",
+    "stream",
+    "embed",
+]
 
 
 ### Thread.sc ###
 
 
-class TimeThread():
-    State = enum.Enum('State', [
-        'Init', 'Running', 'Suspended', 'Paused', 'Done'])
+class TimeThread:
+    State = enum.Enum("State", ["Init", "Running", "Suspended", "Paused", "Done"])
 
     def __init__(self, func):
         if not inspect.isfunction(func):
-            raise TypeError('TimeThread argument is not a function')
+            raise TypeError("TimeThread argument is not a function")
 
         self.func = func
         self._func_has_inval = (  # Maybe it would be better to require the argument. Sync code with Prout and Pfuncn.
-            len(inspect.signature(self.func).parameters) > 0)
+            len(inspect.signature(self.func).parameters) > 0
+        )
         self._func_isgenfunc = inspect.isgeneratorfunction(self.func)
 
         self.parent = None
@@ -56,16 +62,14 @@ class TimeThread():
 
     @property
     def is_playing(self):
-        return (self.state == self.State.Suspended or
-                self is _libsc3.main.current_tt)
+        return self.state == self.State.Suspended or self is _libsc3.main.current_tt
 
     @property
     def thread_player(self):
         if self._thread_player is not None:
             return self._thread_player
         else:
-            if self.parent is not None\
-            and self.parent is not _libsc3.main.main_tt:
+            if self.parent is not None and self.parent is not _libsc3.main.main_tt:
                 return self.parent.thread_player
             else:
                 return self
@@ -76,12 +80,12 @@ class TimeThread():
 
     @property
     def rand_seed(self):
-        '''Random seed of the routine.
+        """Random seed of the routine.
 
         By default, routine's random generators are inherited
         from the parent routine and only change when seeded.
 
-        '''
+        """
 
         return self._rand_seed
 
@@ -94,7 +98,7 @@ class TimeThread():
 
     @property
     def rand_state(self):
-        '''Return the state of the `random.Random` internal generator.'''
+        """Return the state of the `random.Random` internal generator."""
         return self._rgen.getstate()
 
     @rand_state.setter
@@ -147,7 +151,9 @@ class StopStream(StopIteration):
     pass
 
 
-class PausedStream(StopStream):  # Not to be confused with PauseStream which doesn't exists here.
+class PausedStream(
+    StopStream
+):  # Not to be confused with PauseStream which doesn't exists here.
     pass
 
 
@@ -164,12 +170,12 @@ class AlwaysYield(Exception):
 
 
 class Stream(aob.AbstractObject, ABC):
-    '''Lazy sequence of values.
+    """Lazy sequence of values.
 
     Streams are iterator-generators compatible objects that implement
     a specific interface to interact with clocks and patterns.
 
-    '''
+    """
 
     ### Iterator protocol ###
 
@@ -179,17 +185,14 @@ class Stream(aob.AbstractObject, ABC):
     def __next__(self):
         return self.next()
 
-
     ### Stream protocol ###
 
     def __stream__(self):
-        '''Return a Stream object.'''
+        """Return a Stream object."""
         return self
 
     def __embed__(self, inval=None):
-        '''Return generator-iterator that recursively embeds sub-streams.
-
-        '''
+        """Return generator-iterator that recursively embeds sub-streams."""
 
         try:
             while True:
@@ -210,9 +213,7 @@ class Stream(aob.AbstractObject, ABC):
     #     return self
 
     def all(self, inval=None):
-        '''Same as list(stream) but with inval argument.
-
-        '''
+        """Same as list(stream) but with inval argument."""
 
         lst = []
         try:
@@ -241,7 +242,6 @@ class Stream(aob.AbstractObject, ABC):
     # collate # // ascending order merge of two streams # NOTE: usa interlace
     # <> # Pchain
 
-
     ### AbstractObject interface ###
 
     def _compose_unop(self, selector):
@@ -256,7 +256,6 @@ class Stream(aob.AbstractObject, ABC):
     def _compose_narop(self, selector, *args):
         args = [stream(x) for x in args]
         return NaropStream(selector, self, *args)
-
 
     # asEventStreamPlayer
     # trace
@@ -279,7 +278,7 @@ class UnopStream(Stream):
         self.a.reset()
 
     def __repr__(self):
-        return f'{type(self).__name__}({self.selector.__name__}, {self.a})'
+        return f"{type(self).__name__}({self.selector.__name__}, {self.a})"
 
 
 class BinopStream(Stream):
@@ -299,8 +298,8 @@ class BinopStream(Stream):
 
     def __repr__(self):
         return (
-            f'{type(self).__name__}({self.selector.__name__}, '
-            f'{self.a}, {self.b})')
+            f"{type(self).__name__}({self.selector.__name__}, " f"{self.a}, {self.b})"
+        )
 
 
 # NOTE: See BinaryOpXStream implementation options. Is not possible to
@@ -329,14 +328,13 @@ class NaropStream(Stream):
 
     def __repr__(self):
         return (
-            f'{type(self).__name__}({self.selector.__name__}, '
-            f'{self.a}, {self.args})')
+            f"{type(self).__name__}({self.selector.__name__}, "
+            f"{self.a}, {self.args})"
+        )
 
 
 class FunctionStream(Stream):  # Was FuncStream
-    '''Create a stream from function evaluations.
-
-    '''
+    """Create a stream from function evaluations."""
 
     # Functions could use StopStream as sclang nil but is not nice.
     def __init__(self, next_func, reset_func=None, data=None):
@@ -347,11 +345,11 @@ class FunctionStream(Stream):  # Was FuncStream
         self.data = data
 
     def next(self, inval=None):
-        '''Return the next value from the stream.
+        """Return the next value from the stream.
 
         Its behaviour is the same as in `Routine.next`.
 
-        '''
+        """
 
         # return fn.value(self.next_func, inval, self.data)  # Not cheap.
         # return self.next_func(inval, self.data)  # Mandatory
@@ -363,11 +361,11 @@ class FunctionStream(Stream):  # Was FuncStream
             return self.next_func()
 
     def reset(self):
-        '''Reset the stream by executing the `reset_func` if provided.
+        """Reset the stream by executing the `reset_func` if provided.
 
         If no `reset_func` was provided this method does nothing.
 
-        '''
+        """
         # fn.value(self.reset_func, self.data)  # Not cheap.
         # self.reset_func(self.data)  # Mandatory.
         if self._reset_nargs > 0:
@@ -379,7 +377,7 @@ class FunctionStream(Stream):  # Was FuncStream
 
 
 class Routine(TimeThread, Stream):
-    '''
+    """
     Routines are iterator-generator compatible objects that implement
     the interfaces needed to interact with clocks and patterns and can
     keep track of individual random states. They could be understood as
@@ -403,9 +401,10 @@ class Routine(TimeThread, Stream):
 
       To use different random states and seeds the functions provided by
       the `builtins` module must be used.
-    '''
+    """
 
-    class _SENTINEL(): pass
+    class _SENTINEL:
+        pass
 
     def __init__(self, func):
         super().__init__(func)
@@ -415,18 +414,18 @@ class Routine(TimeThread, Stream):
 
     @classmethod
     def run(cls, func, clock=None, quant=None):
-        '''Create and play a routine from a common function.
+        """Create and play a routine from a common function.
 
         This method is a convenience constructor.
 
-        '''
+        """
 
         obj = cls(func)
         obj.play(clock, quant)
         return obj
 
     def play(self, clock=None, quant=None):
-        '''Schedule the Routine in a clock to play it.
+        """Schedule the Routine in a clock to play it.
 
         Parameters
         ----------
@@ -439,11 +438,10 @@ class Routine(TimeThread, Stream):
             Quant.as_quant constructor. This parameter only works for
             TempoClock and is ignored by other clocks.
 
-        '''
+        """
 
         with self._state_lock:
-            if self.state == self.State.Init\
-            or self.state == self.state.Paused:
+            if self.state == self.State.Init or self.state == self.state.Paused:
                 self.state = self.State.Suspended
                 clock = clock or _libsc3.main.current_tt._clock
                 clock.play(self, quant)
@@ -452,7 +450,7 @@ class Routine(TimeThread, Stream):
         # return self
 
     def next(self, inval=None):
-        '''Return the next value from the routine.
+        """Return the next value from the routine.
 
         This method accepts an optional input value and act the same way
         as the generator's `send` method. Routines behave like iterators
@@ -463,7 +461,7 @@ class Routine(TimeThread, Stream):
         this method is called and return the value of the first yield
         statement.
 
-        '''
+        """
 
         with self._state_lock:
             if self.state == self.State.Paused:
@@ -533,35 +531,35 @@ class Routine(TimeThread, Stream):
             return self._last_value
 
     def reset(self):
-        '''Reset the routine to its initial state.'''
+        """Reset the routine to its initial state."""
         with self._state_lock:
             if self.state == self.State.Running:
                 raise RoutineException(
-                    'cannot be reset within itself except by YieldAndReset')
+                    "cannot be reset within itself except by YieldAndReset"
+                )
             else:
                 self._iterator = None
                 self._clock = clk.SystemClock  # Default clock.
                 self.state = self.State.Init
 
     def pause(self):
-        '''Pause the routine and remove it from the clock if it is playing.
+        """Pause the routine and remove it from the clock if it is playing.
 
         Raises
         ------
         RoutineException
             If this method is called from within the routine's function itself.
 
-        '''
+        """
 
         with self._state_lock:
             if self.state == self.State.Running:
-                raise RoutineException('cannot be paused within itself')
-            if self.state == self.State.Init\
-            or self.state == self.State.Suspended:
+                raise RoutineException("cannot be paused within itself")
+            if self.state == self.State.Init or self.state == self.State.Suspended:
                 self.state = self.State.Paused
 
     def resume(self, clock=None, quant=None):
-        '''Resume the routine, this method does nothing if wasn't paused before.
+        """Resume the routine, this method does nothing if wasn't paused before.
 
         Parameters
         ----------
@@ -574,7 +572,7 @@ class Routine(TimeThread, Stream):
             Quant.as_quant constructor. This parameter only works for
             TempoClock and is ignored by other clocks.
 
-        '''
+        """
 
         with self._state_lock:
             if self.state == self.State.Paused:
@@ -583,18 +581,18 @@ class Routine(TimeThread, Stream):
                 clock.play(self, quant)
 
     def stop(self):
-        '''Stop the routine and remove it from the clock if it is playing.
+        """Stop the routine and remove it from the clock if it is playing.
 
         Raises
         ------
         RoutineException
             If this method is called from within the routine's function itself.
 
-        '''
+        """
 
         with self._state_lock:
             if self.state == self.State.Running:
-                raise RoutineException('cannot be stopped within itself')
+                raise RoutineException("cannot be stopped within itself")
             else:
                 self._iterator = None
                 self._last_value = None
@@ -608,36 +606,38 @@ class Routine(TimeThread, Stream):
         return self.next((self, clock))
 
     def __repr__(self):
-        return f'{type(self).__name__}({self.func.__qualname__})'
+        return f"{type(self).__name__}({self.func.__qualname__})"
 
 
 # decorator syntax
-class routine():
-    '''Decorator to convert generataor functions into Routines.
+class routine:
+    """Decorator to convert generataor functions into Routines.
 
     This decorator class is redundant with the `Routine` class, it returns an
     instance of that class, but its use is recommended when used as decorator.
 
-    '''
+    """
 
     def __new__(cls, func):
         return Routine(func)
 
     @staticmethod
     def run(clock=None, quant=None):
-        '''Convenience decorator method equivalent to `Routine.run(func, clock, quant)`.'''
+        """Convenience decorator method equivalent to `Routine.run(func, clock, quant)`."""
+
         def make_routine(func):
             obj = Routine(func)
             obj.play(clock, quant)
             return obj
+
         return make_routine
 
 
 ### Condition.sc ###
 
 
-class Condition():
-    '''
+class Condition:
+    """
     Stop the execution of a routine playing on a clock until a condition
     is meet.
 
@@ -651,7 +651,7 @@ class Condition():
     test: bool | callable
         Initial test condition it can be a callable that return a boolean.
 
-    '''
+    """
 
     def __init__(self, test=False):
         self._test = test
@@ -660,7 +660,7 @@ class Condition():
 
     @property
     def test(self):
-        '''Get the truth value of the test.'''
+        """Get the truth value of the test."""
         if callable(self._test):
             return self._test()
         else:
@@ -668,11 +668,11 @@ class Condition():
 
     @test.setter
     def test(self, value):
-        '''Set test value. It can be a boolean or a callable that returns one.'''
+        """Set test value. It can be a boolean or a callable that returns one."""
         self._test = value
 
     def wait(self):
-        '''
+        """
         Return a generator that will remove the routine from the clock
         by returning a string and add it to a waiting queue when the
         condition is set to True and signaled. If the test condition is
@@ -695,15 +695,14 @@ class Condition():
         Exeption
             If the generator is yield outside a routine.
 
-        '''
+        """
 
         current_tt = _libsc3.main.current_tt
         if _libsc3.main.current_tt is _libsc3.main.main_tt:
-            raise Exception(
-                f'{type(self).__name__}.wait() called outside a routine')
+            raise Exception(f"{type(self).__name__}.wait() called outside a routine")
         if not self.test:
             self._waiting_threads.append(current_tt.thread_player)
-            yield 'hang'  # Arbitrary non numeric value.
+            yield "hang"  # Arbitrary non numeric value.
         else:
             yield 0
 
@@ -743,7 +742,7 @@ class Condition():
     #     yield value
 
     def signal(self):
-        '''Check the test and reschedule the routine if True.'''
+        """Check the test and reschedule the routine if True."""
         with self._state_lock:
             if self.test:
                 tmp_wtt = self._waiting_threads
@@ -752,7 +751,7 @@ class Condition():
                     tt._clock.sched(0, tt)
 
     def unhang(self):
-        '''Unhang a previously hung routine.'''
+        """Unhang a previously hung routine."""
         with self._state_lock:
             # // Ignore the test, just resume all waiting threads.
             tmp_wtt = self._waiting_threads
@@ -761,17 +760,18 @@ class Condition():
                 tt._clock.sched(0, tt)
 
 
-class FlowVar():
-    '''
+class FlowVar:
+    """
     Defer the execution of a routine playing in a clock until a value is set.
 
     This class is similar of awaitables for routines. Internaly it uses the
     `Condition` class defined in this library. See `value` property for
     example usage.
 
-    '''
+    """
 
-    class _UNBOUND(): pass
+    class _UNBOUND:
+        pass
 
     def __init__(self):
         self._value = self._UNBOUND
@@ -779,7 +779,7 @@ class FlowVar():
 
     @property
     def value(self):
-        '''
+        """
         Return a generator that adds the routine to a waiting queue and
         yield a string from the internal `Condition`. The routine will be
         recheduled to return its value when when it is set.
@@ -800,24 +800,24 @@ class FlowVar():
         Exeption
             If the generator is yield outside a routine.
 
-        '''
+        """
 
         yield from self.condition.wait()
         return self._value
 
     @value.setter
     def value(self, inval):
-        '''Set the generator return value.
+        """Set the generator return value.
 
         Raises
         ------
         Exeption
             If the value set more than once (rebind).
 
-        '''
+        """
 
         if self._value is not self._UNBOUND:
-            raise Exception('cannot rebind a FlowVar')
+            raise Exception("cannot rebind a FlowVar")
         self._value = inval
         self.condition.signal()
 
@@ -826,19 +826,15 @@ class FlowVar():
 
 
 class ValueStream(Stream):
-    '''Create a stream from any object.
-
-    '''
+    """Create a stream from any object."""
 
     def __init__(self, value):
         self.value = value
-
 
     ### Iterator protocol ###
 
     def __next__(self):
         return self.value
-
 
     ### Stream protocol ###
 
@@ -851,24 +847,23 @@ class ValueStream(Stream):
         return self.value
 
     def __repr__(self):
-        return f'{type(self).__name__}({self.value})'
+        return f"{type(self).__name__}({self.value})"
 
 
 class DictionaryStream(ValueStream):
-    '''Create a stream from dict objects.
+    """Create a stream from dict objects.
 
     Dictionaries have a special meaning because they are the base clase for
     events and can be used as specifications deferring the event object
     creation.
 
-    '''
+    """
 
     ### Iterator protocol ###
 
     def __next__(self):
         # Object.composeEvent
         return self.value.copy()
-
 
     ### Stream protocol ###
 
@@ -900,11 +895,9 @@ class DictionaryStream(ValueStream):
 
 
 def stream(obj):
-    '''Convert any object into a Stream.
+    """Convert any object into a Stream."""
 
-    '''
-
-    if hasattr(obj, '__stream__'):
+    if hasattr(obj, "__stream__"):
         return obj.__stream__()
     else:
         if isinstance(obj, dict):
@@ -914,13 +907,13 @@ def stream(obj):
 
 
 def embed(obj, inval=None):
-    '''
+    """
     Convert any object into a Stream and return its embeddable form passing
     inval to the `next` calls.
 
-    '''
+    """
 
-    if hasattr(obj, '__embed__'):
+    if hasattr(obj, "__embed__"):
         return obj.__embed__(inval)
     else:
         if isinstance(obj, dict):

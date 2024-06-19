@@ -31,7 +31,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 For more information, please refer to <http://unlicense.org/>
 """
 
-
 import struct
 import logging
 import collections
@@ -81,9 +80,9 @@ class OscBundleBuildError(OscBuildError):
 
 IMMEDIATELY = 1
 
-_IMMEDIATELY_DGRAM = struct.pack('>Q', 1)
-_BUNDLE_PREFIX_DGRAM = b'#bundle\x00'
-_EMPTY_STR_DGRAM = b'\x00\x00\x00\x00'
+_IMMEDIATELY_DGRAM = struct.pack(">Q", 1)
+_BUNDLE_PREFIX_DGRAM = b"#bundle\x00"
+_EMPTY_STR_DGRAM = b"\x00\x00\x00\x00"
 
 _INT_DGRAM_LEN = 4
 _FLOAT_DGRAM_LEN = 4
@@ -105,11 +104,11 @@ def write_string(val: str) -> bytes:
       - BuildError if the string could not be encoded.
     """
     try:
-        dgram = val.encode('utf-8')  # Default, but better be explicit.
+        dgram = val.encode("utf-8")  # Default, but better be explicit.
     except (UnicodeEncodeError, AttributeError) as e:
-        raise OscTypeBuildError('Incorrect string, could not encode') from e
+        raise OscTypeBuildError("Incorrect string, could not encode") from e
     diff = _STRING_DGRAM_PAD - (len(dgram) % _STRING_DGRAM_PAD)
-    dgram += (b'\x00' * diff)
+    dgram += b"\x00" * diff
     return dgram
 
 
@@ -132,29 +131,31 @@ def get_string(dgram: bytes, start_index: int) -> Tuple[str, int]:
       ParseError if the datagram could not be parsed.
     """
     if start_index < 0:
-        raise OscTypeParseError('start_index < 0')
+        raise OscTypeParseError("start_index < 0")
     offset = 0
     try:
-        if (len(dgram) > start_index + _STRING_DGRAM_PAD
-                and dgram[start_index + _STRING_DGRAM_PAD] == _EMPTY_STR_DGRAM):
-            return '', start_index + _STRING_DGRAM_PAD
+        if (
+            len(dgram) > start_index + _STRING_DGRAM_PAD
+            and dgram[start_index + _STRING_DGRAM_PAD] == _EMPTY_STR_DGRAM
+        ):
+            return "", start_index + _STRING_DGRAM_PAD
         while dgram[start_index + offset] != 0:
             offset += 1
         # Align to a byte word.
         if (offset) % _STRING_DGRAM_PAD == 0:
             offset += _STRING_DGRAM_PAD
         else:
-            offset += (-offset % _STRING_DGRAM_PAD)
+            offset += -offset % _STRING_DGRAM_PAD
         # Python slices do not raise an IndexError past the last index,
         # do it ourselves.
         if offset > len(dgram[start_index:]):
-            raise OscTypeParseError('Datagram is too short')
-        data_str = dgram[start_index:start_index + offset]
-        return data_str.replace(b'\x00', b'').decode('utf-8'), start_index + offset
+            raise OscTypeParseError("Datagram is too short")
+        data_str = dgram[start_index : start_index + offset]
+        return data_str.replace(b"\x00", b"").decode("utf-8"), start_index + offset
     except IndexError as e:
-        raise OscTypeParseError('Could not parse datagram') from e
+        raise OscTypeParseError("Could not parse datagram") from e
     except TypeError as e:
-        raise OscTypeParseError('Could not parse datagram') from e
+        raise OscTypeParseError("Could not parse datagram") from e
 
 
 def write_int(val: int) -> bytes:
@@ -164,9 +165,9 @@ def write_int(val: int) -> bytes:
       - BuildError if the int could not be converted.
     """
     try:
-        return struct.pack('>i', val)
+        return struct.pack(">i", val)
     except struct.error as e:
-        raise OscTypeBuildError('Wrong argument value passed') from e
+        raise OscTypeBuildError("Wrong argument value passed") from e
 
 
 def get_int(dgram: bytes, start_index: int) -> Tuple[int, int]:
@@ -184,20 +185,20 @@ def get_int(dgram: bytes, start_index: int) -> Tuple[int, int]:
     """
     try:
         if len(dgram[start_index:]) < _INT_DGRAM_LEN:
-            raise OscTypeParseError('Datagram is too short')
+            raise OscTypeParseError("Datagram is too short")
         return (
-            struct.unpack(
-                '>i', dgram[start_index:start_index + _INT_DGRAM_LEN])[0],
-            start_index + _INT_DGRAM_LEN)
+            struct.unpack(">i", dgram[start_index : start_index + _INT_DGRAM_LEN])[0],
+            start_index + _INT_DGRAM_LEN,
+        )
     except (struct.error, TypeError) as e:
-        raise OscTypeParseError('Could not parse datagram') from e
+        raise OscTypeParseError("Could not parse datagram") from e
 
 
 def write_timetag(timetag: int) -> bytes:
     try:
-        return struct.pack('>Q', timetag)
+        return struct.pack(">Q", timetag)
     except struct.error as e:
-        raise OscTypeBuildError('Wrong argument value passed') from e
+        raise OscTypeBuildError("Wrong argument value passed") from e
 
 
 def get_timetag(dgram: bytes, start_index: int) -> Tuple[int, int]:
@@ -215,13 +216,15 @@ def get_timetag(dgram: bytes, start_index: int) -> Tuple[int, int]:
     """
     try:
         if len(dgram[start_index:]) < _TIMETAG_DGRAM_LEN:
-            raise OscTypeParseError('Datagram is too short')
+            raise OscTypeParseError("Datagram is too short")
         return (
-            struct.unpack(
-                '>Q', dgram[start_index:start_index + _TIMETAG_DGRAM_LEN])[0],
-            start_index + _TIMETAG_DGRAM_LEN)
+            struct.unpack(">Q", dgram[start_index : start_index + _TIMETAG_DGRAM_LEN])[
+                0
+            ],
+            start_index + _TIMETAG_DGRAM_LEN,
+        )
     except (struct.error, TypeError) as e:
-        raise OscTypeParseError('Could not parse datagram') from e
+        raise OscTypeParseError("Could not parse datagram") from e
 
 
 def write_float(val: float) -> bytes:
@@ -231,9 +234,9 @@ def write_float(val: float) -> bytes:
       - BuildError if the float could not be converted.
     """
     try:
-        return struct.pack('>f', val)
+        return struct.pack(">f", val)
     except struct.error as e:
-        raise OscTypeBuildError('Wrong argument value passed') from e
+        raise OscTypeBuildError("Wrong argument value passed") from e
 
 
 def get_float(dgram: bytes, start_index: int) -> Tuple[float, int]:
@@ -254,13 +257,13 @@ def get_float(dgram: bytes, start_index: int) -> Tuple[float, int]:
             # Noticed that Reaktor doesn't send the last bunch of \x00 needed to make
             # the float representation complete in some cases, thus we pad here to
             # account for that.
-            dgram = dgram + b'\x00' * (_FLOAT_DGRAM_LEN - len(dgram[start_index:]))
+            dgram = dgram + b"\x00" * (_FLOAT_DGRAM_LEN - len(dgram[start_index:]))
         return (
-            struct.unpack(
-                '>f', dgram[start_index:start_index + _FLOAT_DGRAM_LEN])[0],
-            start_index + _FLOAT_DGRAM_LEN)
+            struct.unpack(">f", dgram[start_index : start_index + _FLOAT_DGRAM_LEN])[0],
+            start_index + _FLOAT_DGRAM_LEN,
+        )
     except (struct.error, TypeError) as e:
-        raise OscTypeParseError('Could not parse datagram') from e
+        raise OscTypeParseError("Could not parse datagram") from e
 
 
 def write_double(val: float) -> bytes:
@@ -270,9 +273,9 @@ def write_double(val: float) -> bytes:
       - BuildError if the double could not be converted.
     """
     try:
-        return struct.pack('>d', val)
+        return struct.pack(">d", val)
     except struct.error as e:
-        raise OscTypeBuildError('Wrong argument value passed') from e
+        raise OscTypeBuildError("Wrong argument value passed") from e
 
 
 def get_double(dgram: bytes, start_index: int) -> Tuple[float, int]:
@@ -290,13 +293,15 @@ def get_double(dgram: bytes, start_index: int) -> Tuple[float, int]:
     """
     try:
         if len(dgram[start_index:]) < _DOUBLE_DGRAM_LEN:
-            raise OscParseError('Datagram is too short')
+            raise OscParseError("Datagram is too short")
         return (
-            struct.unpack(
-                '>d', dgram[start_index:start_index + _DOUBLE_DGRAM_LEN])[0],
-            start_index + _DOUBLE_DGRAM_LEN)
+            struct.unpack(">d", dgram[start_index : start_index + _DOUBLE_DGRAM_LEN])[
+                0
+            ],
+            start_index + _DOUBLE_DGRAM_LEN,
+        )
     except (struct.error, TypeError) as e:
-        raise OscTypeParseError('Could not parse datagram') from e
+        raise OscTypeParseError("Could not parse datagram") from e
 
 
 def write_blob(val: bytes) -> bytes:
@@ -306,16 +311,16 @@ def write_blob(val: bytes) -> bytes:
       - BuildError if the value was empty or if its size didn't fit an OSC int.
     """
     if not val:
-        raise OscTypeBuildError('Blob value cannot be empty')
+        raise OscTypeBuildError("Blob value cannot be empty")
     dgram = write_int(len(val))
     dgram += val
     while len(dgram) % _BLOB_DGRAM_PAD != 0:
-        dgram += b'\x00'
+        dgram += b"\x00"
     return dgram
 
 
 def get_blob(dgram: bytes, start_index: int) -> Tuple[bytes, int]:
-    """ Get a blob from the datagram.
+    """Get a blob from the datagram.
 
     According to the specifications, a blob is made of
     "an int32 size count, followed by that many 8-bit bytes of arbitrary
@@ -337,8 +342,8 @@ def get_blob(dgram: bytes, start_index: int) -> Tuple[bytes, int]:
     total_size = size + (-size % _BLOB_DGRAM_PAD)
     end_index = int_offset + size
     if end_index - start_index > len(dgram[start_index:]):
-        raise OscTypeParseError('Datagram is too short')
-    return dgram[int_offset:int_offset + size], int_offset + total_size
+        raise OscTypeParseError("Datagram is too short")
+    return dgram[int_offset : int_offset + size], int_offset + total_size
 
 
 def write_rgba(val: bytes) -> bytes:
@@ -348,9 +353,9 @@ def write_rgba(val: bytes) -> bytes:
       - BuildError if the int could not be converted.
     """
     try:
-        return struct.pack('>I', val)
+        return struct.pack(">I", val)
     except struct.error as e:
-        raise OscTypeBuildError('Wrong argument value passed') from e
+        raise OscTypeBuildError("Wrong argument value passed") from e
 
 
 def get_rgba(dgram: bytes, start_index: int) -> Tuple[bytes, int]:
@@ -368,13 +373,13 @@ def get_rgba(dgram: bytes, start_index: int) -> Tuple[bytes, int]:
     """
     try:
         if len(dgram[start_index:]) < _INT_DGRAM_LEN:
-            raise OscTypeParseError('Datagram is too short')
+            raise OscTypeParseError("Datagram is too short")
         return (
-            struct.unpack(
-                '>I', dgram[start_index:start_index + _INT_DGRAM_LEN])[0],
-            start_index + _INT_DGRAM_LEN)
+            struct.unpack(">I", dgram[start_index : start_index + _INT_DGRAM_LEN])[0],
+            start_index + _INT_DGRAM_LEN,
+        )
     except (struct.error, TypeError) as e:
-        raise OscTypeParseError('Could not parse datagram') from e
+        raise OscTypeParseError("Could not parse datagram") from e
 
 
 def write_midi(val: Tuple[Tuple[int, int, int, int], int]) -> bytes:
@@ -386,13 +391,12 @@ def write_midi(val: Tuple[Tuple[int, int, int, int], int]) -> bytes:
       - BuildError if the MIDI message could not be converted.
     """
     if len(val) != 4:
-        raise OscTypeBuildError('MIDI message length is invalid')
+        raise OscTypeBuildError("MIDI message length is invalid")
     try:
-        value = sum(
-            (value & 0xFF) << 8 * (3 - pos) for pos, value in enumerate(val))
-        return struct.pack('>I', value)
+        value = sum((value & 0xFF) << 8 * (3 - pos) for pos, value in enumerate(val))
+        return struct.pack(">I", value)
     except struct.error as e:
-        raise OscTypeBuildError('Wrong argument value passed') from e
+        raise OscTypeBuildError("Wrong argument value passed") from e
 
 
 def get_midi(dgram: bytes, start_index: int) -> Tuple[Tuple[int, int, int, int], int]:
@@ -410,14 +414,12 @@ def get_midi(dgram: bytes, start_index: int) -> Tuple[Tuple[int, int, int, int],
     """
     try:
         if len(dgram[start_index:]) < _INT_DGRAM_LEN:
-            raise OscTypeParseError('Datagram is too short')
-        val = struct.unpack(
-            '>I', dgram[start_index:start_index + _INT_DGRAM_LEN])[0]
-        midi_msg = tuple(
-            (val & 0xFF << 8 * i) >> 8 * i for i in range(3, -1, -1))
+            raise OscTypeParseError("Datagram is too short")
+        val = struct.unpack(">I", dgram[start_index : start_index + _INT_DGRAM_LEN])[0]
+        midi_msg = tuple((val & 0xFF << 8 * i) >> 8 * i for i in range(3, -1, -1))
         return (midi_msg, start_index + _INT_DGRAM_LEN)
     except (struct.error, TypeError) as e:
-        raise OscTypeParseError('Could not parse datagram') from e
+        raise OscTypeParseError("Could not parse datagram") from e
 
 
 ### OSC Bundle ###
@@ -443,8 +445,7 @@ class OscBundle(object):
         try:
             self._timetag, index = get_timetag(self._dgram, index)
         except OscTypeParseError as e:
-            raise OscBundleParseError(
-                'Could not get the timetag from datagram') from e
+            raise OscBundleParseError("Could not get the timetag from datagram") from e
         # Get the contents as a list of OscBundle and OscMessage.
         self._contents = self._parse_contents(index)
 
@@ -461,7 +462,7 @@ class OscBundle(object):
                 # Get the sub content size.
                 content_size, index = get_int(self._dgram, index)
                 # Get the datagram for the sub content.
-                content_dgram = self._dgram[index:index + content_size]
+                content_dgram = self._dgram[index : index + content_size]
                 # Increment our position index up to the next possible content.
                 index += content_size
                 # Parse the content into an OSC message or bundle.
@@ -470,11 +471,11 @@ class OscBundle(object):
                 elif OscMessage.dgram_is_message(content_dgram):
                     contents.append(OscMessage(content_dgram))
                 else:
-                    _logger.warning('Could not identify content type '
-                                    f'of dgram {content_dgram}')
+                    _logger.warning(
+                        "Could not identify content type " f"of dgram {content_dgram}"
+                    )
         except (OscTypeParseError, OscMessageParseError, IndexError) as e:
-            raise OscBundleParseError(
-                "Could not parse a content datagram") from e
+            raise OscBundleParseError("Could not parse a content datagram") from e
 
         return contents
 
@@ -549,11 +550,12 @@ class OscBundleBuilder(object):
                     dgram += content.dgram
                 else:
                     raise OscBundleBuildError(
-                        'Content must be either OscBundle or OscMessage '
-                        f'found {type(content).__name__}')
+                        "Content must be either OscBundle or OscMessage "
+                        f"found {type(content).__name__}"
+                    )
             return OscBundle(dgram)
         except OscTypeBuildError as e:
-            raise OscBundleBuildError('Could not build the bundle') from e
+            raise OscBundleBuildError("Could not build the bundle") from e
 
 
 ### OSC Message ###
@@ -580,7 +582,7 @@ class OscMessage(object):
 
             # Get the parameters types.
             type_tag, index = get_string(self._dgram, index)
-            if type_tag.startswith(','):
+            if type_tag.startswith(","):
                 type_tag = type_tag[1:]
 
             params = []
@@ -614,22 +616,22 @@ class OscMessage(object):
                 elif param == "]":  # Array stop.
                     if len(param_stack) < 2:
                         raise OscMessageParseError(
-                            'Unexpected closing bracket '
-                            f'in type tag: {type_tag}')
+                            "Unexpected closing bracket " f"in type tag: {type_tag}"
+                        )
                     param_stack.pop()
                 # TODO: Support more exotic types as described in the specification.
                 else:
-                    _logger.warning(f'Unhandled parameter type: {param}')
+                    _logger.warning(f"Unhandled parameter type: {param}")
                     continue
                 if param not in "[]":
                     param_stack[-1].append(val)
             if len(param_stack) != 1:
                 raise OscMessageParseError(
-                    f'Missing closing bracket in type tag: {type_tag}')
+                    f"Missing closing bracket in type tag: {type_tag}"
+                )
             self._parameters = params
         except OscTypeParseError as e:
-            raise OscMessageParseError(
-                'Found incorrect datagram, ignoring it') from e
+            raise OscMessageParseError("Found incorrect datagram, ignoring it") from e
 
     @property
     def address(self) -> str:
@@ -639,7 +641,7 @@ class OscMessage(object):
     @staticmethod
     def dgram_is_message(dgram: bytes) -> bool:
         """Returns whether this datagram starts as an OSC message."""
-        return dgram.startswith(b'/')
+        return dgram.startswith(b"/")
 
     @property
     def size(self) -> int:
@@ -682,11 +684,19 @@ class OscMessageBuilder(object):
     ARG_TYPE_ARRAY_STOP = "]"
 
     _SUPPORTED_ARG_TYPES = (
-        ARG_TYPE_FLOAT, ARG_TYPE_DOUBLE, ARG_TYPE_INT, ARG_TYPE_BLOB,
-        ARG_TYPE_STRING, ARG_TYPE_RGBA, ARG_TYPE_MIDI, ARG_TYPE_TRUE,
-        ARG_TYPE_FALSE, ARG_TYPE_NIL)
+        ARG_TYPE_FLOAT,
+        ARG_TYPE_DOUBLE,
+        ARG_TYPE_INT,
+        ARG_TYPE_BLOB,
+        ARG_TYPE_STRING,
+        ARG_TYPE_RGBA,
+        ARG_TYPE_MIDI,
+        ARG_TYPE_TRUE,
+        ARG_TYPE_FALSE,
+        ARG_TYPE_NIL,
+    )
 
-    def __init__(self, address: str=None) -> None:
+    def __init__(self, address: str = None) -> None:
         """Initialize a new builder for a message.
 
         Args:
@@ -706,7 +716,11 @@ class OscMessageBuilder(object):
         self._address = value
 
     @property
-    def args(self) -> List[Tuple[str, Union[str, bytes, bool, int, float, tuple, list]]]:   # TODO: Make 'tuple' more specific for it is a MIDI packet
+    def args(
+        self,
+    ) -> List[
+        Tuple[str, Union[str, bytes, bool, int, float, tuple, list]]
+    ]:  # TODO: Make 'tuple' more specific for it is a MIDI packet
         """Returns the (type, value) arguments list of this message."""
         return self._args
 
@@ -720,7 +734,11 @@ class OscMessageBuilder(object):
             return True
         return False
 
-    def add_arg(self, arg_value: Union[str, bytes, bool, int, float, tuple, list], arg_type: str=None) -> None:     # TODO: Make 'tuple' more specific for it is a MIDI packet
+    def add_arg(
+        self,
+        arg_value: Union[str, bytes, bool, int, float, tuple, list],
+        arg_type: str = None,
+    ) -> None:  # TODO: Make 'tuple' more specific for it is a MIDI packet
         """Add a typed argument to this message.
 
         Args:
@@ -732,8 +750,9 @@ class OscMessageBuilder(object):
         """
         if arg_type and not self._valid_type(arg_type):
             raise ValueError(
-                f'arg_type must be one of {self._SUPPORTED_ARG_TYPES}, '
-                'or an array of valid types')
+                f"arg_type must be one of {self._SUPPORTED_ARG_TYPES}, "
+                "or an array of valid types"
+            )
         if not arg_type:
             arg_type = self._get_arg_type(arg_value)
         if isinstance(arg_type, list):
@@ -744,7 +763,9 @@ class OscMessageBuilder(object):
         else:
             self._args.append((arg_type, arg_value))
 
-    def _get_arg_type(self, arg_value: Union[str, bytes, bool, int, float, tuple, list]) -> str:    # TODO: Make 'tuple' more specific for it is a MIDI packet
+    def _get_arg_type(
+        self, arg_value: Union[str, bytes, bool, int, float, tuple, list]
+    ) -> str:  # TODO: Make 'tuple' more specific for it is a MIDI packet
         """Guess the type of a value.
 
         Args:
@@ -772,7 +793,8 @@ class OscMessageBuilder(object):
             arg_type = self.ARG_TYPE_NIL
         else:
             raise ValueError(
-                f'Infered arg_value type is not supported: {type(arg_value)}')
+                f"Infered arg_value type is not supported: {type(arg_value)}"
+            )
         return arg_type
 
     def build(self):
@@ -786,18 +808,18 @@ class OscMessageBuilder(object):
           - an OscMessage instance.
         """
         if not self._address:
-            raise OscMessageBuildError('OSC addresses cannot be empty')
-        dgram = b''
+            raise OscMessageBuildError("OSC addresses cannot be empty")
+        dgram = b""
         try:
             # Write the address.
             dgram += write_string(self._address)
             if not self._args:
-                dgram += write_string(',')
+                dgram += write_string(",")
                 return OscMessage(dgram)
 
             # Write the parameters.
             arg_types = "".join([arg[0] for arg in self._args])
-            dgram += write_string(',' + arg_types)
+            dgram += write_string("," + arg_types)
             for arg_type, value in self._args:
                 if arg_type == self.ARG_TYPE_STRING:
                     dgram += write_string(value)
@@ -813,30 +835,33 @@ class OscMessageBuilder(object):
                     dgram += write_rgba(value)
                 elif arg_type == self.ARG_TYPE_MIDI:
                     dgram += write_midi(value)
-                elif arg_type in (self.ARG_TYPE_TRUE,
-                                  self.ARG_TYPE_FALSE,
-                                  self.ARG_TYPE_ARRAY_START,
-                                  self.ARG_TYPE_ARRAY_STOP,
-                                  self.ARG_TYPE_NIL):
+                elif arg_type in (
+                    self.ARG_TYPE_TRUE,
+                    self.ARG_TYPE_FALSE,
+                    self.ARG_TYPE_ARRAY_START,
+                    self.ARG_TYPE_ARRAY_STOP,
+                    self.ARG_TYPE_NIL,
+                ):
                     continue
                 else:
                     raise OscMessageBuildError(
-                        f'Incorrect parameter type found {arg_type}')
+                        f"Incorrect parameter type found {arg_type}"
+                    )
 
             return OscMessage(dgram)
         except OscTypeBuildError as e:
-            raise OscMessageBuildError(f'Could not build the message') from e
+            raise OscMessageBuildError("Could not build the message") from e
 
 
 ### OSC Packet ###
 
 
 TimedMessage = collections.namedtuple(
-    typename='TimedMessage',
-    field_names=('time', 'message'))
+    typename="TimedMessage", field_names=("time", "message")
+)
 
 
-class OscPacket():
+class OscPacket:
     def __init__(self, dgram: bytes):
         if OscBundle.dgram_is_bundle(dgram):
             self._messages = self._get_bundle_messages(OscBundle(dgram))
@@ -846,8 +871,8 @@ class OscPacket():
         else:
             # Empty packet (because UDP).
             raise OscParseError(
-                'OSC packet should at least contain '
-                'an OscMessage or OscBundle')
+                "OSC packet should at least contain " "an OscMessage or OscBundle"
+            )
 
     @property
     def messages(self):

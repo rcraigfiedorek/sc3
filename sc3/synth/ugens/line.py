@@ -8,31 +8,31 @@ from .. import _graphparam as gpp
 class Line(ugn.UGen):
     @classmethod
     def ar(cls, start=0.0, end=1.0, dur=1.0, done_action=0):
-        return cls._multi_new('audio', start, end, dur, done_action)
+        return cls._multi_new("audio", start, end, dur, done_action)
 
     @classmethod
     def kr(cls, start=0.0, end=1.0, dur=1.0, done_action=0):
-        return cls._multi_new('control', start, end, dur, done_action)
+        return cls._multi_new("control", start, end, dur, done_action)
 
 
 class XLine(ugn.UGen):
     @classmethod
     def ar(cls, start=1.0, end=2.0, dur=1.0, done_action=0):
-        return cls._multi_new('audio', start, end, dur, done_action)
+        return cls._multi_new("audio", start, end, dur, done_action)
 
     @classmethod
     def kr(cls, start=1.0, end=2.0, dur=1.0, done_action=0):
-        return cls._multi_new('control', start, end, dur, done_action)
+        return cls._multi_new("control", start, end, dur, done_action)
 
 
 class LinExp(ugn.PureUGenMixin, ugn.UGen):
     @classmethod
     def ar(cls, input=0.0, srclo=0.0, srchi=1.0, dstlo=1.0, dsthi=2.0):
-        return cls._multi_new('audio', input, srclo, srchi, dstlo, dsthi)
+        return cls._multi_new("audio", input, srclo, srchi, dstlo, dsthi)
 
     @classmethod
     def kr(cls, input=0.0, srclo=0.0, srchi=1.0, dstlo=1.0, dsthi=2.0):
-        return cls._multi_new('control', input, srclo, srchi, dstlo, dsthi)
+        return cls._multi_new("control", input, srclo, srchi, dstlo, dsthi)
 
     def _check_inputs(self):
         return self._check_sr_as_first_input()
@@ -53,29 +53,29 @@ class LinLin(ugn.PseudoUGen):
 
     @classmethod
     def _method_selector_for_rate(cls, rate):  # FIXME: API, same in SelectX
-        if rate == 'audio':
-            return 'ar'
-        elif rate == 'control':
-            return 'kr'
+        if rate == "audio":
+            return "ar"
+        elif rate == "control":
+            return "kr"
         # return None  # original behaviour
-        raise AttributeError(f'{cls.__name__} has no {rate} rate constructor')
+        raise AttributeError(f"{cls.__name__} has no {rate} rate constructor")
 
 
 class AmpComp(ugn.PureUGenMixin, ugn.UGen):
     @classmethod
     def ar(cls, freq=bi.midicps(60), root=bi.midicps(60), exp=0.3333):
-        return cls._multi_new('audio', freq, root, exp)
+        return cls._multi_new("audio", freq, root, exp)
 
     @classmethod
     def kr(cls, freq=bi.midicps(60), root=bi.midicps(60), exp=0.3333):
-        return cls._multi_new('control', freq, root, exp)
+        return cls._multi_new("control", freq, root, exp)
 
     @classmethod
     def ir(cls, freq=bi.midicps(60), root=bi.midicps(60), exp=0.3333):
-        return cls._multi_new('scalar', freq, root, exp)
+        return cls._multi_new("scalar", freq, root, exp)
 
     def _check_inputs(self):
-        if self.rate == 'audio':
+        if self.rate == "audio":
             return self._check_sr_as_first_input()
         else:
             return None
@@ -84,36 +84,36 @@ class AmpComp(ugn.PureUGenMixin, ugn.UGen):
 class AmpCompA(AmpComp):
     @classmethod
     def ar(cls, freq=1000.0, root=0.0, min_amp=0.32, root_amp=1.0):
-        return cls._multi_new('audio', freq, root, min_amp, root_amp)
+        return cls._multi_new("audio", freq, root, min_amp, root_amp)
 
     @classmethod
     def kr(cls, freq=1000.0, root=0.0, min_amp=0.32, root_amp=1.0):
-        return cls._multi_new('control', freq, root, min_amp, root_amp)
+        return cls._multi_new("control", freq, root, min_amp, root_amp)
 
     @classmethod
     def ir(cls, freq=1000.0, root=0.0, min_amp=0.32, root_amp=1.0):
-        return cls._multi_new('scalar', freq, root, min_amp, root_amp)
+        return cls._multi_new("scalar", freq, root, min_amp, root_amp)
 
 
 class K2A(ugn.PureUGenMixin, ugn.UGen):
     # // Control rate to audio rate converter.
     @classmethod
     def ar(cls, input=0.0):
-        return cls._multi_new('audio', input)
+        return cls._multi_new("audio", input)
 
 
 class A2K(ugn.PureUGenMixin, ugn.UGen):
     # // Audio rate to control rate converter. only needed in specific cases.
     @classmethod
     def kr(cls, input=0.0):
-        return cls._multi_new('control', input)
+        return cls._multi_new("control", input)
 
 
 class T2K(A2K):
     # // Audio rate to control rate trigger converter.
     def _check_inputs(self):
-        if gpp.ugen_param(self.inputs[0])._as_ugen_rate() != 'audio':
-            return 'First input is not audio rate'
+        if gpp.ugen_param(self.inputs[0])._as_ugen_rate() != "audio":
+            return "First input is not audio rate"
         else:
             return None
 
@@ -122,17 +122,17 @@ class T2A(K2A):
     # // Control rate to audio rate trigger converter.
     @classmethod
     def ar(cls, input=0.0, offset=0):
-        return cls._multi_new('audio', input, offset)
+        return cls._multi_new("audio", input, offset)
 
 
 class DC(ugn.PureUGenMixin, ugn.MultiOutUGen):
     @classmethod
     def ar(cls, input=0.0):
-        return cls._multi_new('audio', input)
+        return cls._multi_new("audio", input)
 
     @classmethod
     def kr(cls, input=0.0):
-        return cls._multi_new('control', input)
+        return cls._multi_new("control", input)
 
     def _init_ugen(self, *inputs):  # override
         self._inputs = inputs

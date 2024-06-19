@@ -5,31 +5,31 @@ import re
 
 _rewrite_symbols = {
     # Valid OSC address symbols with re meaning BEFORE special symbols rewrite.
-    '(': '\(',
-    ')': '\)',
-    '^': '\^',
-    '.': '\.',
-    '$': '\$',
-    '+': '\+',
-    '|': '\|',
-    '\\': '\\\\',
-
+    "(": "\(",
+    ")": "\)",
+    "^": "\^",
+    ".": "\.",
+    "$": "\$",
+    "+": "\+",
+    "|": "\|",
+    "\\": "\\\\",
     # OSC special symbols (are invalid or special OSC Address symbols).
-    '{': '(?:',
-    ',': '|',
-    '}': ')',
-    '*': '.*',  # BUG: # lo ignora el * si luego viene ?, [, { o literal, por ejemplo: '/*bc'.matchOSCAddressPattern('/abc') es false y re.match('.bc', 'abc') devuelve match. Está en el párrafo anterior al cuadro en la especificación, dice que cada caracter de pattern debe coincidir con el próximo substring de address Y que todo caracter en address debe ser emparejado con algo de pattern.
+    "{": "(?:",
+    ",": "|",
+    "}": ")",
+    "*": ".*",  # BUG: # lo ignora el * si luego viene ?, [, { o literal, por ejemplo: '/*bc'.matchOSCAddressPattern('/abc') es false y re.match('.bc', 'abc') devuelve match. Está en el párrafo anterior al cuadro en la especificación, dice que cada caracter de pattern debe coincidir con el próximo substring de address Y que todo caracter en address debe ser emparejado con algo de pattern.
     # '[': '[',  # Same.
     # '-': '-',  # Same behaviour inside/outside brackets.
-    '[!': '[^',
+    "[!": "[^",
     # ']': ']',  # Same.
-    '-]': ']', # Discard '-' before closing bracket.
-    '?': '.'
+    "-]": "]",  # Discard '-' before closing bracket.
+    "?": ".",
 }
 
 
 _rewrite_pattern = re.compile(
-    '(' + '|'.join(re.escape(x) for x in _rewrite_symbols.keys()) + ')')
+    "(" + "|".join(re.escape(x) for x in _rewrite_symbols.keys()) + ")"
+)
 
 
 def _rewrite_func(match):
@@ -42,6 +42,7 @@ def osc_rematch_pattern(pattern, address):
 
 
 ### Option 2 ###
+
 
 def osc_match_pattern(pattern, address):
     # Based on liblo lo_pattern_match in PyrSymbolPrim.cpp.
@@ -64,46 +65,51 @@ def osc_match_pattern(pattern, address):
         while True:
             p = next(pattern, None)
 
-            while p == '*':
-                while p == '*':  # solo para quitar los '*' consecutivos.
+            while p == "*":
+                while p == "*":  # solo para quitar los '*' consecutivos.
                     p = next(pattern, None)
 
                 if p is None:  # '*' es el último caracter, todo lo que quede en a vale.
                     return True
 
-                if p != '?' and p != '[' and p != '{':  # '*?', '*[abc]', '*{a|b}' leaves '*' without effect.
+                if (
+                    p != "?" and p != "[" and p != "{"
+                ):  # '*?', '*[abc]', '*{a|b}' leaves '*' without effect.
                     a = next(address, None)
                     while a is not None and a != p:
                         a = next(address, None)
 
                     p = next(pattern, None)
 
-            if p == '?':
+            if p == "?":
                 a = next(address, None)
                 if a is None:
                     return False
-            elif p == '[':
+            elif p == "[":
                 char_set = set()
                 p = next(pattern)  # StopIteration, pattern mal formado.
 
-                if p == '!':
+                if p == "!":
                     negate = True
                     p = next(pattern)  # StopIteration, pattern mal formado.
                 else:
                     negate = False
 
-                while p != ']':
+                while p != "]":
                     prev_p = p  # necesita mirar antes
                     p = next(pattern)  # StopIteration, pattern mal formado.
-                    if p == '-':
+                    if p == "-":
                         # el guión se puede descartar.
                         p = next(pattern)  # StopIteration, pattern mal formado.
-                        if p != ']':
+                        if p != "]":
                             # es rango
                             char_set.update(
-                                chr(x) for x in range(ord(prev_p), ord(p) + 1))
+                                chr(x) for x in range(ord(prev_p), ord(p) + 1)
+                            )
                         else:
-                            char_set.add(prev_p)  # es fin de corchete, el guión de más no importa.
+                            char_set.add(
+                                prev_p
+                            )  # es fin de corchete, el guión de más no importa.
                     else:
                         char_set.add(prev_p)
                         char_set.add(p)
@@ -116,30 +122,30 @@ def osc_match_pattern(pattern, address):
                     return False
                 elif not negate and a not in char_set:
                     return False
-            elif p == '{':
+            elif p == "{":
                 string_set = set()
-                p_string = ''
-                a_string = ''
+                p_string = ""
+                a_string = ""
 
-                while p != '}':
+                while p != "}":
                     p = next(pattern)  # StopIteration, pattern mal formado.
-                    if p == ',':
+                    if p == ",":
                         string_set.add(p_string)
-                        p_string = ''
-                    elif p == '}':
+                        p_string = ""
+                    elif p == "}":
                         string_set.add(p_string)
                         break
                     else:
                         p_string += p
 
                 a = next(address, None)
-                while a != '/' and a is not None:
+                while a != "/" and a is not None:
                     a_string += a
                     if a_string in string_set:
                         break
                     a = next(address, None)
 
-                if a == '/' or a is None:
+                if a == "/" or a is None:
                     return False
             else:
                 a = next(address, None)

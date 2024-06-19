@@ -27,7 +27,8 @@ class Prout(FunctionPattern):
     def __init__(self, func):
         self.func = func
         self._func_has_inval = (  # See note in TimeThread.__init__. Sync code.
-            len(inspect.signature(self.func).parameters) > 0)
+            len(inspect.signature(self.func).parameters) > 0
+        )
         self._func_isgenfunc = inspect.isgeneratorfunction(self.func)
 
     def __stream__(self):
@@ -58,7 +59,8 @@ class Pfuncn(FunctionPattern):
     def __init__(self, func, repeats=1):
         self.func = func
         self._func_has_inval = (  # See note in TimeThread.__init__. Sync code.
-            len(inspect.signature(self.func).parameters) > 0)
+            len(inspect.signature(self.func).parameters) > 0
+        )
         self.repeats = repeats
 
     def __embed__(self, inval):
@@ -104,7 +106,8 @@ class Pproduct(FunctionPattern):  # Was PstepNfunc.
                 values[level] = streams[level].next(inval)
                 if level < max_level:
                     yield from self._recgen(
-                        inval, level + 1, max_level, patterns, streams, values)
+                        inval, level + 1, max_level, patterns, streams, values
+                    )
                 else:
                     yield self.func(values)
         except stm.StopStream:

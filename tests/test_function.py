@@ -1,13 +1,12 @@
-
 import unittest
 import operator
 
 import sc3
+
 sc3.init()
 
 import sc3.base.builtins as bi
-from sc3.base.functions import (
-    Function, function, UnopFunction, BinopFunction, NaropFunction)
+from sc3.base.functions import Function, function, UnopFunction, BinopFunction
 
 
 class FunctionTestCase(unittest.TestCase):
@@ -43,8 +42,21 @@ class FunctionTestCase(unittest.TestCase):
         # builtins
 
         res = f1()
-        unops = ['log', 'log2', 'log10', 'exp', 'sin', 'cos', 'tan', 'asin',
-                 'acos', 'atan', 'sinh', 'cosh', 'tanh']
+        unops = [
+            "log",
+            "log2",
+            "log10",
+            "exp",
+            "sin",
+            "cos",
+            "tan",
+            "asin",
+            "acos",
+            "atan",
+            "sinh",
+            "cosh",
+            "tanh",
+        ]
         for op in unops:
             with self.subTest(op=op):
                 f = getattr(f1, op)()
@@ -54,11 +66,22 @@ class FunctionTestCase(unittest.TestCase):
                     self.assertEqual(f.selector, getattr(bi, op))
                     self.assertEqual(f(), getattr(bi, op)(res))
                 except ValueError as e:
-                    self.assertEqual(e.args[0], 'math domain error')
-                    self.assertTrue(op in {'asin', 'acos', 'atan'})
+                    self.assertEqual(e.args[0], "math domain error")
+                    self.assertTrue(op in {"asin", "acos", "atan"})
 
-        unops = ['midicps', 'cpsmidi', 'midiratio', 'ratiomidi', 'octcps',
-                 'cpsoct', 'ampdb', 'dbamp', 'squared', 'cubed', 'sqrt']
+        unops = [
+            "midicps",
+            "cpsmidi",
+            "midiratio",
+            "ratiomidi",
+            "octcps",
+            "cpsoct",
+            "ampdb",
+            "dbamp",
+            "squared",
+            "cubed",
+            "sqrt",
+        ]
         for op in unops:
             f = getattr(f1, op)()
             self.assertEqual(f.selector, getattr(bi, op))
@@ -137,8 +160,7 @@ class FunctionTestCase(unittest.TestCase):
         assert_type_ab_selector(f, 2, f2, bi.mod)
         self.assertEqual(f(), 2 % f2())
 
-    def test_narop(self):
-        ...
+    def test_narop(self): ...
 
     def test_args(self):
         @function
@@ -193,5 +215,5 @@ class FunctionTestCase(unittest.TestCase):
         self.assertRaisesRegex(TypeError, err_msg, f4123, 10, 100, 1000, c=3)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

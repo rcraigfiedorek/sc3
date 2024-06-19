@@ -9,7 +9,7 @@ from . import filter as flt
 
 
 class FSinOsc(ugn.UGen):
-    '''
+    """
     Fixed frequency sine oscillator.
 
     This unit generator uses a very fast algorithm for generating a sine wave
@@ -18,14 +18,15 @@ class FSinOsc(ugn.UGen):
     Args:
         freq - Frequency in cycles per second. Must be a scalar.
         iphase - Initial phase.
-    '''
+    """
+
     @classmethod
     def ar(cls, freq=440, iphase=0.0):
-        return cls._multi_new('audio', freq, iphase)
+        return cls._multi_new("audio", freq, iphase)
 
     @classmethod
     def kr(cls, freq=440, iphase=0.0):
-        return cls._multi_new('control', freq, iphase)
+        return cls._multi_new("control", freq, iphase)
 
 
 class Klang(ugn.UGen):
@@ -34,7 +35,7 @@ class Klang(ugn.UGen):
     @classmethod
     def ar(cls, spec, freq_scale=1.0, freq_offset=0.0):
         spec = utl.multichannel_expand_tuple(spec, 2)
-        return cls._multi_new('audio', freq_scale, freq_offset, spec)
+        return cls._multi_new("audio", freq_scale, freq_offset, spec)
 
     @classmethod
     def _new1(cls, rate, freq_scale, freq_offset, spec):  # override
@@ -59,17 +60,17 @@ class Klang(ugn.UGen):
     def __repr__(self):
         fs, fo = self._inputs[:2]
         spec = tuple(utl.flop(utl.clump(list(self._inputs[2:]), 3)))
-        return f'{type(self).__name__}.ar({spec}, {fs}, {fo})'
+        return f"{type(self).__name__}.ar({spec}, {fs}, {fo})"
 
 
 class DynKlang(ugn.PseudoUGen):
     @classmethod
     def ar(cls, spec, freq_scale=1.0, freq_offset=0.0):
-        return cls._multi_new('audio', spec, freq_scale, freq_offset)
+        return cls._multi_new("audio", spec, freq_scale, freq_offset)
 
     @classmethod
     def kr(cls, spec, freq_scale=1.0, freq_offset=0.0):
-        return cls._multi_new('control', spec, freq_scale, freq_offset)
+        return cls._multi_new("control", spec, freq_scale, freq_offset)
 
     @classmethod
     def _new1(cls, rate, spec, freq_scale, freq_offset):  # override
@@ -98,11 +99,11 @@ class Klank(ugn.UGen):
     def ar(cls, spec, input, freq_scale=1.0, freq_offset=0.0, decay_scale=1.0):
         spec = utl.multichannel_expand_tuple(spec, 2)
         return cls._multi_new(
-            'audio', input, freq_scale, freq_offset, decay_scale, spec)
+            "audio", input, freq_scale, freq_offset, decay_scale, spec
+        )
 
     @classmethod
-    def _new1(cls, rate, input, freq_scale, freq_offset,
-              decay_scale, spec):  # override
+    def _new1(cls, rate, input, freq_scale, freq_offset, decay_scale, spec):  # override
         freqs, amps, times = spec
         size = len(freqs)
         if amps is None:
@@ -113,8 +114,7 @@ class Klank(ugn.UGen):
         spec = utl.flat(utl.flop(spec))
         obj = cls._create_ugen_object(rate)
         obj._add_to_synth()
-        return obj._init_ugen(
-            input, freq_scale, freq_offset, decay_scale, *spec)
+        return obj._init_ugen(input, freq_scale, freq_offset, decay_scale, *spec)
 
     # No needed.
     # def _init_ugen(self, inputs)  # override
@@ -125,23 +125,24 @@ class Klank(ugn.UGen):
     def __repr__(self):
         ip, fs, fo, ds = self._inputs[:4]
         spec = tuple(utl.flop(utl.clump(list(self._inputs[4:]), 3)))
-        return f'{type(self).__name__}.ar({spec}, {ip}, {fs}, {fo}, {ds})'
+        return f"{type(self).__name__}.ar({spec}, {ip}, {fs}, {fo}, {ds})"
 
 
 class DynKlank(ugn.PseudoUGen):
     @classmethod
     def ar(cls, spec, input, freq_scale=1.0, freq_offset=0.0, decay_scale=1.0):
-        return cls._multi_new('audio', spec, input, freq_scale,
-                              freq_offset, decay_scale)
+        return cls._multi_new(
+            "audio", spec, input, freq_scale, freq_offset, decay_scale
+        )
 
     @classmethod
     def kr(cls, spec, input, freq_scale=1.0, freq_offset=0.0, decay_scale=1.0):
-        return cls._multi_new('control', spec, input, freq_scale,
-                              freq_offset, decay_scale)
+        return cls._multi_new(
+            "control", spec, input, freq_scale, freq_offset, decay_scale
+        )
 
     @classmethod
-    def _new1(cls, rate, spec, input, freq_scale,
-              freq_offset, decay_scale):  # override
+    def _new1(cls, rate, spec, input, freq_scale, freq_offset, decay_scale):  # override
         if spec[0] is None:
             freq = utl.list_binop(operator.mul, [440.0], freq_scale)
             freq = utl.list_binop(operator.add, freq, freq_offset)
@@ -163,28 +164,28 @@ class DynKlank(ugn.PseudoUGen):
 class Blip(ugn.UGen):
     @classmethod
     def ar(cls, freq=440, numharm=200.0):
-        return cls._multi_new('audio', freq, numharm)
+        return cls._multi_new("audio", freq, numharm)
 
     @classmethod
     def kr(cls, freq=440, numharm=200.0):
-        return cls._multi_new('control', freq, numharm)
+        return cls._multi_new("control", freq, numharm)
 
 
 class Saw(ugn.UGen):
     @classmethod
     def ar(cls, freq=440):
-        return cls._multi_new('audio', freq)
+        return cls._multi_new("audio", freq)
 
     @classmethod
     def kr(cls, freq=440):
-        return cls._multi_new('control', freq)
+        return cls._multi_new("control", freq)
 
 
 class Pulse(ugn.UGen):
     @classmethod
     def ar(cls, freq=440, width=0.5):
-        return cls._multi_new('audio', freq, width)
+        return cls._multi_new("audio", freq, width)
 
     @classmethod
     def kr(cls, freq=440, width=0.5):
-        return cls._multi_new('control', freq, width)
+        return cls._multi_new("control", freq, width)

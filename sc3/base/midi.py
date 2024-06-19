@@ -1,11 +1,10 @@
-
 from . import main as _libsc3
 
 
-__all__ = ['MidiIn', 'MidiOut']
+__all__ = ["MidiIn", "MidiOut"]
 
 
-class MidiIO():
+class MidiIO:
     def __init__(self, name, virtual=False):
         self._name = name
         self._virtual = virtual
@@ -33,14 +32,15 @@ class MidiIO():
         return hash((type(self), self._name, id(self._port)))
 
     def __repr__(self):
-        return f'{type(self).__name__}({repr(self._name)}, {self._virtual})'
+        return f"{type(self).__name__}({repr(self._name)}, {self._virtual})"
 
 
 class MidiIn(MidiIO):
     def __init__(self, name, virtual=False):
         super().__init__(name, virtual)
         self._port = _libsc3.main._midi_interface.open_input_port(
-            self._name, self._virtual)
+            self._name, self._virtual
+        )
 
     def close(self):
         _libsc3.main._midi_interface.close_input_port(self._name, self._port)
@@ -54,7 +54,8 @@ class MidiOut(MidiIO):
     def __init__(self, name, virtual=False):
         super().__init__(name, virtual)
         self._port = _libsc3.main._midi_interface.open_output_port(
-            self._name, self._virtual)
+            self._name, self._virtual
+        )
 
     def close(self):
         _libsc3.main._midi_interface.close_output_port(self._name, self._port)

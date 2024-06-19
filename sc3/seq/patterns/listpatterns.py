@@ -14,9 +14,11 @@ class ListPattern(ptt.Pattern):
         else:
             raise ValueError(
                 f"ListPattern '{type(self).__name__}' "
-                "requires a non empty collection")
+                "requires a non empty collection"
+            )
         self._is_event_pattern = any(
-            isinstance(x, ptt.Pattern) and x.is_event_pattern for x in lst)
+            isinstance(x, ptt.Pattern) and x.is_event_pattern for x in lst
+        )
 
     @property
     def is_event_pattern(self):
@@ -166,6 +168,7 @@ class Placep(Pseq):  # Was Ppatlace.
 
 ### Random ###
 
+
 class Pshuffle(ListPattern):  # Pshuf
     def __embed__(self, inval):
         slist = self.lst[:]
@@ -200,7 +203,7 @@ class Pxrand(ListPattern):
 
 class Pwrand(ListPattern):
     # repeats should be length.
-    def __init__(self, lst, weights=None, repeats=1):  #, *, cum_weights=None, k=1):
+    def __init__(self, lst, weights=None, repeats=1):  # , *, cum_weights=None, k=1):
         super().__init__(lst, repeats)
         self.weights = weights
         # self.cum_weights = cum_weights
@@ -214,7 +217,9 @@ class Pwrand(ListPattern):
         wstream = stm.stream(weights)
         try:
             for _ in bi.counter(self.repeats):
-                indx = bi.choices(ilst, wstream.next(inval))[0]  #, cum_weights=cw, k=k)
+                indx = bi.choices(ilst, wstream.next(inval))[
+                    0
+                ]  # , cum_weights=cw, k=k)
                 inval = yield from stm.embed(lst[indx], inval)
         except stm.StopStream:
             pass
@@ -249,13 +254,11 @@ class Pslide(ListPattern):
                 lval = len_stream.next(inval)  # raises StopStream
                 if wrap:
                     for j in range(lval):
-                        inval = yield from stm.embed(
-                            lst[bi.mod(pos + j, size)], inval)
+                        inval = yield from stm.embed(lst[bi.mod(pos + j, size)], inval)
                 else:
                     for j in range(lval):
                         if pos + j < size:
-                            inval = yield from stm.embed(
-                                lst[pos + j], inval)
+                            inval = yield from stm.embed(lst[pos + j], inval)
                         else:
                             return inval
                 pos += step_stream.next(inval)  # raises StopStream
@@ -268,7 +271,7 @@ class Pwalk(ListPattern):
     # // random walk pattern - hjh - jamshark70@gmail.com
     def __init__(self, lst, steps=None, directions=1, start=0):
         super().__init__(lst)
-        self.steps = steps or Prand([-1, 1], float('inf'))
+        self.steps = steps or Prand([-1, 1], float("inf"))
         self.directions = 1 if directions is None else directions
         self.start = start
 
@@ -289,7 +292,9 @@ class Pwalk(ListPattern):
                 inval = yield from stm.embed(lst[int(index)], inval)
                 step *= direction
                 if index + step < 0 or index + step >= size:
-                    direction = direction_stream.next(inval)  # or 1  # raises StopStream
+                    direction = direction_stream.next(
+                        inval
+                    )  # or 1  # raises StopStream
                     step = abs(step) * bi.sign(direction)
                 index += step
                 index %= size
@@ -297,8 +302,8 @@ class Pwalk(ListPattern):
             return inval
 
 
-
 ### Finite State Machine ###
+
 
 class Pfsm(ListPattern):
     # // Finite State Machine
@@ -343,7 +348,7 @@ class Pdfsm(ListPattern):
                     if sig in state:
                         curr_state, out_stream = state[sig]
                     else:
-                        curr_state, out_stream = state['default']
+                        curr_state, out_stream = state["default"]
                     if curr_state is None or curr_state >= num_states:
                         break
                     inval = yield from stm.embed(out_stream, inval)
