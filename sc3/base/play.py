@@ -114,11 +114,9 @@ def play(obj=None, *args, **kwargs):
     All versions return the return value of the played object.
     """
 
-    if not obj and not args and not kwargs:
-        # Test tone.
-        return (
-            evt.event().play()
-        )  # TODO: Event is not returning the created server object.
+    if obj is None:
+        # Decorator with args
+        return lambda o: play(o, *args, **kwargs)
     elif hasattr(obj, "play"):
         # Is playable.
         return obj.play(*args, **kwargs)
@@ -130,8 +128,5 @@ def play(obj=None, *args, **kwargs):
         return _play_func(obj, *args, **kwargs)
     elif isinstance(obj, bff.Buffer):
         return _play_buf(obj, *args, **kwargs)
-    elif obj is None and not args and kwargs:
-        # As a keyword only call makes an event.
-        return evt.event(kwargs).play()
     else:
         raise ValueError("non playable arguments")
