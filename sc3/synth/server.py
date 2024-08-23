@@ -667,7 +667,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
         mdl.NotificationCenter.notify(type(self), "server_added", self)
 
     @property
-    def addr(self):
+    def addr(self) -> nad.NetAddr:
         """NetAddr object of the server."""
         return self._addr
 
@@ -1257,8 +1257,7 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
     def _quit_atexit(self):
         if self._status_watcher.server_running:
             event = threading.Event()
-            set_func = lambda: event.set()
-            self.quit(True, set_func, set_func)
+            self.quit(True, event.set, event.set)
             event.wait(5)  # _MainThread, set_func runs in AppClock thread.
 
     def reboot(self, func=None, on_failure=None):
@@ -1404,3 +1403,6 @@ class Server(gpp.NodeParameter, metaclass=MetaServer):
 
     def _as_target(self):
         return self._default_group
+
+    def load_directory(self, dir: str):
+        self.addr.send_msg("/d_loadDir", dir)
