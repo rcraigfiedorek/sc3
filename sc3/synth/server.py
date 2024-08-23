@@ -78,6 +78,7 @@ class Defaults(enum.Enum):
     # Darwin only.
     INPUT_STREAMS = ("-I", None)  # opt str, input_streams_enabled
     OUTPUT_STREAMS = ("-O", None)  # opt str, output_streams_enabled
+    SAFETY_CLIP_THRESHOLD = ("-s", 1)  # opt float
 
     def __init__(self, flag, default):
         self.flag = flag
@@ -223,6 +224,19 @@ class ServerOptions:
         then only the first two output streams on the device will be
         enabled. Turning off streams can reduce CPU load. Darwin only
         option.
+    safety_clip_threshold : float
+        A Float indicating a safety threshold for output values to be
+        clipped to. This is necessary on macOS because setting a low
+        system volume doesn't prevent output values greater than +/-1
+        from sounding extremely loud, which can happen by mistake,
+        e.g. when sending a negative coefficient to a filter. With
+        this threshold, values are clipped just before being written
+        to hardware output busses, which does not affect the recording.
+        However, the signal will be affected if it's above the threshold
+        and the sound is routed to other apps using 3rd-party software.
+        Defaults to a threshold of 1.26 (ca. 2 dB), to save some ears
+        and still allow some headroom. Setting safetyClipThreshold to
+        inf, 0, or a negative value, disables clipping altogether.
 
     reserved_audio_buses : int
         Undocumented client side option.
@@ -289,6 +303,7 @@ class ServerOptions:
         # Darwin only.
         self.input_streams = Defaults.INPUT_STREAMS.default
         self.output_streams = Defaults.OUTPUT_STREAMS.default
+        self.safety_clip_threshold = Defaults.SAFETY_CLIP_THRESHOLD.default
 
         # Language side.
         self.reserved_audio_buses = 0  # not used, really.
@@ -410,6 +425,13 @@ class ServerOptions:
                 o.extend([Defaults.INPUT_STREAMS.flag, str(self.input_streams)])
             if self.output_streams != Defaults.OUTPUT_STREAMS.default:
                 o.extend([Defaults.OUTPUT_STREAMS.flag, str(self.output_streams)])
+            if self.safety_clip_threshold is not None:
+                o.extend(
+                    [
+                        Defaults.SAFETY_CLIP_THRESHOLD.flag,
+                        str(self.safety_clip_threshold),
+                    ]
+                )
 
         return o
 
