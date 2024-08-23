@@ -991,14 +991,16 @@ class SynthDef(metaclass=MetaSynthDef):
 ### Decorator syntax ###
 
 
-def _create_synthdef(func, **kwargs):
-    sdef = SynthDef(func.__name__, func, **kwargs)
+def _create_synthdef(func, cls=None, **kwargs):
+    if cls is None:
+        cls = SynthDef
+    sdef = cls(func.__name__, func, **kwargs)
     sdef.add()  # Running servers or offline patterns.
     sac.ServerBoot.add("all", lambda server: sdef.add())  # Next boot.
     return sdef
 
 
-def synthdef(func=None, **kwargs):
+def synthdef(func=None, cls=None, **kwargs):
     """Decorator function to build and add definitions.
 
     The name of the decorated function becomes the name of the
@@ -1043,6 +1045,6 @@ def synthdef(func=None, **kwargs):
 
     if func is None:
         # action: 'load', 'send', 'store', 'add'? (needs kwargs filtering).
-        return lambda func: _create_synthdef(func, **kwargs)
+        return lambda func: _create_synthdef(func, cls=cls, **kwargs)
     else:
-        return _create_synthdef(func)
+        return _create_synthdef(func, cls=cls)
