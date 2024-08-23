@@ -36,7 +36,7 @@ class scbuiltin:
     def unop(func):
         def scbuiltin_(x):
             if hasattr(x, "_compose_unop"):
-                return x._compose_unop(func)
+                return x._compose_unop(scbuiltin_)
             return func(x)
 
         scbuiltin_.__name__ = func.__name__  # used to obtain special_index.
@@ -47,9 +47,9 @@ class scbuiltin:
     def binop(func):
         def scbuiltin_(a, b):
             if hasattr(a, "_compose_binop"):
-                return a._compose_binop(func, b)
+                return a._compose_binop(scbuiltin_, b)
             if hasattr(b, "_rcompose_binop"):
-                return b._rcompose_binop(func, a)
+                return b._rcompose_binop(scbuiltin_, a)
             return func(a, b)
 
         scbuiltin_.__name__ = func.__name__  # used to obtain special_index.
@@ -60,7 +60,7 @@ class scbuiltin:
     def narop(func):
         def scbuiltin_(x, *args):
             if hasattr(x, "_compose_narop"):
-                return x._compose_narop(func, *args)
+                return x._compose_narop(scbuiltin_, *args)
             return func(x, *args)
 
         scbuiltin_.__name__ = func.__name__  # used to obtain special_index.
