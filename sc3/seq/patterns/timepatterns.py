@@ -1,4 +1,3 @@
-
 from ...base import main as _libsc3
 from ...base import builtins as bi
 from ...base import stream as stm
@@ -13,7 +12,7 @@ class TimePattern(vlp.ValuePattern):
 
 class Ptime(TimePattern):
     # // Returns relative time (in beats) from moment of embedding.
-    def __init__(self, repeats=float('inf')):
+    def __init__(self, repeats=float("inf")):
         self.repeats = repeats
 
     def __embed__(self, inval):
@@ -53,7 +52,7 @@ class Pstep(TimePattern):
 
 
 class Pseg(TimePattern):
-    def __init__(self, levels, durs=1, curves='lin', repeats=1):
+    def __init__(self, levels, durs=1, curves="lin", repeats=1):
         self.levels = levels
         self.durs = durs
         self.curves = curves

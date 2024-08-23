@@ -45,14 +45,13 @@ import inspect
 from ..base import _hooks as hks
 from ..base import absobject as aob
 from ..base import stream as stm
-from . import event as evt
 
 
-est = hks.late_import(__name__, 'sc3.seq.eventstream', 'est')
-flp = hks.late_import(__name__, 'sc3.seq.patterns.filterpatterns', 'flp')
+est = hks.late_import(__name__, "sc3.seq.eventstream", "est")
+flp = hks.late_import(__name__, "sc3.seq.patterns.filterpatterns", "flp")
 
 
-__all__ = ['pattern']
+__all__ = ["pattern"]
 
 
 class Pattern(aob.AbstractObject):
@@ -62,12 +61,10 @@ class Pattern(aob.AbstractObject):
         # streams depending if they embed an EventPattern.
         return False
 
-
     ### Iterable protocol ###
 
     def __iter__(self):
         return self.__stream__()
-
 
     ### Stream protocol ###
 
@@ -79,7 +76,6 @@ class Pattern(aob.AbstractObject):
 
     def __embed__(self, inval=None):
         return (yield from self.__stream__().__embed__(inval))
-
 
     ### AbstractObject interface ###
 
@@ -95,10 +91,9 @@ class Pattern(aob.AbstractObject):
     def _compose_narop(self, selector, *args):
         return Pnarop(selector, self, *args)
 
-
     def play(self, clock=None, quant=None, proto=None):
         if not self.is_event_pattern:
-            raise ValueError(f'{type(self)} is not an event pattern')
+            raise ValueError(f"{type(self)} is not an event pattern")
         proto = proto or dict()
         stream = est.EventStreamPlayer(self.__stream__(), proto)
         stream.play(clock, quant)
@@ -161,8 +156,7 @@ class Punop(Pattern):
     def __init__(self, selector, a):
         self.selector = selector
         self.a = a
-        self._is_event_pattern = (
-            isinstance(a, Pattern) and a.is_event_pattern)
+        self._is_event_pattern = isinstance(a, Pattern) and a.is_event_pattern
 
     @property
     def is_event_pattern(self):
@@ -180,7 +174,7 @@ class Punop(Pattern):
             return inval
 
     def __repr__(self):
-        return f'{type(self).__name__}({self.selector.__name__}, {self.a})'
+        return f"{type(self).__name__}({self.selector.__name__}, {self.a})"
 
 
 class Pbinop(Pattern):
@@ -189,22 +183,22 @@ class Pbinop(Pattern):
         self.a = a
         self.b = b
         self._is_event_pattern = any(
-            isinstance(x, Pattern) and x.is_event_pattern for x in (a, b))
+            isinstance(x, Pattern) and x.is_event_pattern for x in (a, b)
+        )
 
     @property
     def is_event_pattern(self):
         return self._is_event_pattern
 
     def __stream__(self):
-        return stm.BinopStream(
-            self.selector, stm.stream(self.a), stm.stream(self.b))
+        return stm.BinopStream(self.selector, stm.stream(self.a), stm.stream(self.b))
         # NOTE: See BinaryOpXStream implementation options. Class is not
         # defined.
 
     def __repr__(self):
         return (
-            f'{type(self).__name__}({self.selector.__name__}, '
-            f'{self.a}, {self.b})')
+            f"{type(self).__name__}({self.selector.__name__}, " f"{self.a}, {self.b})"
+        )
 
 
 class Pnarop(Pattern):  # Was Pnaryop.
@@ -212,8 +206,7 @@ class Pnarop(Pattern):  # Was Pnaryop.
         self.selector = selector
         self.a = a
         self.args = args
-        self._is_event_pattern = (
-            isinstance(a, Pattern) and a.is_event_pattern)
+        self._is_event_pattern = isinstance(a, Pattern) and a.is_event_pattern
 
     @property
     def is_event_pattern(self):
@@ -237,12 +230,13 @@ class Pnarop(Pattern):  # Was Pnaryop.
 
     def __repr__(self):
         return (
-            f'{type(self).__name__}({self.selector.__name__}, '
-            f'{self.a}, {self.args})')
+            f"{type(self).__name__}({self.selector.__name__}, "
+            f"{self.a}, {self.args})"
+        )
 
 
 def pattern(gfunc):
-    '''
+    """
     Decorator to create value patterns from generator functions. ::
 
         @pattern
@@ -260,10 +254,10 @@ def pattern(gfunc):
 
         p = stream(pwhite(length=3) ** 2)
         next(p)
-    '''
+    """
 
     if not inspect.isgeneratorfunction(gfunc):
-        raise Exception(f'{gfunc} is not a generator function')
+        raise Exception(f"{gfunc} is not a generator function")
 
     class _(Pattern):
         _gfunc = gfunc

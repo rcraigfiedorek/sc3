@@ -14,9 +14,10 @@ from . import node as nod
 _logger = logging.getLogger(__name__)
 
 
-class Volume():
-    def __init__(self, server, start_bus=0, channels=None,
-                 min=-90, max=6, persist=True):
+class Volume:
+    def __init__(
+        self, server, start_bus=0, channels=None, min=-90, max=6, persist=True
+    ):
         self._server = server
         self._start_bus = start_bus
         self._channels = channels
@@ -70,8 +71,9 @@ class Volume():
     def channels(self, value):
         if self._amp_synth is not None and value != self.channels:
             _logger.warning(
-                'Change in number of channels will not take '
-                'effect until gain is reset to 0dB')
+                "Change in number of channels will not take "
+                "effect until gain is reset to 0dB"
+            )
         else:
             self._channels = value
 
@@ -82,7 +84,7 @@ class Volume():
     @gain.setter
     def gain(self, value):
         self._gain = bi.clip(value, self._min, self._max)
-        mdl.NotificationCenter.notify(self, 'gain', self._gain)
+        mdl.NotificationCenter.notify(self, "gain", self._gain)
         self._update_synth()
 
     @property
@@ -93,7 +95,7 @@ class Volume():
     def lag(self, value):
         self._lag = value
         if self._amp_synth is not None:
-            self._amp_synth.set('volume_lag', self._lag)
+            self._amp_synth.set("volume_lag", self._lag)
 
     @property
     def is_muted(self):
@@ -112,7 +114,7 @@ class Volume():
 
             def send_volume_synthdef():
                 self._num_output_channels = self.channels
-                self._def_name = f'volume_amp_ctrl_{self._num_output_channels}'
+                self._def_name = f"volume_amp_ctrl_{self._num_output_channels}"
 
                 def graph(volume_amp=1, volume_lag=0.1, gate=1, bus=None):
                     env = ugns.Linen.kr(gate, release_time=0.05, done_action=2)
@@ -133,11 +135,19 @@ class Volume():
             if self._server._status_watcher.has_booted:
                 if self._amp_synth is None:
                     self._amp_synth = nod.Synth.after(
-                        self._server.default_group, self._def_name,
-                        ['volume_amp', amp, 'volume_lag', self._lag,
-                         'bus', self._start_bus])
+                        self._server.default_group,
+                        self._def_name,
+                        [
+                            "volume_amp",
+                            amp,
+                            "volume_lag",
+                            self._lag,
+                            "bus",
+                            self._start_bus,
+                        ],
+                    )
                 else:
-                    self._amp_synth.set('volume_amp', amp)
+                    self._amp_synth.set("volume_amp", amp)
         else:
             if self._amp_synth is not None:
                 self._amp_synth.release()
@@ -146,13 +156,13 @@ class Volume():
     def mute(self):
         if not self._is_muted:
             self._is_muted = True
-            mdl.NotificationCenter.notify(self, 'mute', True)
+            mdl.NotificationCenter.notify(self, "mute", True)
             self._update_synth()
 
     def unmute(self):
         if self._is_muted:
             self._is_muted = False
-            mdl.NotificationCenter.notify(self, 'mute', False)
+            mdl.NotificationCenter.notify(self, "mute", False)
             self._update_synth()
 
     def free_synth(self):
@@ -167,16 +177,15 @@ class Volume():
         self.gain = 0.0
 
     def set_gain_range(self, min=None, max=None):
-        '''Set a new gain range, min, max or both.'''
+        """Set a new gain range, min, max or both."""
         if min is not None:
             self._min = min
         if max is not None:
             self._max = max
-        mdl.NotificationCenter.notify(self, 'gain_range', min, max)
+        mdl.NotificationCenter.notify(self, "gain_range", min, max)
         clipped_gain = bi.clip(self._gain, min, max)
         if clipped_gain != self._gain:
             self.gain = clipped_gain
-
 
     ### System Actions ###
 
@@ -191,7 +200,6 @@ class Volume():
         self._amp_synth = None
         if self._persist:
             self._update_synth()
-
 
     # No gui embedded.
     # gui

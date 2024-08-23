@@ -1,9 +1,9 @@
-
 import unittest
 import math
 
 import sc3
-sc3.init('nrt')
+
+sc3.init("nrt")
 
 from sc3.base.main import main
 from sc3.base.clock import SystemClock, TempoClock
@@ -11,6 +11,7 @@ from sc3.base.stream import routine
 
 
 # NOTE: These tests are duplicated for test_clock_rt.py and need sync.
+
 
 class ClockTestCase(unittest.TestCase):
     def test_time_unit_conversion(self):
@@ -58,7 +59,6 @@ class ClockTestCase(unittest.TestCase):
         main.process()
 
     def test_initial_values(self):
-
         @routine
         def example():
             offset = 5
@@ -78,5 +78,5 @@ class ClockTestCase(unittest.TestCase):
     # def test_logical_and_bundle_time(self):  # No use for nrt.
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

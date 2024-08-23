@@ -13,7 +13,7 @@ class BEQSuite(flt.Filter):
 class BLowPass(BEQSuite):
     @classmethod
     def ar(cls, input, freq=1200.0, rq=1.0):
-        return cls._multi_new('audio', input, freq, rq)
+        return cls._multi_new("audio", input, freq, rq)
 
     @classmethod
     def sc(cls, dummy=None, freq=1200.0, rq=1.0):
@@ -33,7 +33,7 @@ class BLowPass(BEQSuite):
 class BHiPass(BEQSuite):
     @classmethod
     def ar(cls, input, freq=1200.0, rq=1.0):
-        return cls._multi_new('audio', input, freq, rq)
+        return cls._multi_new("audio", input, freq, rq)
 
     @classmethod
     def sc(cls, dummy=None, freq=1200.0, rq=1.0):
@@ -53,7 +53,7 @@ class BHiPass(BEQSuite):
 class BAllPass(BEQSuite):
     @classmethod
     def ar(cls, input, freq=1200.0, rq=1.0):
-        return cls._multi_new('audio', input, freq, rq)
+        return cls._multi_new("audio", input, freq, rq)
 
     @classmethod
     def sc(cls, dummy=None, freq=1200.0, rq=1.0):
@@ -69,7 +69,7 @@ class BAllPass(BEQSuite):
 class BBandPass(BEQSuite):
     @classmethod
     def ar(cls, input, freq=1200.0, bw=1.0):
-        return cls._multi_new('audio', input, freq, bw)
+        return cls._multi_new("audio", input, freq, bw)
 
     @classmethod
     def sc(cls, dummy=None, freq=1200.0, bw=1.0):
@@ -88,7 +88,7 @@ class BBandPass(BEQSuite):
 class BBandStop(BEQSuite):
     @classmethod
     def ar(cls, input, freq=1200.0, bw=1.0):
-        return cls._multi_new('audio', input, freq, bw)
+        return cls._multi_new("audio", input, freq, bw)
 
     @classmethod
     def sc(cls, dummy=None, freq=1200.0, bw=1.0):
@@ -96,9 +96,9 @@ class BBandStop(BEQSuite):
         w0 = bi.pi * 2 * freq * ifu.SampleDur.ir()
         sin_w0 = bi.sin(w0)
         # // alpha = w0.sin * 0.5 * rq;
-        alpha = sin_w0 * bi.sinh(0.34657359027997 * bw * w0 / sin_w0);
+        alpha = sin_w0 * bi.sinh(0.34657359027997 * bw * w0 / sin_w0)
         b0rz = bi.reciprocal(1 + alpha)
-        b1 = 2.0 * bi.cos(w0) * b0rz;
+        b1 = 2.0 * bi.cos(w0) * b0rz
         b2 = (1 - alpha) * -b0rz
         return [b0rz, -b1, b0rz, b1, b2]
 
@@ -106,12 +106,12 @@ class BBandStop(BEQSuite):
 class BPeakEQ(BEQSuite):
     @classmethod
     def ar(cls, input, freq=1200.0, rq=1.0, db=0.0):
-        return cls._multi_new('audio', input, freq, rq, db)
+        return cls._multi_new("audio", input, freq, rq, db)
 
     @classmethod
     def sc(cls, dummy=None, freq=1200.0, rq=1.0, db=0.0):
         sr = ifu.SampleRate.ir()
-        a = bi.pow(10, db/40)
+        a = bi.pow(10, db / 40)
         w0 = bi.pi * 2 * freq * ifu.SampleDur.ir()
         alpha = bi.sin(w0) * 0.5 * rq
         b0rz = bi.reciprocal(1 + (alpha / a))
@@ -125,50 +125,50 @@ class BPeakEQ(BEQSuite):
 class BLowShelf(BEQSuite):
     @classmethod
     def ar(cls, input, freq=1200.0, rs=1.0, db=0.0):
-        return cls._multi_new('audio', input, freq, rs, db)
+        return cls._multi_new("audio", input, freq, rs, db)
 
     @classmethod
     def sc(cls, dummy=None, freq=1200.0, rs=1.0, db=0.0):
         sr = ifu.SampleRate.ir()
-        a = bi.pow(10, db/40)
+        a = bi.pow(10, db / 40)
         w0 = bi.pi * 2 * freq * ifu.SampleDur.ir()
         cos_w0 = bi.cos(w0)
         sin_w0 = bi.sin(w0)
         alpha = sin_w0 * 0.5 * bi.sqrt((a + bi.reciprocal(a)) * (rs - 1) + 2.0)
-        i = (a+1) * cos_w0
-        j = (a-1) * cos_w0
+        i = (a + 1) * cos_w0
+        j = (a - 1) * cos_w0
         k = 2 * bi.sqrt(a) * alpha
-        b0rz = bi.reciprocal((a+1) + j + k)
-        a0 = a * ((a+1) - j + k) * b0rz
-        a1 = 2 * a * ((a-1) - i) * b0rz
-        a2 = a * ((a+1) - j - k) * b0rz
-        b1 = 2.0 * ((a-1) + i) * b0rz
-        b2 = ((a+1) + j - k) * -b0rz
+        b0rz = bi.reciprocal((a + 1) + j + k)
+        a0 = a * ((a + 1) - j + k) * b0rz
+        a1 = 2 * a * ((a - 1) - i) * b0rz
+        a2 = a * ((a + 1) - j - k) * b0rz
+        b1 = 2.0 * ((a - 1) + i) * b0rz
+        b2 = ((a + 1) + j - k) * -b0rz
         return [a0, a1, a2, b1, b2]
 
 
 class BHiShelf(BEQSuite):
     @classmethod
     def ar(cls, input, freq=1200.0, rs=1.0, db=0.0):
-        return cls._multi_new('audio', input, freq, rs, db)
+        return cls._multi_new("audio", input, freq, rs, db)
 
     @classmethod
     def sc(cls, dummy=None, freq=1200.0, rs=1.0, db=0.0):
         sr = ifu.SampleRate.ir()
-        a = bi.pow(10, db/40)
+        a = bi.pow(10, db / 40)
         w0 = bi.pi * 2 * freq * ifu.SampleDur.ir()
         cos_w0 = bi.cos(w0)
         sin_w0 = bi.sin(w0)
         alpha = sin_w0 * 0.5 * bi.sqrt((a + bi.reciprocal(a)) * (rs - 1) + 2.0)
-        i = (a+1) * cos_w0
-        j = (a-1) * cos_w0
+        i = (a + 1) * cos_w0
+        j = (a - 1) * cos_w0
         k = 2 * bi.sqrt(a) * alpha
-        b0rz = bi.reciprocal((a+1) - j + k)
-        a0 = a * ((a+1) + j + k) * b0rz
-        a1 = -2.0 * a * ((a-1) + i) * b0rz
-        a2 = a * ((a+1) + j - k) * b0rz
-        b1 = -2.0 * ((a-1) - i) * b0rz
-        b2 = ((a+1) - j - k) * -b0rz
+        b0rz = bi.reciprocal((a + 1) - j + k)
+        a0 = a * ((a + 1) + j + k) * b0rz
+        a1 = -2.0 * a * ((a - 1) + i) * b0rz
+        a2 = a * ((a + 1) + j - k) * b0rz
+        b1 = -2.0 * ((a - 1) - i) * b0rz
+        b2 = ((a + 1) - j - k) * -b0rz
         return [a0, a1, a2, b1, b2]
 
 

@@ -8,27 +8,29 @@ import operator
 
 
 def as_list(obj):
-    '''
+    """
     Bubble non iterable objects, tuples and strings in a list. If obj is None
     returns an empty list. For the rest of iterators is the same as list(obj).
-    '''
+    """
     if isinstance(obj, (tuple, str)):
         return [obj]
-    elif hasattr(obj, '__iter__'):
+    elif hasattr(obj, "__iter__"):
         return list(obj)
     else:
         return [obj]
 
 
 def unbubble(obj):
-    '''If obj is a list of one item or any other object unbubble(obj)
-    returns the item, otherwise returns the list or object unchanged.'''
+    """If obj is a list of one item or any other object unbubble(obj)
+    returns the item, otherwise returns the list or object unchanged."""
     if isinstance(obj, list) and len(obj) == 1:  # only one level
         return obj[0]
     else:
         return obj
 
+
 # TODO: replace all inlist by lst for convention.
+
 
 def flat(inlist):
     def _(inlist, outlist):
@@ -37,6 +39,7 @@ def flat(inlist):
                 _(item[:], outlist)  # TODO: Not sure if has to be a copy.
             else:
                 outlist.append(item)
+
     outlist = []
     _(inlist, outlist)
     return outlist
@@ -52,6 +55,7 @@ def flatten(inlist, n_levels=1):
                     outlist.append(item)
             else:
                 outlist.append(item)
+
     outlist = []
     _(inlist, outlist, 0)
     return outlist
@@ -68,7 +72,7 @@ def shape(lst):
                 ret.extend(sub_shape)
                 return tuple(ret)
             else:
-                return (size, )
+                return (size,)
         else:
             return (0,)
     else:
@@ -84,6 +88,7 @@ def reshape_like(one, another):
         item = one_flat[index % len(one_flat)]
         index += 1
         return item
+
     return deep_collect(another, 0x7FFFFFFF, func)
 
 
@@ -93,7 +98,8 @@ def deep_collect(inlist, depth, func, index=0, rank=0):
         if isinstance(inlist, list):
             return [
                 deep_collect(item, depth, func, i, rank)
-                for i, item in enumerate(inlist)]
+                for i, item in enumerate(inlist)
+            ]
         else:
             return func(inlist, index, rank)
     if depth <= 0:
@@ -105,28 +111,30 @@ def deep_collect(inlist, depth, func, index=0, rank=0):
     rank += 1
     if isinstance(inlist, list):
         return [
-            deep_collect(item, depth, func, i, rank)
-            for i, item in enumerate(inlist)]
+            deep_collect(item, depth, func, i, rank) for i, item in enumerate(inlist)
+        ]
     else:
         return func(inlist, index, rank)
 
 
 def extend(lst, n, item):
-    '''
+    """
     Create a new list by extending lst with item.
-    '''
+    """
     l = len(lst)
-    if l == 0 or n <= 0: return []
+    if l == 0 or n <= 0:
+        return []
     return (lst + [item] * (n - l))[:n]
 
 
 def wrap_extend(lst, n):
-    '''
+    """
     Create a new list by extending lst with its own elements cyclically.
-    '''
+    """
     l = len(lst)
-    if l == 0 or n <= 0: return []
-    return lst * (n // l) + lst[:n % l]
+    if l == 0 or n <= 0:
+        return []
+    return lst * (n // l) + lst[: n % l]
 
 
 def list_unop(op, a, t=None):
@@ -141,7 +149,7 @@ def list_unop(op, a, t=None):
 
 
 def list_binop(op, a, b, t=None):
-    '''
+    """
     Operate on sequences element by element and return a sequence of type t
     (default to list) if any argument a or b is sequence. Arguments a and b may
     be types or a sequence of types compatible with operator op. Nested
@@ -149,7 +157,7 @@ def list_binop(op, a, b, t=None):
     is tuple or type(a) if is a is sequence else type(b) if b is sequence.
     Tuples are termporary converted to lists to process. All this is needed
     because multichannel expansion behaviour (e.g. in Env).
-    '''
+    """
     # NOTE: The other option is to leave tuples as tuples, could be
     # better, the problem is outside UGen operations as in Env.
     t = t or list
@@ -159,8 +167,7 @@ def list_binop(op, a, b, t=None):
             b = wrap_extend(list(b), len(a))
         else:
             a = wrap_extend(list(a), len(b))
-        if any(isinstance(i, t_seq) for i in a)\
-        or any(isinstance(i, t_seq) for i in b):
+        if any(isinstance(i, t_seq) for i in a) or any(isinstance(i, t_seq) for i in b):
             ret = []
             a2 = b2 = t2 = None
             for i in range(len(a)):
@@ -177,7 +184,9 @@ def list_binop(op, a, b, t=None):
                         t2 = list
                 a2 = a2 or a[i]
                 b2 = b2 or b[i]
-                t2 = t2 or type(...)  # if neither is t_seq type doesn't matter but can't be None.
+                t2 = t2 or type(
+                    ...
+                )  # if neither is t_seq type doesn't matter but can't be None.
                 ret.append(list_binop(op, a2, b2, t2))
                 a2 = b2 = t2 = None
             return t(ret)
@@ -208,6 +217,7 @@ def list_sum(lst, t=None):
         res = list_binop(operator.add, res, item, t)
     return res
 
+
 # NOTE: maxItem used in Env.duration gives the clue that only one level of
 # nesting is supported by multichannels graphs. Same happens when building
 # controls in SynthDef.
@@ -216,6 +226,7 @@ def list_sum(lst, t=None):
 # [3, 4] > 3 // ok
 # [1, 2, [3, 4]].maxItem // not ok
 # [[1, 2], [3, 4]].maxItem // not ok
+
 
 def list_min(lst, t=None):
     t_seq = (list, tuple)
@@ -243,7 +254,7 @@ def list_max(lst, t=None):
     return max_item
 
 
-#def reshape_like(this, that); # or that this like sclang?
+# def reshape_like(this, that); # or that this like sclang?
 
 # flop [(a[i], b[i]) for i in range(len(a))] but len(a) >= len(b)
 # filter() y itertools.filterfalse() are select/reject.
@@ -264,14 +275,14 @@ def list_max(lst, t=None):
 
 
 def clump(lst, n):
-    return [lst[i:i + n] for i in range(0, len(lst), n)]
+    return [lst[i : i + n] for i in range(0, len(lst), n)]
 
 
 # para pairsDo:
 def gen_cclumps(l, n=1):
-    '''return n items as pairsDo does (with n=2) for iteration, cclump stands
-    for complete clump, it discards possible non full clump at the end'''
-    return (l[i:i + n] for i in range(0, len(l) - (n - 1), n))
+    """return n items as pairsDo does (with n=2) for iteration, cclump stands
+    for complete clump, it discards possible non full clump at the end"""
+    return (l[i : i + n] for i in range(0, len(l) - (n - 1), n))
 
 
 # doAdjacentPairs, Itertools Recipes: https://docs.python.org/3/library/itertools.html#itertools-recipes
@@ -305,7 +316,9 @@ def lace(lst, size=None):
 
 
 def flop(lst):
-    lst = [[None] if x is None else as_list(x) for x in lst]  # NOTE: as_list converts None in []
+    lst = [
+        [None] if x is None else as_list(x) for x in lst
+    ]  # NOTE: as_list converts None in []
     n = len(lst)
     if n == 0:
         return [[]]  # NOTE: empty column as in sclang.
@@ -314,7 +327,9 @@ def flop(lst):
     for i in range(length):
         for j in range(n):
             try:
-                ret[i][j] = lst[j][i % len(lst[j])]  # NOTE: i % 0 == 0 in sclang, and is also empty list.
+                ret[i][j] = lst[j][
+                    i % len(lst[j])
+                ]  # NOTE: i % 0 == 0 in sclang, and is also empty list.
             except ZeroDivisionError:
                 ret[i][j] = []  # NOTE: a = []; a[0] is nil, 0 or nil is [].
     return ret
@@ -363,6 +378,7 @@ def max_depth(lst):
             if isinstance(item, list):
                 ret = max(ret, find_max(item, max_rank + 1))
         return ret
+
     return find_max(lst)
 
 

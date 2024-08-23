@@ -1,4 +1,3 @@
-
 from abc import ABC, abstractmethod
 import logging
 import threading
@@ -21,7 +20,7 @@ from . import functions as fn
 from . import platform as plf
 
 
-__all__ = ['OscUdpInterface', 'OscTcpInterface', 'OscNrtInterface']
+__all__ = ["OscUdpInterface", "OscTcpInterface", "OscNrtInterface"]
 
 
 _logger = logging.getLogger(__name__)
@@ -55,30 +54,30 @@ class OscInterface(ABC):
 
     @classmethod
     def add_recv_func(cls, func):
-        '''
+        """
         Register a callable to be evaluated each time an OSC message arrives.
         Signature of func is:
             msg: OSC message as list.
             time: Time of arrival measured from `main.elapsed_time()`.
             addr: A NetAddr object with sender's address.
             port: Local port as int.
-        '''
+        """
         cls._recv_functions.add(func)
 
     @classmethod
     def remove_recv_func(cls, func):
-        '''Unregister func callback.'''
+        """Unregister func callback."""
         cls._recv_functions.discard(func)
 
     def _msg_dispatch(self, addr, time, *msg):
-        '''
+        """
         This method routes all incoming OSC messages to responders.
 
         Args:
             addr: A tuple (sender_ip:str, sender_port:int).
             time: OSC timetag as 64bits unsigned integer.
             *msg: OSC message as address followed by values.
-        '''
+        """
         addr = nad.NetAddr(addr[0], addr[1])
         addr._osc_interface = self
 
@@ -98,35 +97,36 @@ class OscInterface(ABC):
                 else:
                     time = clk.SystemClock.osc_to_elapsed_time(timed_msg.time)
                 self._msg_dispatch(
-                    address, time,
-                    *[timed_msg.message.address,
-                    *timed_msg.message.params])
+                    address,
+                    time,
+                    *[timed_msg.message.address, *timed_msg.message.params],
+                )
         except:
             _logger.error(
-                'Exception happened during processing '
-                f'request from {address}',
-                exc_info=sys.exc_info())
+                "Exception happened during processing " f"request from {address}",
+                exc_info=sys.exc_info(),
+            )
 
     def send_msg(self, target, *args):
-        '''
+        """
         args are values to create one message.
         target is a tuple (hostname, port).
         sclang converts True to 1, False to 0, None and empty lists to 0.
         Non empty lists are converted to blobs containing osc messages or
         bundles. Empty strings are sent unchanged.
-        '''
+        """
         # Time has to be set here for nested bundles (completion msg case).
         send_time = _libsc3.main.current_tt._seconds
         self._send(self._build_msg(send_time, list(args)), target)
 
     def send_bundle(self, target, time, *elements):
-        '''
+        """
         args are lists of values to creae a message or bundle each.
         target is a tuple (hostname, port).
         If time is None the OSC library must send 1 (immediate) as timetag.
         If time is negative it will be substracted from elapsed time and be
         an already late timetag (no check for sign).
-        '''
+        """
         # Time has to be set here for nested bundles consistency.
         send_time = _libsc3.main.current_tt._seconds
         self._send(self._build_bundle(send_time, [time, *elements]), target)
@@ -147,22 +147,22 @@ class OscInterface(ABC):
                 if not arg:
                     msg_builder.add_arg(0)
                 elif isinstance(arg[0], str):
-                    msg_builder.add_arg(
-                        self._build_msg(send_time, arg).dgram)
-                elif isinstance(arg[0], (int, float, type(None)))\
-                and len(arg) > 1 and isinstance(arg[1], list):
-                    msg_builder.add_arg(
-                        self._build_bundle(send_time, arg).dgram)
+                    msg_builder.add_arg(self._build_msg(send_time, arg).dgram)
+                elif (
+                    isinstance(arg[0], (int, float, type(None)))
+                    and len(arg) > 1
+                    and isinstance(arg[1], list)
+                ):
+                    msg_builder.add_arg(self._build_bundle(send_time, arg).dgram)
                 else:
                     raise ValueError(
-                        'lists within messages must be valid '
-                        f'OSC messages or bundles: {arg}')
-            elif arg == '[':
-                msg_builder.args.append(
-                    (msg_builder.ARG_TYPE_ARRAY_START, None))
-            elif arg == ']':
-                msg_builder.args.append(
-                    (msg_builder.ARG_TYPE_ARRAY_STOP, None))
+                        "lists within messages must be valid "
+                        f"OSC messages or bundles: {arg}"
+                    )
+            elif arg == "[":
+                msg_builder.args.append((msg_builder.ARG_TYPE_ARRAY_START, None))
+            elif arg == "]":
+                msg_builder.args.append((msg_builder.ARG_TYPE_ARRAY_STOP, None))
             else:
                 msg_builder.add_arg(arg)  # Infiere correctamente el resto de los tipos.
         return msg_builder.build()
@@ -179,8 +179,9 @@ class OscInterface(ABC):
                 bndl_builder.add_content(self._build_bundle(send_time, arg))
             else:
                 raise ValueError(
-                    'elements within bundles must be valid '
-                    f'OSC messages or bundles: {arg}')
+                    "elements within bundles must be valid "
+                    f"OSC messages or bundles: {arg}"
+                )
         return bndl_builder.build()
 
     @staticmethod
@@ -197,11 +198,10 @@ class OscInterface(ABC):
         if time is None:
             return
         if subtime is None or time > subtime:
-            raise ValueError(
-                'nested bundle time must be >= enclosing bundle time')
+            raise ValueError("nested bundle time must be >= enclosing bundle time")
 
     def bind(self):
-        localhost = socket.gethostbyname('localhost')
+        localhost = socket.gethostbyname("localhost")
         for i in range(self._port_range):
             try:
                 bind_addr = (localhost, self._port)
@@ -216,12 +216,14 @@ class OscInterface(ABC):
                     first = last - (self._port_range - 1)
                     if first == last:
                         errstr = (
-                            f'[Errno {errno.EADDRINUSE}] port '
-                            f'{first} already in use')
+                            f"[Errno {errno.EADDRINUSE}] port "
+                            f"{first} already in use"
+                        )
                     else:
                         errstr = (
-                            f'[Errno {errno.EADDRINUSE}] port range '
-                            f'{first}-{last} already in use')
+                            f"[Errno {errno.EADDRINUSE}] port range "
+                            f"{first}-{last} already in use"
+                        )
                     err = OSError(errstr)
                     err.errno = errno.EADDRINUSE
                     raise err from e
@@ -234,10 +236,9 @@ class OscInterface(ABC):
             self._socket.shutdown(socket.SHUT_RDWR)
         else:
             # SOCK_DGRAM recvfrom unblock for Linux.
-            self._socket.sendto(b'', bind_addr)
+            self._socket.sendto(b"", bind_addr)
         self._socket.close()
         del type(self)._local_endpoints[bind_addr]
-
 
     ### UDP Interface ###
 
@@ -249,7 +250,6 @@ class OscInterface(ABC):
 
     def running(self):
         pass
-
 
     ### TCP Interface ###
 
@@ -266,7 +266,6 @@ class OscInterface(ABC):
     def is_connected(self):
         return False
 
-
     ### NRT Interface ###
 
     def init(self):
@@ -275,31 +274,28 @@ class OscInterface(ABC):
     def finish(self):
         pass
 
-
     def __str__(self):
-        return f'{type(self).__name__} port {self._port}'
+        return f"{type(self).__name__} port {self._port}"
 
 
 class OscUdpInterface(OscInterface):
-    '''OSC over UDP server.'''
+    """OSC over UDP server."""
 
     def __init__(self, port, port_range=1):
         super().__init__(port, port_range)
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._udp_thread = None
         self._running = False
-        self._proto = 'udp'
+        self._proto = "udp"
 
     def start(self):
         if self._running:
             return
         self.bind()
-        self._udp_thread = threading.Thread(
-            target=self._udp_run, name=str(self))
+        self._udp_thread = threading.Thread(target=self._udp_run, name=str(self))
         self._udp_thread.daemon = True
         self._udp_thread.start()
-        _libsc3.main._atexitq.add(
-            _libsc3.main._atexitprio.NETWORKING + 1, self.stop)
+        _libsc3.main._atexitq.add(_libsc3.main._atexitprio.NETWORKING + 1, self.stop)
 
     def _udp_run(self):
         bind_addr = self._socket.getsockname()
@@ -312,7 +308,7 @@ class OscUdpInterface(OscInterface):
                 self._handle_request(data, address)
             except OSError as e:
                 if self._running:
-                    _logger.error(f'{str(self)}: {str(e)}')
+                    _logger.error(f"{str(self)}: {str(e)}")
                 break
 
     def stop(self):
@@ -330,9 +326,9 @@ class OscUdpInterface(OscInterface):
 
 
 class OscTcpInterface(OscInterface):
-    '''
+    """
     OSC client over TCP. OscTcpInterface instances aren't reusable.
-    '''
+    """
 
     def __init__(self, port, port_range=1):
         super().__init__(port, port_range)
@@ -341,17 +337,15 @@ class OscTcpInterface(OscInterface):
         self._tcp_thread = None
         self._run_thread = False
         self._is_connected = False
-        self._proto = 'tcp'
+        self._proto = "tcp"
 
     def connect(self, target):
         self._socket.connect(target)  # Exception on failure.
         self._is_connected = True  # Not thread safe.
-        self._tcp_thread = threading.Thread(
-            target=self._tcp_run, name=str(self))
+        self._tcp_thread = threading.Thread(target=self._tcp_run, name=str(self))
         self._tcp_thread.daemon = True
         self._tcp_thread.start()
-        _libsc3.main._atexitq.add(
-            _libsc3.main._atexitprio.NETWORKING, self.disconnect)
+        _libsc3.main._atexitq.add(_libsc3.main._atexitprio.NETWORKING, self.disconnect)
 
     def _tcp_run(self):
         self._run_thread = True
@@ -361,7 +355,7 @@ class OscTcpInterface(OscInterface):
                 if not data:
                     self._is_connected = False
                     break
-                size = struct.unpack('>i', data)[0]
+                size = struct.unpack(">i", data)[0]
                 data = self._socket.recv(size)
                 if not data:
                     self._is_connected = False
@@ -369,7 +363,7 @@ class OscTcpInterface(OscInterface):
                 self._handle_request(data, self._socket.getpeername())
             except OSError as e:
                 if self._run_thread:  # Log for not intentional disconnects.
-                    _logger.error(f'{str(self)}: {str(e)}')
+                    _logger.error(f"{str(self)}: {str(e)}")
                 self._is_connected = False
                 break
 
@@ -385,7 +379,9 @@ class OscTcpInterface(OscInterface):
                 except ConnectionRefusedError:
                     yield dt
                 except OSError as e:
-                    if e.errno == errno.EADDRNOTAVAIL:  # Happens when trying to register to the existing server after a boot() fail.
+                    if (
+                        e.errno == errno.EADDRNOTAVAIL
+                    ):  # Happens when trying to register to the existing server after a boot() fail.
                         yield dt
                     else:
                         raise
@@ -406,7 +402,7 @@ class OscTcpInterface(OscInterface):
         return self._is_connected
 
     def _send(self, msg, _=None):  # override
-        self._socket.send(msg.size.to_bytes(4, 'big'))
+        self._socket.send(msg.size.to_bytes(4, "big"))
         self._socket.send(msg.dgram)
 
 
@@ -452,8 +448,8 @@ class OscNrtInterface(OscInterface):
         pass
 
 
-class OscScore():
-    class _Entry():
+class OscScore:
+    class _Entry:
         def __init__(self, bndl, msg):
             self.bndl = bndl
             self.msg = msg
@@ -482,10 +478,12 @@ class OscScore():
 
     def add(self, bndl):
         if self._finished:
-            raise Exception('already finished OSC score')
+            raise Exception("already finished OSC score")
         send_time = _libsc3.main.current_tt._seconds
-        msg = _libsc3.main._osc_interface._build_bundle(send_time, bndl)  # Raises Exception.
-        msg = msg.size.to_bytes(4, 'big') + msg.dgram
+        msg = _libsc3.main._osc_interface._build_bundle(
+            send_time, bndl
+        )  # Raises Exception.
+        msg = msg.size.to_bytes(4, "big") + msg.dgram
         bndl = self._process_bndl_time(send_time, bndl)
         self._scoreq.add(bndl[0], type(self)._Entry(bndl, msg))
 
@@ -498,8 +496,9 @@ class OscScore():
                 bndl[i] = self._process_bndl_time(send_time, element)
             elif not isinstance(element[0], str):
                 raise ValueError(
-                    'elements within bundles must be valid '
-                    f'OSC messages or bundles: {element}')
+                    "elements within bundles must be valid "
+                    f"OSC messages or bundles: {element}"
+                )
         bndl = bndl[:]
         bndl[0] = self._get_logical_time(send_time, bndl[0])
         return bndl
@@ -522,7 +521,7 @@ class OscScore():
         # Those methods and this one would need refactoring all at once.
         if _libsc3.main.current_tt is _libsc3.main.main_tt:
             tailtime += _libsc3.main.current_tt._seconds
-        self.add([tailtime, ['/c_set', 0, 0]])  # Dummy cmd.
+        self.add([tailtime, ["/c_set", 0, 0]])  # Dummy cmd.
         for _, entry in self._scoreq:
             self._lst_score.append(entry.bndl)
             self._raw_score.extend(entry.msg)
@@ -531,19 +530,18 @@ class OscScore():
     def write(self, path):
         if not self._finished:
             self.finish(self.duration)
-        with open(path, 'wb') as file:
+        with open(path, "wb") as file:
             file.write(self._raw_score)
 
     def render(self, path=None, input_file=None, server=None):
         # This method blocks until cmd finish and returns its exit code.
         osc_file = plf.Platform.tmp_dir
-        osc_file /= 'SC_' + time.strftime('%Y%m%d_%H%M%S') + '.osc'
+        osc_file /= "SC_" + time.strftime("%Y%m%d_%H%M%S") + ".osc"
         self.write(osc_file)
 
         server = srv.Server.default if server is None else server
         cmd = [server.options.program]
-        cmd.extend(
-            server.options.options_list(None, osc_file, input_file, path))
+        cmd.extend(server.options.options_list(None, osc_file, input_file, path))
 
         self._render_proc = subprocess.Popen(
             cmd,
@@ -551,7 +549,8 @@ class OscScore():
             stdout=sys.stdout,
             stderr=sys.stderr,
             bufsize=1,
-            universal_newlines=True)
+            universal_newlines=True,
+        )
 
         try:
             self._render_proc.wait()

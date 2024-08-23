@@ -1,20 +1,27 @@
-
 import unittest
 
 import sc3
+
 sc3.init()
 
 from sc3.base.main import main
 from sc3.base.stream import (
-    Routine, routine, StopStream, PausedStream, AlwaysYield,
-    YieldAndReset, Condition, FlowVar)
+    Routine,
+    routine,
+    StopStream,
+    PausedStream,
+    AlwaysYield,
+    YieldAndReset,
+    Condition,
+    FlowVar,
+)
 from sc3.base.clock import TempoClock
 from sc3.base.builtins import rrand
 
 
 class RoutineTestCase(unittest.TestCase):
     def test_common_function(self):
-        '''Common functions are infinite None streams.'''
+        """Common functions are infinite None streams."""
 
         @routine
         def rout():
@@ -24,7 +31,8 @@ class RoutineTestCase(unittest.TestCase):
             self.assertIs(next(rout), None)
 
     def test_generator_stop(self):
-        '''Routines raise StopStream.'''
+        """Routines raise StopStream."""
+
         @routine
         def rout():
             for i in range(3):
@@ -35,7 +43,8 @@ class RoutineTestCase(unittest.TestCase):
         self.assertRaises(StopStream, next, rout)
 
     def test_generator_return(self):
-        '''Routines raise StopStream.'''
+        """Routines raise StopStream."""
+
         @routine
         def rout():
             for i in range(3):
@@ -58,14 +67,16 @@ class RoutineTestCase(unittest.TestCase):
 
         def r():
             return 1
+
         r = Routine(r)
-        self.assertIs(next(r), None) # Infinite None
+        self.assertIs(next(r), None)  # Infinite None
         self.assertIs(r.next(123), None)
 
         def r():
             self.assertEqual(r.state, r.State.Running)
             yield 1
             self.assertEqual(r.state, r.State.Running)
+
         r = Routine(r)
         r.pause()
         self.assertEqual(r.state, r.State.Paused)
@@ -142,7 +153,6 @@ class RoutineTestCase(unittest.TestCase):
         self.assertIs(next(rout), None)
 
     def test_condition_same_clock(self):
-
         @routine
         def test():
             test_value = 0
@@ -222,7 +232,7 @@ class RoutineTestCase(unittest.TestCase):
 
         @routine
         def r1():
-            value = (yield from test_var.value)
+            value = yield from test_var.value
             self.assertEqual(value, 123)
             main.resume()
 
@@ -259,17 +269,21 @@ class RoutineTestCase(unittest.TestCase):
             def sub1():
                 self.assertEqual(id(parent._rgen), id(sub1._rgen))
                 main.resume()
+
             sub1.play()
 
             @routine
             def sub2():
                 sub2.rand_seed = 222
+
                 @routine
                 def sub22():
                     self.assertEqual(id(sub2._rgen), id(sub22._rgen))
                     main.resume()
+
                 sub22.play()
                 main.resume()
+
             sub2.play()
             main.resume()
 
@@ -289,18 +303,22 @@ class RoutineTestCase(unittest.TestCase):
                 _, sub1_clock = inval
                 self.assertEqual(id(parent_clock), id(sub1_clock))
                 main.resume()
+
             sub1.play()
 
             @routine
             def sub2(inval):
                 _, sub2_clock = inval
+
                 @routine
                 def sub22(inval):
                     _, sub22_clock = inval
                     self.assertEqual(id(sub2_clock), id(sub22_clock))
                     main.resume()
+
                 sub22.play()
                 main.resume()
+
             sub2.play(clock2)
 
             main.resume()
@@ -309,5 +327,5 @@ class RoutineTestCase(unittest.TestCase):
         main.wait(tasks=4)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

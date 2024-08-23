@@ -5,7 +5,7 @@ import math
 from ..base import builtins as bi
 
 
-__all__ = ['Scale', 'Tuning']
+__all__ = ["Scale", "Tuning"]
 
 
 class Scale(tuple):
@@ -34,8 +34,9 @@ class Scale(tuple):
             tuning = Tuning(tuning)
         if max(degrees) > len(tuning) - 1:
             raise ValueError(
-                f'max scale degree {max(degrees)} exceeds '
-                f'{tuning.name} tuning ppo range')
+                f"max scale degree {max(degrees)} exceeds "
+                f"{tuning.name} tuning ppo range"
+            )
         self._ppo = len(degrees)
         self._tuning = tuning
         self._name = name
@@ -51,9 +52,9 @@ class Scale(tuple):
     @classmethod
     def chromatic(cls, tuning=None):
         if tuning is None:
-            tuning = Tuning.from_name('et12')
+            tuning = Tuning.from_name("et12")
         ppo = len(tuning)
-        name = f'Chromatic {ppo} {tuning.name}'
+        name = f"Chromatic {ppo} {tuning.name}"
         return cls(range(ppo), tuning, name=name)
 
     @property
@@ -89,7 +90,8 @@ class Scale(tuple):
             return (
                 super().__eq__(other)
                 and self._tuning == other._tuning
-                and self._name == other._name)
+                and self._name == other._name
+            )
         else:
             return False
 
@@ -97,7 +99,7 @@ class Scale(tuple):
         return hash((super().__hash__(), self._tuning, self._name))
 
     def __repr__(self):
-        return f'Scale({super().__repr__()}, {self._tuning}, name={self._name})'
+        return f"Scale({super().__repr__()}, {self._tuning}, name={self._name})"
 
     # @property
     # def degree_ratios(self):  # Was semitones.
@@ -144,7 +146,7 @@ class Tuning(tuple):
     def et(cls, spo=12):
         ratio = 12 / spo
         tuning = tuple(i * ratio for i in range(spo))
-        return cls(tuning, 2.0, name='et' + str(spo))
+        return cls(tuning, 2.0, name="et" + str(spo))
 
     @property
     def octave_ratio(self):
@@ -163,7 +165,8 @@ class Tuning(tuple):
             return (
                 super().__eq__(other)
                 and self._octave_ratio == other._octave_ratio
-                and self._name == other._name)
+                and self._name == other._name
+            )
         else:
             return False
 
@@ -172,6 +175,7 @@ class Tuning(tuple):
 
     def __repr__(self):
         return (
-            f'Tuning({super().__repr__()}, '
-            f'{self._octave_ratio}, '
-            f'name={self._name})')
+            f"Tuning({super().__repr__()}, "
+            f"{self._octave_ratio}, "
+            f"name={self._name})"
+        )

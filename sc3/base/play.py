@@ -16,27 +16,26 @@ from ..synth import node as nod
 from ..synth import buffer as bff
 
 
-__all__ = ['play']
+__all__ = ["play"]
 
 
 _logger = logging.getLogger(__name__)
 
 
 # TODO: Should be defined as type.
-ir = 'ir'
+ir = "ir"
 
 
-def _play_func(func, target=None, outbus=0, fade=0.01,
-               add_action='addToHead', args=()):
+def _play_func(func, target=None, outbus=0, fade=0.01, add_action="addToHead", args=()):
     # asDefName.sc
     target = gpp.node_param(target)._as_target()
     server = target.server
     if not server._status_watcher.server_running:
-        _logger.warning(f'server {str(server.name)} not running')
+        _logger.warning(f"server {str(server.name)} not running")
         return
 
     # GraphBuilder.sc
-    def wrapper(_iout:ir=0):
+    def wrapper(_iout: ir = 0):
         # SynthDef.wrap function has to return an UGen-input or
         # None to be chained or not. UGens that don't return a
         # signal should return None. Generated synthdef of this
@@ -44,10 +43,11 @@ def _play_func(func, target=None, outbus=0, fade=0.01,
         result = sdf.SynthDef.wrap(func)
         if result is not None:
             if fade:
-                ugns.Control.add_name('gate')
+                ugns.Control.add_name("gate")
                 gate = ugns.Control.kr(1.0)
                 result *= ugns.EnvGen.kr(
-                    evp.Env.asr(fade, 1, fade, 'lin'), gate, 1, 0, 1, 2)
+                    evp.Env.asr(fade, 1, fade, "lin"), gate, 1, 0, 1, 2
+                )
             result = utl.as_list(result)
             rate = gpp.ugen_param(result)._as_ugen_rate()
             result = ugn.SynthObject._replace_zeroes_with_silence(result)
@@ -57,26 +57,33 @@ def _play_func(func, target=None, outbus=0, fade=0.01,
     synth = nod.Synth.basic_new(synthdef.name, server)
     rpd.OscFunc(
         # // Use the /n_end signal to remove the temp synthdef.
-        lambda *_: server.addr.send_msg('/d_free', synthdef.name),
-        '/n_end', server.addr, arg_template=[synth.node_id]).one_shot()
+        lambda *_: server.addr.send_msg("/d_free", synthdef.name),
+        "/n_end",
+        server.addr,
+        arg_template=[synth.node_id],
+    ).one_shot()
     args = gpp.node_param(args)._as_control_input()
-    args = gpp.node_param(
-        ['_iout', outbus, 'out', outbus, *args])._as_osc_arg_list()
+    args = gpp.node_param(["_iout", outbus, "out", outbus, *args])._as_osc_arg_list()
     synth_msg = [
-        '/s_new', synth.def_name, synth.node_id,
-        nod.Synth.add_actions[add_action], target.node_id, *args]
+        "/s_new",
+        synth.def_name,
+        synth.node_id,
+        nod.Synth.add_actions[add_action],
+        target.node_id,
+        *args,
+    ]
     synthdef._do_send(server, synth_msg)
     return synth
 
 
 def _play_buf(buf, loop=False, mul=1, **kwargs):
     if buf._bufnum is None:
-        raise bff.BufferAlreadyFreed('_play_buf')
+        raise bff.BufferAlreadyFreed("_play_buf")
 
     def buffer_player():
         sig = ugns.PlayBuf.ar(
-            buf._channels, buf._bufnum,
-            ugns.BufRateScale.kr(buf._bufnum), loop=loop)
+            buf._channels, buf._bufnum, ugns.BufRateScale.kr(buf._bufnum), loop=loop
+        )
         if not loop:
             ugns.FreeSelfWhenDone.kr(sig)
         return sig * mul
@@ -85,7 +92,7 @@ def _play_buf(buf, loop=False, mul=1, **kwargs):
 
 
 def play(obj=None, *args, **kwargs):
-    '''Convenience function to play events and lambdas.
+    """Convenience function to play events and lambdas.
 
     If called without any argument it will play the default event
     with the default parameters.
@@ -105,12 +112,14 @@ def play(obj=None, *args, **kwargs):
     lambda functions but can be used as a decorator.
 
     All versions return the return value of the played object.
-    '''
+    """
 
     if not obj and not args and not kwargs:
         # Test tone.
-        return evt.event().play()  # TODO: Event is not returning the created server object.
-    elif hasattr(obj, 'play'):
+        return (
+            evt.event().play()
+        )  # TODO: Event is not returning the created server object.
+    elif hasattr(obj, "play"):
         # Is playable.
         return obj.play(*args, **kwargs)
     elif isinstance(obj, dict) and not args:
@@ -125,4 +134,4 @@ def play(obj=None, *args, **kwargs):
         # As a keyword only call makes an event.
         return evt.event(kwargs).play()
     else:
-        raise ValueError(f'non playable arguments')
+        raise ValueError("non playable arguments")

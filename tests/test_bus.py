@@ -1,15 +1,15 @@
-
 import unittest
 import shutil
 
 import sc3
+
 sc3.init()
 
-from sc3.synth.bus import Bus, AudioBus, ControlBus
+from sc3.synth.bus import AudioBus, ControlBus
 from sc3.synth.server import s
 
 
-@unittest.skipIf(not shutil.which(s.options.program), 'no server available')
+@unittest.skipIf(not shutil.which(s.options.program), "no server available")
 class BusTestCase(unittest.TestCase):
     def test_common_interface(self):
         b1 = ControlBus(5)
@@ -33,5 +33,5 @@ class BusTestCase(unittest.TestCase):
         ...
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

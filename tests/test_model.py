@@ -1,7 +1,7 @@
-
 import unittest
 
 import sc3
+
 sc3.init()
 
 from sc3.base.model import NotificationCenter
@@ -10,7 +10,7 @@ from sc3.base.model import NotificationCenter
 class NotificationCenterTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        class Object():
+        class Object:
             pass
 
         cls.Object = Object
@@ -34,25 +34,24 @@ class NotificationCenterTestCase(unittest.TestCase):
         def b_action(obj, msg, listener, *args):
             b.value = args[0]
 
-        registration = NotificationCenter.register(
-            a, 'value_changed', b, b_action)
+        registration = NotificationCenter.register(a, "value_changed", b, b_action)
 
         a.value = 10
-        NotificationCenter.notify(a, 'value_changed', a.value)
-        self.assertEqual(a.value, b.value, 'notification failure')
+        NotificationCenter.notify(a, "value_changed", a.value)
+        self.assertEqual(a.value, b.value, "notification failure")
 
     def test_register(self, n=5):
         registrations = []
         actions = []
-        msg = 'failed to register'
+        msg = "failed to register"
 
         for i in range(n):
             obj = self.Object()
             listener = self.Object()
             action = lambda: None
             actions.append(action)
-            registrations.append([obj, 'changed', listener])
-            NotificationCenter.register(obj, 'changed', listener, action)
+            registrations.append([obj, "changed", listener])
+            NotificationCenter.register(obj, "changed", listener, action)
 
         for (o, m, l), a in zip(registrations, actions):
             self.assertIs(NotificationCenter._registrations[o][m][l], a, msg)
@@ -60,5 +59,5 @@ class NotificationCenterTestCase(unittest.TestCase):
     # TODO
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

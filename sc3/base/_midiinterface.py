@@ -1,4 +1,3 @@
-
 from abc import ABC, abstractmethod
 import threading
 import pprint
@@ -10,10 +9,10 @@ from . import _taskq as tsq
 from . import _hooks as hks
 
 
-mido = hks.import_optional_module('mido')
+mido = hks.import_optional_module("mido")
 
 
-__all__ = ['MidiRtInterface', 'MidiNrtInterface']
+__all__ = ["MidiRtInterface", "MidiNrtInterface"]
 
 
 class MidiInterface(ABC):
@@ -90,9 +89,8 @@ class MidiRtInterface(MidiInterface):
         port = mido.open_input(name, virtual)
         self._input_ports[name] = port
         thread = threading.Thread(
-            target=self._run,
-            name='MIDI ' + str(port),
-            args=(self, name, virtual, port))
+            target=self._run, name="MIDI " + str(port), args=(self, name, virtual, port)
+        )
         thread.daemon = True
         thread.start()
         self._threads[name] = thread
@@ -153,13 +151,15 @@ class MidiRtInterface(MidiInterface):
 
 
 class MidiNrtInterface(MidiInterface):
-    class _DummyPort():
+    class _DummyPort:
         def __init__(self, name, virtual=False):
             self.name = name
             self.closed = False
             self._virtual = virtual
+
         def reset(self):
             pass
+
         def panic(self):
             pass
 
@@ -179,7 +179,7 @@ class MidiNrtInterface(MidiInterface):
         pass
 
     def open_input_port(self, name, virtual):  # override
-        raise Exception('input ports cannot be open in nrt mode')
+        raise Exception("input ports cannot be open in nrt mode")
 
     def open_output_port(self, name, virtual):  # override
         if name in self._output_ports:
@@ -199,8 +199,8 @@ class MidiNrtInterface(MidiInterface):
         self._midi_score.add(port, msg, **kwargs)
 
 
-class MidiScore():
-    class _Entry():
+class MidiScore:
+    class _Entry:
         def __init__(self, port, msg):
             self.port = port
             self.msg = msg
@@ -228,7 +228,7 @@ class MidiScore():
 
     def add(self, port, msg, **kwargs):
         if self._finished:
-            raise Exception('already finished MIDI score')
+            raise Exception("already finished MIDI score")
         try:
             midi_msg = mido.Message(msg, **kwargs)
         except LookupError:
@@ -243,21 +243,24 @@ class MidiScore():
         devices = dict()
         for send_time, entry in self._scoreq:
             name, msg = entry.port.name, entry.msg
-            if not name in devices:
+            if name not in devices:
                 prev_time[name] = 0
                 devices[name] = mido.MidiTrack()
-                devices[name].extend([
-                    mido.MetaMessage('device_name', name=name),
-                    mido.MetaMessage('set_tempo', tempo=midi_tempo)])
-            msg.time = int(mido.second2tick(
-                send_time - prev_time[name], midi_ppqn, midi_tempo))
+                devices[name].extend(
+                    [
+                        mido.MetaMessage("device_name", name=name),
+                        mido.MetaMessage("set_tempo", tempo=midi_tempo),
+                    ]
+                )
+            msg.time = int(
+                mido.second2tick(send_time - prev_time[name], midi_ppqn, midi_tempo)
+            )
             devices[name].append(msg)
             prev_time[name] = send_time
         self._tracks = list(devices.values())
         self._midi_file = mido.MidiFile(
-            type=1,
-            ticks_per_beat=midi_ppqn,
-            tracks=self._tracks)
+            type=1, ticks_per_beat=midi_ppqn, tracks=self._tracks
+        )
         self._finished = True
 
     def write(self, path):

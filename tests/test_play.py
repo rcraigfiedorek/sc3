@@ -1,8 +1,8 @@
-
 import unittest
 
 import sc3
-sc3.init('nrt')
+
+sc3.init("nrt")
 
 from sc3.base.main import main
 from sc3.base.play import play
@@ -13,12 +13,12 @@ from sc3.synth.ugens import Silent, SinOsc
 
 class PlayTestCase(unittest.TestCase):
     def test_events(self):
-        SystemDefs.add_synthdef('default')
-        x = play({'freq': 440})
+        SystemDefs.add_synthdef("default")
+        x = play({"freq": 440})
         self.assertIsNone(x)
         x = play(freq=550)
         self.assertIsNone(x)
-        x = play({'freq': 660}, freq=770)  # Overrides.
+        x = play({"freq": 660}, freq=770)  # Overrides.
         self.assertIsNone(x)
 
         score = main.process()
@@ -38,7 +38,7 @@ class PlayTestCase(unittest.TestCase):
         self.assertIsInstance(x, Synth)
         try:
             success = False
-            x = play(lambda: [0, Silent(), 'error'])
+            x = play(lambda: [0, Silent(), "error"])
         except Exception as e:
             self.assertIsInstance(e, ValueError)
             success = True
@@ -53,5 +53,5 @@ class PlayTestCase(unittest.TestCase):
     #     ...
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

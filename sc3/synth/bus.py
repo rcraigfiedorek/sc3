@@ -8,7 +8,7 @@ from ..base import utils as utl
 from ..base import responders as rpd
 
 
-__all__ = ['AudioBus', 'ControlBus']
+__all__ = ["AudioBus", "ControlBus"]
 
 
 _logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class BusAlreadyFreed(BusException):
 
 
 class Bus(gpp.UGenParameter, gpp.NodeParameter):
-    '''Client side representation of server buses.
+    """Client side representation of server buses.
 
     Bus objects are used to keep track and manage the buses being
     used in the server, they can be passed as arguments instead
@@ -45,35 +45,29 @@ class Bus(gpp.UGenParameter, gpp.NodeParameter):
         is automatically allocated (client side) by the bus
         allocator class.
 
-    '''
+    """
 
     @property
     def index(self):
-        '''Bus index in the server.
-
-        '''
+        """Bus index in the server."""
 
         return self._index
 
     @property
     def channels(self):
-        '''Number of channels.
-
-        '''
+        """Number of channels."""
 
         return self._channels
 
     @property
     def server(self):
-        '''Target server of the bus object.
-
-        '''
+        """Target server of the bus object."""
 
         return self._server
 
     @classmethod
     def new_from(cls, bus, offset, channels=1):
-        '''Create a new object from ``bus``.
+        """Create a new object from ``bus``.
 
         Parameters
         ----------
@@ -84,19 +78,16 @@ class Bus(gpp.UGenParameter, gpp.NodeParameter):
         channels: int
             Number of channels from to count from ``offset``.
 
-        '''
+        """
 
-        if offset > bus._channels\
-        or channels + offset > bus._channels:
+        if offset > bus._channels or channels + offset > bus._channels:
             raise BusException(
-                'new_from tried to reach outside '
-                f'the channel range of {bus}')
+                "new_from tried to reach outside " f"the channel range of {bus}"
+            )
         return cls(channels, bus.server, bus.index + offset)
 
     def sub_bus(self, offset, channels=1):
-        '''Return a sub-range of channels from this bus.
-
-        '''
+        """Return a sub-range of channels from this bus."""
 
         return type(self).new_from(self, offset, channels)
 
@@ -111,28 +102,28 @@ class Bus(gpp.UGenParameter, gpp.NodeParameter):
         if not isinstance(other, type(self)):
             return NotImplemented
 
-        if self._index == other._index\
-        and self._channels == other._channels\
-        and self._server == other._server:
+        if (
+            self._index == other._index
+            and self._channels == other._channels
+            and self._server == other._server
+        ):
             return True
         else:
             return False
 
     def __hash__(self):
-        return hash(
-            (type(self), self._index, self._channels, self._server))
+        return hash((type(self), self._index, self._channels, self._server))
 
     def __repr__(self):
         return (
-            f'{type(self).__name__}({self._channels}, '
-            f'{self._server.name}, {self._index})')
-
+            f"{type(self).__name__}({self._channels}, "
+            f"{self._server.name}, {self._index})"
+        )
 
     ### UGen graph parameter interface ###
 
     def _as_ugen_input(self, *_):
         return self._index
-
 
     ### Node parameter interface ###
 
@@ -146,12 +137,12 @@ class AudioBus(Bus):
         self._channels = channels
         self._server = server or srv.Server.default
         if index is None:
-            self._index = self._server._audio_bus_allocator.alloc(
-                self._channels)
+            self._index = self._server._audio_bus_allocator.alloc(self._channels)
             if self._index is None:
                 raise BusException(
-                    'failed to get AudioBus bus allocated, channels '
-                    f"= {self._channels}, server = {self._server.name}")
+                    "failed to get AudioBus bus allocated, channels "
+                    f"= {self._channels}, server = {self._server.name}"
+                )
         else:
             self._index = index
         self._map_symbol = None
@@ -161,12 +152,10 @@ class AudioBus(Bus):
     #     return self._index < self._server.options.first_private_bus()
 
     def free(self):
-        '''Free the bus object index.
-
-        '''
+        """Free the bus object index."""
 
         if self._index is None:
-            _logger.warning('AudioBus has already been freed')
+            _logger.warning("AudioBus has already been freed")
             return
         self._server._audio_bus_allocator.free(self._index)
         self._index = None
@@ -174,14 +163,12 @@ class AudioBus(Bus):
         self._map_symbol = None
 
     def as_map(self):
-        '''Return the map string of this bus.
-
-        '''
+        """Return the map string of this bus."""
 
         if self._map_symbol is None:
             if self._index is None:
-                raise BusException('bus not allocated')
-            self._map_symbol = 'a' + str(self._index)
+                raise BusException("bus not allocated")
+            self._map_symbol = "a" + str(self._index)
         return self._map_symbol
 
     ### Shared memory interface ###
@@ -198,11 +185,10 @@ class AudioBus(Bus):
     # def setn_synchronous(self, values):
     #     ...
 
-
     ### UGen graph parameter interface ###
 
     def _as_ugen_rate(self):
-        return 'audio'
+        return "audio"
 
 
 class ControlBus(Bus):
@@ -211,30 +197,26 @@ class ControlBus(Bus):
         self._channels = channels
         self._server = server or srv.Server.default
         if index is None:
-            self._index = self._server._control_bus_allocator.alloc(
-                self._channels)
+            self._index = self._server._control_bus_allocator.alloc(self._channels)
             if self._index is None:
                 raise BusException(
-                    'failed to get ControlBus bus allocated, channels '
-                    f'= {self._channels}, server = {self._server.name}')
+                    "failed to get ControlBus bus allocated, channels "
+                    f"= {self._channels}, server = {self._server.name}"
+                )
         else:
             self._index = index
         self._map_symbol = None
 
     def clear(self):
-        '''Set bus value to zero for all channels.
-
-        '''
+        """Set bus value to zero for all channels."""
 
         self.fill(0, self._channels)
 
     def free(self):
-        '''Free the bus object index.
-
-        '''
+        """Free the bus object index."""
 
         if self._index is None:
-            _logger.warning('ControlBus has already been freed')
+            _logger.warning("ControlBus has already been freed")
             return
         self._server._control_bus_allocator.free(self._index)
         self._index = None
@@ -242,49 +224,44 @@ class ControlBus(Bus):
         self._map_symbol = None
 
     def as_map(self):
-        '''Return the map string of this bus.
-
-        '''
+        """Return the map string of this bus."""
 
         if self._map_symbol is None:
             if self._index is None:
-                raise BusException('bus not allocated')
-            self._map_symbol = 'c' + str(self._index)
+                raise BusException("bus not allocated")
+            self._map_symbol = "c" + str(self._index)
         return self._map_symbol
 
     def set(self, *values):
-        '''Set bus value or values for consecutive channels.
+        """Set bus value or values for consecutive channels.
 
         This method uses '/c_set' command. The length of ``*values``
         shouldn't be larger than the number of channels or it will
         override values set by other bus objects.
 
-        '''
+        """
 
         if self._index is None:
-            raise BusAlreadyFreed('set')
-        msg = [
-            '/c_set',
-            *[[self._index + i, v] for i, v in enumerate(values)]]
+            raise BusAlreadyFreed("set")
+        msg = ["/c_set", *[[self._index + i, v] for i, v in enumerate(values)]]
         self._server.addr.send_msg(*utl.flat(msg))
 
     def setn(self, values):
-        '''Set the list of ``values`` to consecutive channels.
+        """Set the list of ``values`` to consecutive channels.
 
         This method uses '/c_setn' command that sets a list of values to a
         contiguous range of buses. The length of ``*values`` shouldn't be
         larger than the number of channels or it will override values set by
         other bus objects.
 
-        '''
+        """
 
         if self._index is None:
-            raise BusAlreadyFreed('setn')
-        self._server.addr.send_msg(
-            '/c_setn', self._index, len(values), *values)
+            raise BusAlreadyFreed("setn")
+        self._server.addr.send_msg("/c_setn", self._index, len(values), *values)
 
     def set_at(self, offset, *values):
-        '''Set the value of consecutive buses using '/c_set' command.
+        """Set the value of consecutive buses using '/c_set' command.
 
         Parameters
         ----------
@@ -298,17 +275,15 @@ class ControlBus(Bus):
         Booth ``set_at`` and ``set_pairs`` are different parameter
         organizations for the '/c_set' command.
 
-        '''
+        """
 
         if self._index is None:
-            raise BusAlreadyFreed('set_at')
-        msg = [
-            '/c_set',
-            *[[self._index + offset + i, v] for i, v in enumerate(values)]]
+            raise BusAlreadyFreed("set_at")
+        msg = ["/c_set", *[[self._index + offset + i, v] for i, v in enumerate(values)]]
         self._server.addr.send_msg(*utl.flat(msg))
 
     def setn_at(self, offset, values):
-        '''Set the value of consecutive buses using '/c_setn' command.
+        """Set the value of consecutive buses using '/c_setn' command.
 
         Parameters
         ----------
@@ -317,16 +292,17 @@ class ControlBus(Bus):
         values : list[float]
             A list of values for each consecutive bus.
 
-        '''
+        """
 
         if self._index is None:
-            raise BusAlreadyFreed('setn_at')
+            raise BusAlreadyFreed("setn_at")
         # // could throw an error if values.size > numChannels
         self._server.addr.send_msg(
-            '/c_setn', self._index + offset, len(values), *values)
+            "/c_setn", self._index + offset, len(values), *values
+        )
 
     def set_pairs(self, *pairs):
-        '''Set the value of buses by index relative to this bus.
+        """Set the value of buses by index relative to this bus.
 
         Parameters
         ----------
@@ -338,35 +314,37 @@ class ControlBus(Bus):
         Booth ``set_at`` and ``set_pairs`` are different parameter
         organizations for the '/c_set' command.
 
-        '''
+        """
 
         if self._index is None:
-            raise BusAlreadyFreed('set_pairs')
+            raise BusAlreadyFreed("set_pairs")
         msg = [
-            '/c_set',
-            *[[self._index + pair[0], pair[1]]
-            for pair in utl.gen_cclumps(pairs, 2)]]
+            "/c_set",
+            *[[self._index + pair[0], pair[1]] for pair in utl.gen_cclumps(pairs, 2)],
+        ]
         self._server.addr.send_msg(*utl.flat(msg))
 
     def get(self, action=None):
-        '''Get the bus current value.
+        """Get the bus current value.
 
         Parameters
         ----------
         action: function
             A function to be evaluated with the bus' value as argument.
 
-        '''
+        """
 
         if self._index is None:
-            raise BusAlreadyFreed('get')
+            raise BusAlreadyFreed("get")
 
         if self._channels == 1:
             if action is None:
+
                 def default_action_func(val):
                     print(
-                        f'{type(self).__name__} index: '
-                        f'{self._index} value: {val}')
+                        f"{type(self).__name__} index: " f"{self._index} value: {val}"
+                    )
+
                 action = default_action_func
 
             def get_func(msg, *_):
@@ -375,14 +353,14 @@ class ControlBus(Bus):
                 action(msg[2])
 
             rpd.OscFunc(
-                get_func, '/c_set', self._server.addr,
-                arg_template=[self._index]).one_shot()
-            self._server.addr.send_msg('/c_get', self._index)
+                get_func, "/c_set", self._server.addr, arg_template=[self._index]
+            ).one_shot()
+            self._server.addr.send_msg("/c_get", self._index)
         else:
             self.getn(self._channels, action)
 
     def getn(self, count=None, action=None):
-        '''Get consecutive channels' values from this bus index.
+        """Get consecutive channels' values from this bus index.
 
         Parameters
         ----------
@@ -392,16 +370,16 @@ class ControlBus(Bus):
             A function to be evaluated with a list of buses' values
             as argument.
 
-        '''
+        """
 
         if self._index is None:
-            raise BusAlreadyFreed('getn')
+            raise BusAlreadyFreed("getn")
 
         if action is None:
+
             def default_action_func(vals):
-                print(
-                    f'{type(self).__name__} index: '
-                    f'{self._index} values: {vals}')
+                print(f"{type(self).__name__} index: " f"{self._index} values: {vals}")
+
             action = default_action_func
 
         def getn_func(msg, *_):
@@ -410,14 +388,14 @@ class ControlBus(Bus):
             action(msg[3:])
 
         rpd.OscFunc(
-            getn_func, '/c_setn', self._server.addr,
-            arg_template=[self._index]).one_shot()
+            getn_func, "/c_setn", self._server.addr, arg_template=[self._index]
+        ).one_shot()
         if count is None:
             count = self._channels
-        self._server.addr.send_msg('/c_getn', self._index, count)
+        self._server.addr.send_msg("/c_getn", self._index, count)
 
     def fill(self, value, channels):
-        '''Set contiguous buses from this bus index to a single value.
+        """Set contiguous buses from this bus index to a single value.
 
         This method uses '/c_fill' command.
 
@@ -428,18 +406,17 @@ class ControlBus(Bus):
         channels: int
             Number of contiguous buses to set.
 
-        '''
+        """
 
         if self._index is None:
-            raise BusAlreadyFreed('fill')
+            raise BusAlreadyFreed("fill")
         # // Could throw an error if numChans > numChannels.
-        self._server.addr.send_msg('/c_fill', self._index, channels, value)
+        self._server.addr.send_msg("/c_fill", self._index, channels, value)
 
     # setAll is fill(value, self._channels)
     # value_ is fill(value, self._channels)
 
-
     ### UGen graph parameter interface ###
 
     def _as_ugen_rate(self):
-        return 'control'
+        return "control"

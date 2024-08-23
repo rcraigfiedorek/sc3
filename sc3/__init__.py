@@ -1,11 +1,10 @@
-
-__version__ = '1.1.3a0'
-__all__ = ['base', 'seq', 'synth']
+__version__ = "1.1.3a0"
+__all__ = ["base", "seq", "synth"]
 
 
 ### Library configuration ###
 
-LIB_MODE = 'rt'
+LIB_MODE = "rt"
 LIB_PORT = 57120
 LIB_PORT_RANGE = 10
 LIB_SETUP_FILE = None
@@ -15,13 +14,14 @@ LIB_SETUP_FILE = None
 
 # https://docs.python.org/3/howto/logging-cookbook.html#dealing-with-handlers-that-block
 
+
 def _init_logger(verbosity, blocking=False):
     import queue
     import logging
     import logging.handlers
     import atexit
 
-    formatter = logging.Formatter('%(levelname)s:%(name)s:%(message)s')
+    formatter = logging.Formatter("%(levelname)s:%(name)s:%(message)s")
 
     if blocking:
         handler = logging.StreamHandler()
@@ -42,24 +42,26 @@ def _init_logger(verbosity, blocking=False):
 
     root_logger.setLevel(verbosity)
 
+
 ### Init library ###
 
 _libsc3_initialized = False
 
-def init(mode='rt', verbosity='INFO'):
+
+def init(mode="rt", verbosity="INFO"):
     global _libsc3_initialized
 
     if _libsc3_initialized:
         return
 
     mode = mode.lower()
-    _init_logger(verbosity, True if mode == 'nrt' else False)
+    _init_logger(verbosity, True if mode == "nrt" else False)
 
     import sc3.base.main
 
-    if mode == 'rt':
+    if mode == "rt":
         sc3.base.main.main = sc3.base.main.RtMain
-    elif mode == 'nrt':
+    elif mode == "nrt":
         sc3.base.main.main = sc3.base.main.NrtMain
     else:
         raise ValueError(f"invalid mode '{mode}'")

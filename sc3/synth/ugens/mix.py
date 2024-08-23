@@ -1,4 +1,3 @@
-
 import logging
 
 from ...base import utils as utl
@@ -35,37 +34,37 @@ class Mix(ugn.PseudoUGen):
     def ar(cls, lst):
         result = cls.new(lst)
         rate = result._as_ugen_rate()
-        if rate == 'audio':
+        if rate == "audio":
             return result
-        elif rate == 'control':
+        elif rate == "control":
             return lne.K2A.ar(result)
-        elif rate == 'scalar':
+        elif rate == "scalar":
             return lne.DC.ar(result)
         else:
-            raise ValueError(f'unsupported rate {rate} for Mix.ar')
+            raise ValueError(f"unsupported rate {rate} for Mix.ar")
 
     @classmethod
     def kr(cls, lst):
         # // 'rate' on an array returns the fastest rate
         # // ('audio' takes precedence over 'control' over 'scalar')
-        if gpp.ugen_param(lst)._as_ugen_rate() == 'audio':
+        if gpp.ugen_param(lst)._as_ugen_rate() == "audio":
             _logger.warning(
-                'audio rate input(s) to Mix.kr will '
-                'result in signal degradation')
+                "audio rate input(s) to Mix.kr will " "result in signal degradation"
+            )
             for i, item in enumerate(lst[:]):
                 rate = gpp.ugen_param(item)._as_ugen_rate()
-                if rate == 'audio':
-                    print(f'{type(item).__name__} {rate}')
+                if rate == "audio":
+                    print(f"{type(item).__name__} {rate}")
                     item._dump_args()
                     lst[i] = lne.A2K.kr(item)
         result = cls.new(lst)
         rate = result._as_ugen_rate()
-        if rate == 'control':
+        if rate == "control":
             return result
-        elif rate == 'scalar':
+        elif rate == "scalar":
             return lne.DC.kr(result)
         else:
-            raise ValueError(f'unsupported rate {rate} for Mix.kr')
+            raise ValueError(f"unsupported rate {rate} for Mix.kr")
 
 
 # This is a later added Pseudo UGen used only by JITLib.

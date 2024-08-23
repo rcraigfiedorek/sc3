@@ -1,4 +1,3 @@
-
 import operator
 # import math
 
@@ -6,31 +5,33 @@ from ..base import _hooks as hks
 from ..base import utils as utl
 
 
-bi = hks.late_import(__name__, 'sc3.base.builtins', 'bi')
+bi = hks.late_import(__name__, "sc3.base.builtins", "bi")
 
 
-class AbstractObject():
+class AbstractObject:
     def _compose_unop(self, selector):
         raise NotImplementedError(
-            f'{type(self).__name__} does not implement _compose_unop')
+            f"{type(self).__name__} does not implement _compose_unop"
+        )
 
     def _compose_binop(self, selector, other):
         raise NotImplementedError(
-            f'{type(self).__name__} does not implement _compose_binop')
+            f"{type(self).__name__} does not implement _compose_binop"
+        )
 
     def _rcompose_binop(self, selector, other):
         raise NotImplementedError(
-            f'{type(self).__name__} does not implement _rcompose_binop')
+            f"{type(self).__name__} does not implement _rcompose_binop"
+        )
 
     def _compose_narop(self, selector, *args):
         raise NotImplementedError(
-            f'{type(self).__name__} does not implement _compose_narop')
-
+            f"{type(self).__name__} does not implement _compose_narop"
+        )
 
     # NOTE: If needed by subclasses, operations below, as a whole or in sets,
     # can be implemented as mixins. There are inconsistencies regarding
     # supported operations in specific UGen objects.
-
 
     ### Unary operators ###
 
@@ -45,7 +46,6 @@ class AbstractObject():
 
     def __invert__(self):
         return self._compose_unop(operator.invert)  # ~ (bitwise inverse)
-
 
     # Python numeric type conversion must return adequate types.
     #
@@ -80,7 +80,6 @@ class AbstractObject():
     def __floor__(self):
         return self._compose_unop(bi.floor)
 
-
     # `not obj` is not implementable but through __bool__ and __len__ which
     # must return boolean or int(obj).
     # def __not__(self):
@@ -113,7 +112,9 @@ class AbstractObject():
     def sign(self):
         return self._compose_unop(bi.sign)
 
-    def log(self):  #, base=math.e):  # In special index is unary, can't change the base.
+    def log(
+        self,
+    ):  # , base=math.e):  # In special index is unary, can't change the base.
         return self._compose_unop(bi.log)
 
     def log2(self):
@@ -258,22 +259,21 @@ class AbstractObject():
     # rotate
     # dist
 
-
     ### Binary operators ###
 
-    def __add__(self, other): # +
+    def __add__(self, other):  # +
         return self._compose_binop(operator.add, other)
 
     def __radd__(self, other):
         return self._rcompose_binop(operator.add, other)
 
-    def __sub__(self, other): # -
+    def __sub__(self, other):  # -
         return self._compose_binop(operator.sub, other)
 
     def __rsub__(self, other):
         return self._rcompose_binop(operator.sub, other)
 
-    def __mul__(self, other): # *
+    def __mul__(self, other):  # *
         return self._compose_binop(operator.mul, other)
 
     def __rmul__(self, other):
@@ -285,19 +285,19 @@ class AbstractObject():
     # def __rmatmul__(self, other):
     #     return self._rcompose_binop(operator.matmul, other)
 
-    def __truediv__(self, other): # /
+    def __truediv__(self, other):  # /
         return self._compose_binop(operator.truediv, other)
 
     def __rtruediv__(self, other):
         return self._rcompose_binop(operator.truediv, other)
 
-    def __floordiv__(self, other): # //
+    def __floordiv__(self, other):  # //
         return self._compose_binop(operator.floordiv, other)
 
     def __rfloordiv__(self, other):
         return self._rcompose_binop(operator.floordiv, other)
 
-    def __mod__(self, other): # %
+    def __mod__(self, other):  # %
         return self._compose_binop(bi.mod, other)
 
     def __rmod__(self, other):
@@ -309,46 +309,46 @@ class AbstractObject():
     # def __rdivmod__(self, other):
     #     return self._rcompose_binop('divmod', other)
 
-    def __pow__(self, other): # pow(), **, object.__pow__(self, other[, modulo])
+    def __pow__(self, other):  # pow(), **, object.__pow__(self, other[, modulo])
         return self._compose_binop(operator.pow, other)
 
     def __rpow__(self, other):
         return self._rcompose_binop(operator.pow, other)
 
-    def __lshift__(self, other): # <<
+    def __lshift__(self, other):  # <<
         return self._compose_binop(operator.lshift, other)
 
     def __rlshift__(self, other):
         return self._rcompose_binop(operator.lshift, other)
 
-    def __rshift__(self, other): # >>
+    def __rshift__(self, other):  # >>
         return self._compose_binop(operator.rshift, other)
 
     def __rrshift__(self, other):
         return self._rcompose_binop(operator.rshift, other)
 
-    def __and__(self, other): # &
+    def __and__(self, other):  # &
         return self._compose_binop(operator.and_, other)
 
     def __rand__(self, other):
         return self._rcompose_binop(operator.and_, other)
 
-    def __or__(self, other): # |
+    def __or__(self, other):  # |
         return self._compose_binop(operator.or_, other)
 
     def __ror__(self, other):
         return self._rcompose_binop(operator.or_, other)
 
-    def __xor__(self, other): # ^
+    def __xor__(self, other):  # ^
         return self._compose_binop(operator.xor, other)
 
     def __rxor__(self, other):
         return self._rcompose_binop(operator.xor, other)
 
-    def __lt__(self, other): # <
+    def __lt__(self, other):  # <
         return self._compose_binop(operator.lt, other)
 
-    def __le__(self, other): # <=
+    def __le__(self, other):  # <=
         return self._compose_binop(operator.le, other)
 
     def __eq__(self, other):
@@ -360,12 +360,11 @@ class AbstractObject():
     def __ne__(self, other):
         return self._compose_binop(operator.ne, other)
 
-    def __gt__(self, other): # >
+    def __gt__(self, other):  # >
         return self._compose_binop(operator.gt, other)
 
-    def __ge__(self, other): # >=
+    def __ge__(self, other):  # >=
         return self._compose_binop(operator.ge, other)
-
 
     def min(self, other):
         return self._compose_binop(bi.min, other)
@@ -480,7 +479,6 @@ class AbstractObject():
     def exprand(self, other):
         return self._compose_binop(bi.exprand, other)
 
-
     ### Nary operators ###
 
     def clip(self, lo, hi):
@@ -495,39 +493,37 @@ class AbstractObject():
     def blend(self, other, frac=0.5):
         return self._compose_narop(bi.blend, other, frac)
 
-    def linlin(self, inmin, inmax, outmin, outmax, clip='minmax'):
-        return self._compose_narop(
-            bi.linlin, inmin, inmax, outmin, outmax, clip)
+    def linlin(self, inmin, inmax, outmin, outmax, clip="minmax"):
+        return self._compose_narop(bi.linlin, inmin, inmax, outmin, outmax, clip)
 
-    def linexp(self, inmin, inmax, outmin, outmax, clip='minmax'):
-        return self._compose_narop(
-            bi.linexp, inmin, inmax, outmin, outmax, clip)
+    def linexp(self, inmin, inmax, outmin, outmax, clip="minmax"):
+        return self._compose_narop(bi.linexp, inmin, inmax, outmin, outmax, clip)
 
-    def explin(self, inmin, inmax, outmin, outmax, clip='minmax'):
-        return self._compose_narop(
-            bi.explin, inmin, inmax, outmin, outmax, clip)
+    def explin(self, inmin, inmax, outmin, outmax, clip="minmax"):
+        return self._compose_narop(bi.explin, inmin, inmax, outmin, outmax, clip)
 
-    def expexp(self, inmin, inmax, outmin, outmax, clip='minmax'):
-        return self._compose_narop(
-            bi.expexp, inmin, inmax, outmin, outmax, clip)
+    def expexp(self, inmin, inmax, outmin, outmax, clip="minmax"):
+        return self._compose_narop(bi.expexp, inmin, inmax, outmin, outmax, clip)
 
-    def lincurve(self, inmin, inmax, outmin, outmax, curve=-4, clip='minmax'):
+    def lincurve(self, inmin, inmax, outmin, outmax, curve=-4, clip="minmax"):
         return self._compose_narop(
-            bi.lincurve, inmin, inmax, outmin, outmax, curve, clip)
+            bi.lincurve, inmin, inmax, outmin, outmax, curve, clip
+        )
 
-    def curvelin(self, inmin, inmax, outmin, outmax, curve=-4, clip='minmax'):
+    def curvelin(self, inmin, inmax, outmin, outmax, curve=-4, clip="minmax"):
         return self._compose_narop(
-            bi.curvelin, inmin, inmax, outmin, outmax, curve, clip)
+            bi.curvelin, inmin, inmax, outmin, outmax, curve, clip
+        )
 
-    def bilin(self, incenter, inmin, inmax, outcenter, outmin, outmax,
-              clip='minmax'):
+    def bilin(self, incenter, inmin, inmax, outcenter, outmin, outmax, clip="minmax"):
         return self._compose_narop(
-            bi.bilin, incenter, inmin, inmax, outcenter, outmin, outmax, clip)
+            bi.bilin, incenter, inmin, inmax, outcenter, outmin, outmax, clip
+        )
 
-    def biexp(self, incenter, inmin, inmax, outcenter, outmin, outmax,
-              clip='minmax'):
+    def biexp(self, incenter, inmin, inmax, outcenter, outmin, outmax, clip="minmax"):
         return self._compose_narop(
-            bi.biexp, incenter, inmin, inmax, outcenter, outmin, outmax, clip)
+            bi.biexp, incenter, inmin, inmax, outcenter, outmin, outmax, clip
+        )
 
     def moddif(self, other, mod=1.0):
         return self._compose_narop(bi.moddif, other, mod)
@@ -536,7 +532,6 @@ class AbstractObject():
 
 
 class AbstractSequence(AbstractObject):
-
     ### AbstractObject interface ###
 
     def _compose_unop(self, selector):

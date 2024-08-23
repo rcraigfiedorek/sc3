@@ -8,10 +8,10 @@ from ..base import model as mdl
 # // Watches a server address for node-related messages
 
 
-class NodeWatcher():
+class NodeWatcher:
     # // Watches registered nodes and sets their isPlaying/isRunning flag.
     # // A node needs to be registered to be addressed, other nodes are ignored.
-    _CMDS = ('/n_go', '/n_end', '/n_off', '/n_on', '/n_move', '/n_info')
+    _CMDS = ("/n_go", "/n_end", "/n_off", "/n_on", "/n_move", "/n_info")
 
     def __init__(self, server):
         self._server = server
@@ -19,12 +19,12 @@ class NodeWatcher():
         self._responders = []
         self._is_watching = False
         for cmd in self._CMDS:
-            method = '_' + cmd[1:]
+            method = "_" + cmd[1:]
             osc_func = rpd.OscFunc(
-                (lambda mthd:
-                    lambda msg, *_:
-                        self.respond(mthd, msg))(method),
-                cmd, self._server.addr)
+                (lambda mthd: lambda msg, *_: self.respond(mthd, msg))(method),
+                cmd,
+                self._server.addr,
+            )
             osc_func.permanent = True
             # osc_func.disable()  # *** NOTE: no sense if self.start() is not manual.
             self._responders.append(osc_func)
@@ -73,8 +73,10 @@ class NodeWatcher():
             return
         if self._is_watching:
             if self._nodes.get(node.node_id) is None:
-                if playing: node._is_playing = True
-                if running: node._is_running = True
+                if playing:
+                    node._is_playing = True
+                if running:
+                    node._is_running = True
             self._nodes[node.node_id] = node
 
     def unregister(self, node):
@@ -90,34 +92,33 @@ class NodeWatcher():
         for node in self._nodes.copy().values():
             node._is_playing = None
             node._is_running = None
-            mdl.NotificationCenter.notify(node, '/n_end')
+            mdl.NotificationCenter.notify(node, "/n_end")
         self._nodes = dict()
 
     def _n_go(self, node):
         node._is_playing = True
         node._is_running = True
-        mdl.NotificationCenter.notify(node, '/n_go')
+        mdl.NotificationCenter.notify(node, "/n_go")
 
     def _n_end(self, node):
         self.unregister(node)
         node._is_playing = False
         node._is_running = False
-        mdl.NotificationCenter.notify(node, '/n_end')
+        mdl.NotificationCenter.notify(node, "/n_end")
 
     def _n_off(self, node):  # response to /n_run 0
         node._is_running = False
-        mdl.NotificationCenter.notify(node, '/n_off')
+        mdl.NotificationCenter.notify(node, "/n_off")
 
     def _n_on(self, node):  # response to /n_run 1
         node._is_running = True
-        mdl.NotificationCenter.notify(node, '/n_on')
+        mdl.NotificationCenter.notify(node, "/n_on")
 
     def _n_move(self, node):  # response to /n_before, /n_after, /n_order
-        mdl.NotificationCenter.notify(node, '/n_move')
+        mdl.NotificationCenter.notify(node, "/n_move")
 
     def _n_info(self, node):  # response to /n_query
-        mdl.NotificationCenter.notify(node, '/n_info')
-
+        mdl.NotificationCenter.notify(node, "/n_info")
 
     ### System Actions ###
 

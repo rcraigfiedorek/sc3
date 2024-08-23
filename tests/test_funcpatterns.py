@@ -1,8 +1,8 @@
-
 import unittest
 
 import sc3
-sc3.init('nrt')
+
+sc3.init("nrt")
 
 from sc3.base.stream import stream
 from sc3.seq.patterns.listpatterns import Pseq
@@ -38,5 +38,5 @@ class FuncPatternsTestCase(unittest.TestCase):
         self.assertEqual(list(q), [1, 2])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

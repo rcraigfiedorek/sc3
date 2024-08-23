@@ -9,12 +9,12 @@ from . import oscillators as ocl
 class Poll(ugn.UGen):
     @classmethod
     def ar(cls, trig, input, label=None, trig_id=-1):
-        cls._multi_new('audio', trig, input, label, trig_id)
+        cls._multi_new("audio", trig, input, label, trig_id)
         return input
 
     @classmethod
     def kr(cls, trig, input, label=None, trig_id=-1):
-        cls._multi_new('control', trig, input, label, trig_id)
+        cls._multi_new("control", trig, input, label, trig_id)
         return input
 
     @classmethod
@@ -26,11 +26,11 @@ class Poll(ugn.UGen):
 
     @classmethod
     def _new1(cls, rate, trig, input, label, trig_id):  # override
-        label = label or f'UGen({type(input).__name__})'
-        label = [int(x) for x in bytes(label, 'utf-8')]  # *** TODO: sc ascii method
+        label = label or f"UGen({type(input).__name__})"
+        label = [int(x) for x in bytes(label, "utf-8")]  # *** TODO: sc ascii method
         # label = [x - 256 if x > 127 else x for x in bytes(label, 'utf-8')]  # sclang uses signed, works the same
-        if rate == 'scalar':
-            rate = 'control'
+        if rate == "scalar":
+            rate = "control"
         if isinstance(trig, (int, float)):
             selector = ocl.Impulse._method_selector_for_rate(rate)
             trig = getattr(ocl.Impulse, selector)(trig, 0)

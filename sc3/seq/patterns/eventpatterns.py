@@ -27,7 +27,7 @@ class EventPattern(ptt.Pattern):
 
 class Pkey(ptt.Pattern):
     # Access a key from the input event within a Pbind.
-    def __init__(self, key, length=float('inf')):  # Changed: repeats is for lists.
+    def __init__(self, key, length=float("inf")):  # Changed: repeats is for lists.
         self.key = key
         self.length = length
 
@@ -109,12 +109,15 @@ class Pbind(EventPattern):
         for name, stream in stream_dict.items():
             stream_out = stream.next(event)  # raises StopStream
             if isinstance(name, tuple):
-                if not isinstance(stream_out, (list, tuple))\
-                or isinstance(stream_out, (list, tuple))\
-                and len(name) > len(stream_out):
+                if (
+                    not isinstance(stream_out, (list, tuple))
+                    or isinstance(stream_out, (list, tuple))
+                    and len(name) > len(stream_out)
+                ):
                     _logger.warning(
-                        'the pattern is not providing enough '
-                        f'values to assign to the key set: {name}')
+                        "the pattern is not providing enough "
+                        f"values to assign to the key set: {name}"
+                    )
                     return event
                 for i, key in enumerate(name):
                     event[key] = stream_out[i]
@@ -126,7 +129,7 @@ class Pbind(EventPattern):
 
 
 class Pmono(Pbind):
-    _kept_keys = {'server', 'node_id', 'has_gate'}
+    _kept_keys = {"server", "node_id", "has_gate"}
 
     def __init__(self, instrument, mapping, articulate=False):
         super().__init__(mapping)
@@ -149,21 +152,22 @@ class Pmono(Pbind):
         try:
             while True:
                 if node_id is None:
-                    event = evt.event(inevent, type='_mono_on')
+                    event = evt.event(inevent, type="_mono_on")
                     event.update(self._stream_dict_next(stream_dict))
                     event._prepare_event(instrument)
-                    server = event['server']
-                    node_id = event['node_id']
-                    mono_params = event['msg_params'][::2]  # For _update_msg_params
-                    cleanup.add_event(evt.event(
-                        {k: event[k] for k in kept_keys}, type='_mono_off'))
+                    server = event["server"]
+                    node_id = event["node_id"]
+                    mono_params = event["msg_params"][::2]  # For _update_msg_params
+                    cleanup.add_event(
+                        evt.event({k: event[k] for k in kept_keys}, type="_mono_off")
+                    )
                     inevent = yield event
                 else:
-                    event = evt.event(inevent, type='_mono_set')
+                    event = evt.event(inevent, type="_mono_set")
                     event.update(self._stream_dict_next(stream_dict))
-                    event['server'] = server
-                    event['node_id'] = node_id
-                    event['mono_params'] = mono_params
+                    event["server"] = server
+                    event["node_id"] = node_id
+                    event["mono_params"] = mono_params
                     inevent = yield event
         except stm.StopStream:
             cleanup.run()
@@ -179,29 +183,29 @@ class Pmono(Pbind):
         try:
             while True:
                 if node_id is None:
-                    event = evt.event(inevent, type='_mono_on')
+                    event = evt.event(inevent, type="_mono_on")
                     event.update(self._stream_dict_next(stream_dict))
                     event._prepare_event(instrument)
-                    if event('sustain') >= event('delta')\
-                    and not evt.is_rest(event):
-                        server = event['server']
-                        node_id = event['node_id']
-                        mono_params = event['msg_params'][::2]  # For _update_msg_params
+                    if event("sustain") >= event("delta") and not evt.is_rest(event):
+                        server = event["server"]
+                        node_id = event["node_id"]
+                        mono_params = event["msg_params"][::2]  # For _update_msg_params
                         cleanup_event = evt.event(
-                            {k: event[k] for k in kept_keys}, type='_mono_off')
+                            {k: event[k] for k in kept_keys}, type="_mono_off"
+                        )
                         cleanup.add_event(cleanup_event)
                         inevent = yield event
                     else:
-                        event = evt.event(event, type='note')
+                        event = evt.event(event, type="note")
                         inevent = yield event
                 else:
-                    event = evt.event(inevent, type='_mono_set')
+                    event = evt.event(inevent, type="_mono_set")
                     event.update(self._stream_dict_next(stream_dict))
-                    event['server'] = server
-                    event['node_id'] = node_id
-                    event['mono_params'] = mono_params
-                    if event('sustain') < event('delta'):
-                        cleanup_event['delay'] = event('sustain')
+                    event["server"] = server
+                    event["node_id"] = node_id
+                    event["mono_params"] = mono_params
+                    if event("sustain") < event("delta"):
+                        cleanup_event["delay"] = event("sustain")
                         cleanup_event.play()
                         cleanup.remove_event(cleanup_event)
                         node_id = None
@@ -240,9 +244,9 @@ class Ppar(EventPattern):
                 outevent = stream.next(inevent)
                 outevent = evt.event(outevent)  # as_event
                 # // Requeue stream.
-                queue.add(now + float(outevent('delta')), stream)
+                queue.add(now + float(outevent("delta")), stream)
                 nexttime = queue.peek()[0]
-                outevent['delta'] = nexttime - now
+                outevent["delta"] = nexttime - now
                 inevent = yield outevent
                 now = nexttime
             except stm.StopStream:  # next

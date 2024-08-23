@@ -12,11 +12,11 @@ from .ugens import trig as trg
 from .ugens import oscillators as ocl
 
 
-__all__ = ['Env']
+__all__ = ["Env"]
 
 
 class Env(gpp.UGenParameter, gpp.NodeParameter):
-    '''Specification for a segmented envelope.
+    """Specification for a segmented envelope.
 
     Envelope specifications are used for server-side parameters'
     generation for ``EnvGen`` or ``IEnvGen``. They can be used
@@ -141,31 +141,37 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         nodes in a ``Env`` object. The methods ``xyc`` and ``pairs``
         can be used to specify an envelope in terms of points.
 
-    '''
+    """
 
     _SHAPE_NAMES = {
-        'step': 0,
-        'lin': 1,
-        'linear': 1,
-        'exp': 2,
-        'exponential': 2,
-        'sin': 3,
-        'sine': 3,
-        'wel': 4,
-        'welch': 4,
-        'sqrt': 6,
-        'squared': 6,
-        'cub': 7,
-        'cubed': 7,
-        'hold': 8
+        "step": 0,
+        "lin": 1,
+        "linear": 1,
+        "exp": 2,
+        "exponential": 2,
+        "sin": 3,
+        "sine": 3,
+        "wel": 4,
+        "welch": 4,
+        "sqrt": 6,
+        "squared": 6,
+        "cub": 7,
+        "cubed": 7,
+        "hold": 8,
     }
 
-    def __init__(self, levels=None, times=None, curves='lin',
-                 release_node=None, loop_node=None, offset=0):
+    def __init__(
+        self,
+        levels=None,
+        times=None,
+        curves="lin",
+        release_node=None,
+        loop_node=None,
+        offset=0,
+    ):
         super(gpp.UGenParameter, self).__init__(self)
         self.levels = levels or [0, 1, 0]  # Can't be empty or zero either.
-        self.times = utl.wrap_extend(
-            utl.as_list(times or [1, 1]), len(self.levels) - 1)
+        self.times = utl.wrap_extend(utl.as_list(times or [1, 1]), len(self.levels) - 1)
         self.curves = curves
         self.release_node = release_node
         self.loop_node = loop_node
@@ -178,12 +184,11 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
     # no ar
     # no setters
 
-
     ### Fixed duration common envelopes ###
 
     @classmethod
     def xyc(cls, xyc):
-        '''Fixed duration envelope from control points with curvature.
+        """Fixed duration envelope from control points with curvature.
 
         Parameters
         ----------
@@ -192,11 +197,10 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
             if possible, pairs are sorted regarding their point in time.
             Default curve value is 'lin'.
 
-        '''
+        """
 
         if any(len(i) != 3 for i in xyc):
-            raise ValueError(
-                'xyc list must contain only sequences of length 3')
+            raise ValueError("xyc list must contain only sequences of length 3")
         xyc = xyc[:]  # Ensures internal state.
         xyc.sort(key=lambda x: x[0])
         times, levels, curves = utl.flop(xyc)
@@ -207,7 +211,7 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
 
     @classmethod
     def pairs(cls, pairs, curves=None):
-        '''Fixed duration envelope from control points.
+        """Fixed duration envelope from control points.
 
         Parameters
         ----------
@@ -217,29 +221,28 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         curve : list | str | float | int
             Curvature of the segments. Default value is 'lin'.
 
-        '''
+        """
 
         if any(len(i) != 2 for i in pairs):
-            raise ValueError(
-                'pairs list must contain only sequences of length 2')
+            raise ValueError("pairs list must contain only sequences of length 2")
         pairs = pairs[:]  # Ensures internal state.
         if curves is None:
             for i in range(len(pairs)):
-                pairs[i].append('lin')
+                pairs[i].append("lin")
         elif isinstance(curves, (str, float, int)):
             for i in range(len(pairs)):
                 pairs[i].append(curves)
         else:
             # NOTE: Last point curvature is ignored by xyc.
             if len(pairs) != len(curves):
-                raise ValueError('pairs and curves must have the same length')
+                raise ValueError("pairs and curves must have the same length")
             for i in range(len(pairs)):
                 pairs[i].append(curves[i])
         return cls.xyc(pairs)
 
     @classmethod
     def triangle(cls, dur=1.0, level=1.0):
-        '''Fixed duration envelope specification with triangular shape.
+        """Fixed duration envelope specification with triangular shape.
 
         Parameters
         ----------
@@ -248,14 +251,14 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         level : list | float | int
             Peak level of the envelope.
 
-        '''
+        """
 
         dur = utl.list_binop(operator.mul, dur, 0.5)
         return cls([0, level, 0], [dur, dur])
 
     @classmethod
     def sine(cls, dur=1.0, level=1.0):
-        '''Fixed duration envelope specification with hanning shape.
+        """Fixed duration envelope specification with hanning shape.
 
         Parameters
         ----------
@@ -264,14 +267,14 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         level : list | float | int
             Peak level of the envelope.
 
-        '''
+        """
 
         dur = utl.list_binop(operator.mul, dur, 0.5)
-        return cls([0, level, 0], [dur, dur], 'sine')
+        return cls([0, level, 0], [dur, dur], "sine")
 
     @classmethod
     def perc(cls, attack_time=0.01, release_time=1.0, level=1.0, curve=-4.0):
-        '''Fixed duration evenlope which (usually) has a percussive shape.
+        """Fixed duration evenlope which (usually) has a percussive shape.
 
         Parameters
         ----------
@@ -284,14 +287,20 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         curve : str | float | int | list
             Curvature of the envelope.
 
-        '''
+        """
 
         return cls([0, level, 0], [attack_time, release_time], curve)
 
     @classmethod
-    def linen(cls, attack_time=0.01, sustain_time=1.0, release_time=1.0,
-              level=1.0, curve='lin'):
-        '''Fixed duration envelope specification with trapezoidal shape.
+    def linen(
+        cls,
+        attack_time=0.01,
+        sustain_time=1.0,
+        release_time=1.0,
+        level=1.0,
+        curve="lin",
+    ):
+        """Fixed duration envelope specification with trapezoidal shape.
 
         Parameters
         ----------
@@ -306,19 +315,19 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         curve : list | str | float | int
             Curvatuve of the envelope.
 
-        '''
+        """
 
         return cls(
-            [0, level, level, 0],
-            [attack_time, sustain_time, release_time], curve)
-
+            [0, level, level, 0], [attack_time, sustain_time, release_time], curve
+        )
 
     ### Sustained common envelopes ###
 
     @classmethod
-    def step(cls, levels=None, times=None, release_level=None,
-             loop_level=None, offset=0):
-        '''Sustained envelope where all the segments are horizontal lines.
+    def step(
+        cls, levels=None, times=None, release_level=None, loop_level=None, offset=0
+    ):
+        """Sustained envelope where all the segments are horizontal lines.
 
         Given n values of times only n levels need to be provided,
         corresponding to the fixed value of each segment.
@@ -341,20 +350,19 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         offset : float | int
             Offset to all time values (only applies in ``IEnvGen``).
 
-        '''
+        """
 
         levels = levels or [0, 1]
         times = times or [1, 1]
         if len(levels) != len(times):
-            raise ValueError('levels and times must have same length')
+            raise ValueError("levels and times must have same length")
         levels = levels[:]  # Ensures internal state.
         levels.insert(0, levels[0])
-        return Env(
-            levels, times, 'step', release_level - 1, loop_level, offset)
+        return Env(levels, times, "step", release_level - 1, loop_level, offset)
 
     @classmethod
-    def cutoff(cls, release_time=0.1, level=1.0, curve='lin'):
-        '''Sustained envelope specification which has no attack segment.
+    def cutoff(cls, release_time=0.1, level=1.0, curve="lin"):
+        """Sustained envelope specification which has no attack segment.
 
         It simply sustains at the peak level until released. Useful if
         you only need a fadeout, and more versatile than ``Line``.
@@ -368,17 +376,25 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         curve : str
             Curvature of the envelope.
 
-        '''
+        """
 
         curve_no = cls._shape_number(curve)
         release_level = bi.dbamp(-100) if curve_no == 2 else 0
         return cls([level, release_level], [release_time], curve, 0)
 
     @classmethod
-    def dadsr(cls, delay_time=0.1, attack_time=0.01, decay_time=0.3,
-              sustain_level=0.5, release_time=1.0, peak_level=1.0,
-              curve=-4.0, bias=0.0):
-        '''Sustained adsr envelope with onset delay.
+    def dadsr(
+        cls,
+        delay_time=0.1,
+        attack_time=0.01,
+        decay_time=0.3,
+        sustain_level=0.5,
+        release_time=1.0,
+        peak_level=1.0,
+        curve=-4.0,
+        bias=0.0,
+    ):
+        """Sustained adsr envelope with onset delay.
 
         Parameters
         ----------
@@ -399,18 +415,29 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         bias : list | float | int
             DC offset.
 
-        '''
+        """
 
         return cls(
             utl.list_binop(
-                operator.add,
-                [0, 0, peak_level, peak_level * sustain_level, 0], bias),
-            [delay_time, attack_time, decay_time, release_time], curve, 3)
+                operator.add, [0, 0, peak_level, peak_level * sustain_level, 0], bias
+            ),
+            [delay_time, attack_time, decay_time, release_time],
+            curve,
+            3,
+        )
 
     @classmethod
-    def adsr(cls, attack_time=0.01, decay_time=0.3, sustain_level=0.5,
-             release_time=1.0, peak_level=1.0, curve=-4.0, bias=0.0):
-        '''Sustained envelope as traditional analog attack-decay-sustain-release.
+    def adsr(
+        cls,
+        attack_time=0.01,
+        decay_time=0.3,
+        sustain_level=0.5,
+        release_time=1.0,
+        peak_level=1.0,
+        curve=-4.0,
+        bias=0.0,
+    ):
+        """Sustained envelope as traditional analog attack-decay-sustain-release.
 
         Parameters
         ----------
@@ -429,18 +456,20 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         bias : list | float | int
             DC offset.
 
-        '''
+        """
 
         return cls(
             utl.list_binop(
-                operator.add,
-                [0, peak_level, peak_level * sustain_level, 0], bias),
-            [attack_time, decay_time, release_time], curve, 2)
+                operator.add, [0, peak_level, peak_level * sustain_level, 0], bias
+            ),
+            [attack_time, decay_time, release_time],
+            curve,
+            2,
+        )
 
     @classmethod
-    def asr(cls, attack_time=0.01, sustain_level=1.0,
-            release_time=1.0, curve=-4.0):
-        '''Sustained envelope as traditional analog attack-sustain-release.
+    def asr(cls, attack_time=0.01, sustain_level=1.0, release_time=1.0, curve=-4.0):
+        """Sustained envelope as traditional analog attack-sustain-release.
 
         Parameters
         ----------
@@ -453,14 +482,13 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         curve : ist | str | float | int
             Curvature of the envelope.
 
-        '''
+        """
 
-        return cls(
-            [0, sustain_level, 0], [attack_time, release_time], curve, 1)
+        return cls([0, sustain_level, 0], [attack_time, release_time], curve, 1)
 
     @classmethod
-    def cyclic(cls, levels, times, curves='lin'):  # was *circle
-        '''Sustained envelope which cycles through its values.
+    def cyclic(cls, levels, times, curves="lin"):  # was *circle
+        """Sustained envelope which cycles through its values.
 
         For making a given envelope cyclic, you can use the instance
         method ``circle``.
@@ -487,7 +515,7 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         Cyclic envelopes use ugens internally thus they can only be
         used within a synthdef function.
 
-        '''
+        """
 
         times = utl.wrap_extend(utl.as_list(times), len(levels))
         last_time = times.pop()
@@ -495,8 +523,8 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         last_curve = curves.pop()
         return cls(levels, times, curves).circle(last_time, last_curve)
 
-    def circle(self, last_time=0.0, last_curve='lin'):
-        '''Make the envelope cyclical.
+    def circle(self, last_time=0.0, last_curve="lin"):
+        """Make the envelope cyclical.
 
         Parameters
         ----------
@@ -507,24 +535,21 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
             Curvature of the transition from the end to the beginning
             of the evenlope.
 
-        '''
+        """
 
         # // Connect releaseNode (or end) to first node of envelope.
         if _libsc3.main._current_synthdef is None:
-            raise Exception('circle can only be used within graph functions')
+            raise Exception("circle can only be used within graph functions")
         first_0_then_1 = trg.Latch.kr(1.0, ocl.Impulse.kr(0.0))
         if self.release_node is None:
             self.levels = [0.0, *self.levels, 0.0]
-            self.curves = utl.wrap_extend(
-                utl.as_list(self.curves), len(self.times))
-            self.curves = [last_curve, *self.curves, 'lin']
-            self.times = [
-                first_0_then_1 * last_time, *self.times, float('inf')]
+            self.curves = utl.wrap_extend(utl.as_list(self.curves), len(self.times))
+            self.curves = [last_curve, *self.curves, "lin"]
+            self.times = [first_0_then_1 * last_time, *self.times, float("inf")]
             self.release_node = len(self.levels) - 2
         else:
             self.levels = [0.0, *self.levels]
-            self.curves = utl.wrap_extend(
-                utl.as_list(self.curves), len(self.times))
+            self.curves = utl.wrap_extend(utl.as_list(self.curves), len(self.times))
             self.curves = [last_curve, *self.curves]
             self.times = [first_0_then_1 * last_time, *self.times]
             self.release_node += 1
@@ -533,47 +558,38 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
 
     @property
     def duration(self):
-        '''Duration of the envelope as the sum of `times`.
-
-        '''
+        """Duration of the envelope as the sum of `times`."""
 
         return utl.list_sum(self.times)
 
     @duration.setter
     def duration(self, value):
-        res = utl.list_binop(
-            operator.mul, self.times, 1 / self.total_duration())
+        res = utl.list_binop(operator.mul, self.times, 1 / self.total_duration())
         self.times = utl.list_binop(operator.mul, res, value)
 
     def total_duration(self):
-        '''Duration of the longest envelop (multichannel case).
-
-        '''
+        """Duration of the longest envelop (multichannel case)."""
 
         duration = utl.list_sum(self.times)
         return utl.list_max(utl.as_list(duration))
 
     @property
     def release_time(self):
-        '''Duration of the release portion of the envelope.
-
-        '''
+        """Duration of the release portion of the envelope."""
 
         if self.release_node is None:
             return 0.0
         else:
-            return utl.list_sum(self.times[self.release_node:])
+            return utl.list_sum(self.times[self.release_node :])
 
     @property
     def is_sustained(self):
-        '''Return `True` if the envelope is sustained.
-
-        '''
+        """Return `True` if the envelope is sustained."""
 
         return self.release_node is not None
 
     def range(self, lo=0.0, hi=1.0):
-        '''Return a copy of the envelope with the levels mapped linearly.
+        """Return a copy of the envelope with the levels mapped linearly.
 
         Parameters
         ----------
@@ -582,7 +598,7 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         hi : float | int
             Maximum value of the new range.
 
-        '''
+        """
 
         obj = copy.copy(self)
         min = utl.list_min(obj.levels)
@@ -591,7 +607,7 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         return obj
 
     def exprange(self, lo=0.01, hi=1.0):
-        '''Return a copy of the envelope with the levels mapped exponentially.
+        """Return a copy of the envelope with the levels mapped exponentially.
 
         Parameters
         ----------
@@ -600,7 +616,7 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         hi : float | int
             Maximum value of the new range.
 
-        '''
+        """
 
         obj = copy.copy(self)
         min = utl.list_min(obj.levels)
@@ -609,7 +625,7 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         return obj
 
     def curverange(self, lo=0.0, hi=1.0, curve=-4):
-        '''Return a copy of the envelope with the levels mapped to a curvature.
+        """Return a copy of the envelope with the levels mapped to a curvature.
 
         Parameters
         ----------
@@ -620,13 +636,12 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         curve : float | int
             Curvature of the mapping.
 
-        '''
+        """
 
         obj = copy.copy(self)
         min = utl.list_min(obj.levels)
         max = utl.list_max(obj.levels)
-        obj.levels = utl.list_narop(
-            bi.lincurve, obj.levels, min, max, lo, hi, curve)
+        obj.levels = utl.list_narop(bi.lincurve, obj.levels, min, max, lo, hi, curve)
         return obj
 
     # TODO
@@ -657,7 +672,7 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
                     shape = cls._SHAPE_NAMES[item]
                     ret.append(shape)
                 except KeyError as e:
-                     raise ValueError(f"invalid Env shape '{item}'") from e
+                    raise ValueError(f"invalid Env shape '{item}'") from e
         return utl.unbubble(ret)
 
     @classmethod
@@ -708,7 +723,7 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         return self.__envgen_format
 
     def _interpolation_format(self):  # Was asArrayForInterpolation.
-        '''This version is for IEnvGen which has a special format.'''
+        """This version is for IEnvGen which has a special format."""
         if self.__interpolation_format:
             return self.__interpolation_format
 
@@ -745,7 +760,7 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
         # (start_level, num_stages, release_node, loop_node, stage1 [, ...])
         # stage = *(target_level, target_dur, shape, curve)
         if len(data) < 8:
-            raise ValueError('Env must have at least one stage')
+            raise ValueError("Env must have at least one stage")
 
         start_level = float(data[0])  # *** begLevel
         num_stages = data[1]
@@ -761,50 +776,48 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
                 shape = data[i + 2]
                 pos = (time - begin_time) / target_dur
 
-                if shape == shape_names['step']:
+                if shape == shape_names["step"]:
                     return target_level
-                elif shape == shape_names['hold']:
+                elif shape == shape_names["hold"]:
                     return start_level
-                elif shape == shape_names['linear']:
+                elif shape == shape_names["linear"]:
                     return pos * (target_level - start_level) + start_level
-                elif shape == shape_names['exponential']:
-                    if start_level == 0.0: return 0.0
+                elif shape == shape_names["exponential"]:
+                    if start_level == 0.0:
+                        return 0.0
                     return start_level * bi.pow(target_level / start_level, pos)
-                elif shape == shape_names['sine']:
-                    return (
-                        start_level + (target_level - start_level) *
-                        (-bi.cos(bi.pi * pos) * 0.5 + 0.5))
-                elif shape == shape_names['welch']:
+                elif shape == shape_names["sine"]:
+                    return start_level + (target_level - start_level) * (
+                        -bi.cos(bi.pi * pos) * 0.5 + 0.5
+                    )
+                elif shape == shape_names["welch"]:
                     if start_level < target_level:
-                        return (
-                            start_level + (target_level - start_level) *
-                            bi.sin(bi.pi2 * pos))
+                        return start_level + (target_level - start_level) * bi.sin(
+                            bi.pi2 * pos
+                        )
                     else:
-                        return (
-                            target_level - (target_level - start_level) *
-                            bi.sin(bi.pi2 - bi.pi2 * pos))
+                        return target_level - (target_level - start_level) * bi.sin(
+                            bi.pi2 - bi.pi2 * pos
+                        )
                 elif shape == 5:  # 'curvature value'
                     curve = data[i + 3]
                     if math.fabs(curve) < 0.0001:
                         return pos * (target_level - start_level) + start_level
                     else:
-                        fac = (
-                            (1.0 - bi.exp(pos * curve)) /
-                            (1.0 - bi.exp(curve)))
-                        return (
-                            start_level + (target_level - start_level) * fac)
-                elif shape == shape_names['squared']:
+                        fac = (1.0 - bi.exp(pos * curve)) / (1.0 - bi.exp(curve))
+                        return start_level + (target_level - start_level) * fac
+                elif shape == shape_names["squared"]:
                     sqrt_sl = bi.sqrt(start_level)
                     sqrt_tl = bi.sqrt(target_level)
                     sqrt_level = pos * (sqrt_tl - sqrt_sl) + sqrt_sl
                     return sqrt_level * sqrt_level
-                elif shape == shape_names['cubed']:
+                elif shape == shape_names["cubed"]:
                     cbrt_sl = bi.pow(start_level, 0.3333333)
                     cbrt_tl = bi.pow(target_level, 0.3333333)
                     cbrt_level = pos * (cbrt_tl - cbrt_sl) + cbrt_sl
                     return cbrt_level * cbrt_level * cbrt_level
                 else:
-                    raise ValueError(f'invalid shape number: {shape}')
+                    raise ValueError(f"invalid shape number: {shape}")
             else:
                 start_level = target_level
                 begin_time = end_time
@@ -813,10 +826,10 @@ class Env(gpp.UGenParameter, gpp.NodeParameter):
 
     def __repr__(self):
         return (
-            f'{type(self).__name__}({self.levels}, {self.times}, '
-            f'{repr(self.curves)}, {self.release_node}, {self.loop_node}, '
-            f'{self.offset})')
-
+            f"{type(self).__name__}({self.levels}, {self.times}, "
+            f"{repr(self.curves)}, {self.release_node}, {self.loop_node}, "
+            f"{self.offset})"
+        )
 
     ### Node parameter interface ###
 

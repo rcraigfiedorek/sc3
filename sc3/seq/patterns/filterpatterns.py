@@ -15,7 +15,8 @@ class FilterPattern(ptt.Pattern):
     def __init__(self, pattern):
         self.pattern = pattern
         self._is_event_pattern = (
-            isinstance(pattern, ptt.Pattern) and pattern.is_event_pattern)
+            isinstance(pattern, ptt.Pattern) and pattern.is_event_pattern
+        )
 
     @property
     def is_event_pattern(self):
@@ -26,7 +27,7 @@ class Pn(FilterPattern):
     # NOTE: For Pn to have 'key' and to be parent of Pgate seems to be a bit
     # arbitrary. A gate is not usually something that repeats n times, moreover
     # Pgate acts like a hold more that a gate.
-    def __init__(self, pattern, repeats=float('inf'), key=None):
+    def __init__(self, pattern, repeats=float("inf"), key=None):
         super().__init__(pattern)
         self.repeats = repeats
         self.key = key
@@ -220,12 +221,12 @@ class Pdur(FilterPattern):  # Was Pfindur.
         try:
             while True:
                 inevent = stream.next(inevent)
-                delta = inevent('delta')
+                delta = inevent("delta")
                 next_elapsed = elapsed + float(delta)
                 if bi.roundup(next_elapsed, tolerance) >= local_dur:
                     remaining = local_dur - elapsed
                     inevent = inevent.copy()
-                    inevent['delta'] = type(delta)(remaining)
+                    inevent["delta"] = type(delta)(remaining)
                     return (yield inevent)
                 elapsed = next_elapsed
                 inevent = yield inevent
@@ -268,7 +269,6 @@ class Pconst(FilterPattern):
         return inval
 
 
-
 class Pstutter(FilterPattern):
     def __init__(self, pattern, n):
         super().__init__(pattern)
@@ -295,7 +295,8 @@ class Pstutter(FilterPattern):
 
 
 class Platch(FilterPattern):  # Was Pclutch.
-    class _UNDEFINED(): pass
+    class _UNDEFINED:
+        pass
 
     def __init__(self, pattern, trig=True):
         super().__init__(pattern)
@@ -358,11 +359,11 @@ class Pwrap(FilterPattern):
 
 
 class Ptrace(FilterPattern):
-    _ptrace_logger = logging.getLogger('Ptrace')
+    _ptrace_logger = logging.getLogger("Ptrace")
 
     def __init__(self, pattern, prefix=None, keys=None):
         super().__init__(pattern)
-        self.prefix = prefix or ''
+        self.prefix = prefix or ""
         self.keys = keys
 
     def __embed__(self, inval):
@@ -379,17 +380,19 @@ class Ptrace(FilterPattern):
                     if calc_keys:
                         if isinstance(outval, evt.EventType):
                             keys = tuple(
-                                k for k in keys if k in outval\
-                                or k in outval.default_values)
+                                k
+                                for k in keys
+                                if k in outval or k in outval.default_values
+                            )
                         else:
                             keys = tuple()
                         calc_keys = False
-                    logger.info('%s%s', prefix, {k: outval(k) for k in keys})
+                    logger.info("%s%s", prefix, {k: outval(k) for k in keys})
                     inval = yield outval
             else:
                 while True:
                     outval = stream.next(inval)
-                    logger.info('%s%s', prefix, outval)
+                    logger.info("%s%s", prefix, outval)
                     inval = yield outval
         except stm.StopStream:
             pass
@@ -501,7 +504,9 @@ class Pavaroh(FilterPattern):
         melast = 0
         try:
             while True:
-                spo = spo_stream.next(inval)  # *** TODO: Unused here, depends on definition of Tunning for a Scale (immutable by now).
+                spo = spo_stream.next(
+                    inval
+                )  # *** TODO: Unused here, depends on definition of Tunning for a Scale (immutable by now).
                 me = stream.next(inval)
                 scale = aroh if me >= melast else avaroh
                 melast = me
@@ -528,7 +533,10 @@ class Pseed(FilterPattern):
         rout = None
         try:
             while True:
-                def func(inval): yield from stm.embed(self.pattern, inval)
+
+                def func(inval):
+                    yield from stm.embed(self.pattern, inval)
+
                 rout = stm.Routine(func)
                 rout.rand_seed = stream.next(inval)
                 inval = yield from stm.embed(stm.stream(rout), inval)

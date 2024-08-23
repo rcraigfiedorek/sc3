@@ -4,11 +4,11 @@ from .. import ugen as ugn
 
 
 class InfoUGenBase(ugn.UGen):
-    _default_rate = 'scalar'
+    _default_rate = "scalar"
 
     @classmethod
     def ir(cls):
-        return cls._multi_new('scalar')
+        return cls._multi_new("scalar")
 
 
 class SampleRate(InfoUGenBase):
@@ -66,21 +66,21 @@ class NodeID(InfoUGenBase):
 class NumRunningSynths(InfoUGenBase):
     @classmethod
     def kr(cls):
-        return cls._multi_new('control')
+        return cls._multi_new("control")
 
 
 class BufInfoUGenBase(ugn.UGen):
-    _default_rate = 'control'
+    _default_rate = "control"
 
     @classmethod
     def kr(cls, bufnum):
-        return cls._multi_new('control', bufnum)
+        return cls._multi_new("control", bufnum)
 
     @classmethod
     def ir(cls, bufnum):
         # // The .ir method is not the safest choice, since a buffer can be
         # // reallocated at any time, using .ir will not track the changes.
-        return cls._multi_new('scalar', bufnum)
+        return cls._multi_new("scalar", bufnum)
 
 
 class BufSampleRate(BufInfoUGenBase):

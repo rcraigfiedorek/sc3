@@ -1,8 +1,8 @@
-
 import unittest
 import shutil
 
 import sc3
+
 sc3.init()
 
 from sc3.base.main import main
@@ -12,7 +12,7 @@ from sc3.synth.synthdef import synthdef
 from sc3.synth.ugens import PlayBuf, RecordBuf
 
 
-@unittest.skipIf(not shutil.which(s.options.program), 'no server available')
+@unittest.skipIf(not shutil.which(s.options.program), "no server available")
 class BufferTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -87,7 +87,7 @@ class BufferTestCase(unittest.TestCase):
 
         # Test alternative forms (reusing processed server's data values).
 
-        with self.subTest(case='new_send_list, get_to_list'):
+        with self.subTest(case="new_send_list, get_to_list"):
             # Needs action because creates a stream of messages.
             b3 = Buffer.new_send_list(data, 2, action=lambda: main.resume())
             main.wait()
@@ -97,7 +97,7 @@ class BufferTestCase(unittest.TestCase):
             test_ok = False
             b3.free()
 
-        with self.subTest(case='new, load_list, load_to_list'):
+        with self.subTest(case="new, load_list, load_to_list"):
             b3 = Buffer(size // 2, 2)
             # '/b_alloc' is async, this form doesn't handles that internally.
             main.sync(s)
@@ -109,7 +109,7 @@ class BufferTestCase(unittest.TestCase):
             test_ok = False
             b3.free()
 
-        with self.subTest(case='new, send_list, get_to_list'):
+        with self.subTest(case="new, send_list, get_to_list"):
             b3 = Buffer(size // 2, 2)
             # '/b_alloc' is async, this form doesn't handles that internally.
             main.sync(s)
@@ -123,5 +123,5 @@ class BufferTestCase(unittest.TestCase):
             b3.free()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -16,10 +16,10 @@ from ..base import main as _libsc3
 _logger = logging.getLogger(__name__)
 
 
-class ServerStatusWatcher():
+class ServerStatusWatcher:
     _Action = collections.namedtuple(
-        typename='_Action',
-        field_names=('on_complete', 'on_failure'))
+        typename="_Action", field_names=("on_complete", "on_failure")
+    )
 
     def __init__(self, server):
         self.server = server
@@ -79,8 +79,9 @@ class ServerStatusWatcher():
                 # self.server._disconnect_shm()  # Not implemented yet.
                 if self.server._recorder.is_recording:
                     self.server._recorder.stop()
-                clk.defer(lambda: mdl.NotificationCenter.notify(
-                    self.server, 'did_quit')) # BUG: ver comentario en sclang
+                clk.defer(
+                    lambda: mdl.NotificationCenter.notify(self.server, "did_quit")
+                )  # BUG: ver comentario en sclang
                 if not self.server._is_local:
                     self._notified = False
 
@@ -92,8 +93,9 @@ class ServerStatusWatcher():
     def unresponsive(self, value):
         if value != self._unresponsive:
             self._unresponsive = value
-            clk.defer(lambda: mdl.NotificationCenter.notify(
-                self.server, 'server_running'))
+            clk.defer(
+                lambda: mdl.NotificationCenter.notify(self.server, "server_running")
+            )
 
     def _add_action(self, stage, on_complete=None, on_failure=None):
         if stage not in self._boot_actions:
@@ -101,8 +103,7 @@ class ServerStatusWatcher():
         self._boot_actions[stage].append(self._Action(on_complete, on_failure))
 
     def _clear_actions(self):
-        self._boot_actions = {
-            'boot': [], 'quit': [], 'register': [], 'unregister': []}
+        self._boot_actions = {"boot": [], "quit": [], "register": [], "unregister": []}
 
     def _perform_actions(self, stage, action_name):
         while self._boot_actions[stage]:
@@ -112,6 +113,7 @@ class ServerStatusWatcher():
     def _start_alive_thread(self, delay=0.0):
         self._add_responder()
         if self._alive_thread is None:
+
             def alive_func():
                 # // this thread polls the server to see if it is alive
                 yield delay
@@ -128,7 +130,8 @@ class ServerStatusWatcher():
                     self._stop_alive_thread()
                     _logger.warning(
                         f"'{self.server.name}': registration "
-                        "failed, server unresponsive")
+                        "failed, server unresponsive"
+                    )
                     self._server_booting = False
                     self._server_rebooting = False
                     self._server_registering = False
@@ -149,9 +152,9 @@ class ServerStatusWatcher():
         self._clear_state_data()
 
     def _clear_state_data(self):
-        self.num_ugens = self.num_synths = self.num_groups =\
-        self.num_synthdefs = self.avg_cpu = self.peak_cpu =\
-        self.sample_rate = self.actual_sample_rate = None
+        self.num_ugens = self.num_synths = self.num_groups = self.num_synthdefs = (
+            self.avg_cpu
+        ) = self.peak_cpu = self.sample_rate = self.actual_sample_rate = None
 
     def _resume_alive_thread(self):
         if self._alive_thread is not None:
@@ -164,22 +167,33 @@ class ServerStatusWatcher():
 
     def _add_responder(self):
         if self._responder is None:
+
             def status_func(msg, *_):
                 if not self._notified:
                     self._send_notify_request(True)
                 self._alive = True
-                cmd, one, self.num_ugens, self.num_synths, self.num_groups,\
-                    self.num_synthdefs, self.avg_cpu, self.peak_cpu,\
-                    self.sample_rate, self.actual_sample_rate = msg
+                (
+                    cmd,
+                    one,
+                    self.num_ugens,
+                    self.num_synths,
+                    self.num_groups,
+                    self.num_synthdefs,
+                    self.avg_cpu,
+                    self.peak_cpu,
+                    self.sample_rate,
+                    self.actual_sample_rate,
+                ) = msg
 
                 def update_state():
                     self._update_running_state(True)
-                    mdl.NotificationCenter.notify(self.server, 'counts')
+                    mdl.NotificationCenter.notify(self.server, "counts")
 
                 clk.defer(update_state)
 
             self._responder = rpd.OscFunc(
-                status_func, '/status.reply', self.server.addr)
+                status_func, "/status.reply", self.server.addr
+            )
             self._responder.permanent = True
         else:
             self._responder.enable()
@@ -208,14 +222,13 @@ class ServerStatusWatcher():
             elif self._server_unregistering:
                 self._notified = False
                 _logger.info(f"'{self.server.name}': unregistration done")
-                self._perform_actions('unregister', 'on_complete')
+                self._perform_actions("unregister", "on_complete")
             else:
-                _logger.error(
-                    'something went wrong, server status is inconsistent')
+                _logger.error("something went wrong, server status is inconsistent")
 
         done_osc_func = rpd.OscFunc(
-            done, '/done', self.server.addr,
-            arg_template=['/notify', None])
+            done, "/done", self.server.addr, arg_template=["/notify", None]
+        )
         done_osc_func.one_shot()
 
         def fail(msg, *_):
@@ -225,21 +238,20 @@ class ServerStatusWatcher():
             done_osc_func.free()
             self._handle_login_fail(fail_string, prev_client_id)
             if self._server_booting:
-                self._perform_actions('boot', 'on_failure')
+                self._perform_actions("boot", "on_failure")
             elif self._server_registering:
-                self._perform_actions('register', 'on_failure')
+                self._perform_actions("register", "on_failure")
             elif self._server_unregistering:
-                self._perform_actions('unregister', 'on_failure')
+                self._perform_actions("unregister", "on_failure")
             else:
-                _logger.error(
-                    'something went wrong, server status is inconsistent')
+                _logger.error("something went wrong, server status is inconsistent")
 
         fail_osc_func = rpd.OscFunc(
-            fail, '/fail', self.server.addr,
-            arg_template=['/notify', None, None])
+            fail, "/fail", self.server.addr, arg_template=["/notify", None, None]
+        )
         fail_osc_func.one_shot()
 
-        self.server.addr.send_msg('/notify', int(flag), self.server.client_id)
+        self.server.addr.send_msg("/notify", int(flag), self.server.client_id)
 
         if flag:
             _logger.info(f"'{self.server.name}': requested registration id")
@@ -250,25 +262,24 @@ class ServerStatusWatcher():
         # // only set maxLogins if not internal server
         if not self.server._in_process and new_max_logins is not None:
             self._max_logins = new_max_logins
-        _logger.info(
-            f"'{self.server.name}': setting client_id to {new_client_id}")
+        _logger.info(f"'{self.server.name}': setting client_id to {new_client_id}")
         self.server._set_client_id(new_client_id)
 
     def _handle_login_fail(self, fail_string, prev_client_id):
         # // post info on some known error cases
-        if 'already registered' in fail_string:
+        if "already registered" in fail_string:
             _logger.info(
                 f"'{self.server.name}': already registered, "
-                f"client_id {prev_client_id}")
+                f"client_id {prev_client_id}"
+            )
             self._unregister()  # Needed to get max_logins from scsynth.
             self._start_alive_thread()
             return
-        elif 'not registered' in fail_string:
+        elif "not registered" in fail_string:
             # // unregister when already not registered:
             _logger.info(f"'{self.server.name}': not registered")
-        elif 'too many users' in fail_string:
-            _logger.info(
-                f"'{self.server.name}': failed to register, too many users")
+        elif "too many users" in fail_string:
+            _logger.info(f"'{self.server.name}': failed to register, too many users")
         else:
             # // throw error if unknown failure
             # raise Exception(  # gives an uncaught exception in a fork.
@@ -285,8 +296,10 @@ class ServerStatusWatcher():
             yield from self.server.sync()
             self.server._init_tree()  # forks
             yield from self.server.sync()
-            self._perform_actions('boot', 'on_complete')
-            mdl.NotificationCenter.notify(self.server, 'server_running')  # NOTE: esta notificación la hace en varios lugares cuando cambia el estado de running no cuando running es True.
+            self._perform_actions("boot", "on_complete")
+            mdl.NotificationCenter.notify(
+                self.server, "server_running"
+            )  # NOTE: esta notificación la hace en varios lugares cuando cambia el estado de running no cuando running es True.
 
         stm.Routine.run(finalize_boot_task, clk.AppClock)
 
@@ -294,14 +307,13 @@ class ServerStatusWatcher():
         def finalize_register_task():
             # sac.ServerBoot.run(self.server)  # *** VER SI VA O NO.
             yield from self.server.sync()
-            self._perform_actions('register', 'on_complete')
+            self._perform_actions("register", "on_complete")
 
         stm.Routine.run(finalize_register_task, clk.AppClock)
 
     def _update_running_state(self, running):
         if self.server.addr.has_bundle():
-            clk.defer(lambda: mdl.NotificationCenter.notify(
-                self.server, 'bundling'))
+            clk.defer(lambda: mdl.NotificationCenter.notify(self.server, "bundling"))
         elif running:
             self._set_server_running(True)
             self.unresponsive = False
@@ -316,7 +328,7 @@ class ServerStatusWatcher():
         if watch_shutdown:
             self._watch_quit()
         else:
-            self._perform_actions('quit', 'on_complete')
+            self._perform_actions("quit", "on_complete")
         # Only changes flags affected when quitting.
         self._set_server_running(False)
         # self._server_quitting = False  # Async done by on_complete/failure.
@@ -324,40 +336,41 @@ class ServerStatusWatcher():
         self._max_logins = None
         # // server.changed(\serverRunning) should be deferred in dependants!
         # // just in case some don't, defer here to avoid gui updates breaking.
-        clk.defer(lambda: mdl.NotificationCenter.notify(
-            self.server, 'server_running'))
+        clk.defer(lambda: mdl.NotificationCenter.notify(self.server, "server_running"))
 
     def _watch_quit(self):
         done_quit = False
 
         if self._notified:
+
             def quit_func(msg, *_):
                 nonlocal done_quit
-                if msg[1] == '/quit':
+                if msg[1] == "/quit":
                     done_quit = True
                     quit_watcher.free()
                     _logger.info(f"'{self.server.name}': quit done")
-                    self._perform_actions('quit', 'on_complete')
+                    self._perform_actions("quit", "on_complete")
 
-            quit_watcher = rpd.OscFunc(
-                quit_func, '/done', self.server.addr)
+            quit_watcher = rpd.OscFunc(quit_func, "/done", self.server.addr)
 
             def quit_timeout_func():
                 if not done_quit:
                     if self.unresponsive:
                         _logger.warning(
                             f"Server '{self.server.name}' "
-                            "remained unresponsive during quit")
+                            "remained unresponsive during quit"
+                        )
                     else:
                         _logger.warning(
                             f"Server '{self.server.name}' failed to "
-                            f"quit after {self._timeout} seconds")
+                            f"quit after {self._timeout} seconds"
+                        )
                     # // don't accumulate quit-watchers
                     # // if /done doesn't come back
                     quit_watcher.free()
                     if self._responder is not None:
                         self._responder.disable()
-                    self._perform_actions('quit', 'on_failure')
+                    self._perform_actions("quit", "on_failure")
 
             clk.AppClock.sched(self._timeout, quit_timeout_func)
 
@@ -370,8 +383,7 @@ class ServerStatusWatcher():
         self._max_logins = None
         # // server.changed(\serverRunning) should be deferred in dependants!
         # // just in case some don't, defer here to avoid gui updates breaking.
-        clk.defer(lambda: mdl.NotificationCenter.notify(
-            self.server, 'server_running'))
+        clk.defer(lambda: mdl.NotificationCenter.notify(self.server, "server_running"))
 
     def _boot_nrt(self):
         # It could be better to make a base clase with
@@ -404,7 +416,7 @@ class ServerStatusWatcher():
             t = _libsc3.main.elapsed_time()
             yield from self.server.sync()
             dt = _libsc3.main.elapsed_time() - t
-            _logger.info(f'measured latency: {dt}s')
+            _logger.info(f"measured latency: {dt}s")
             result = max(result, dt)
             n -= 1
             if n > 0:
@@ -412,7 +424,8 @@ class ServerStatusWatcher():
             else:
                 _logger.info(
                     f"maximum determined latency of server "
-                    f"'{self.server.name}': {result} seconds")
+                    f"'{self.server.name}': {result} seconds"
+                )
                 fn.value(action, result)
 
         def ping_func():

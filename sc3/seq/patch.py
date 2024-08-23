@@ -32,7 +32,6 @@ from ..base import _taskq as tsq
 from ..base import stream as stm
 from ..base import absobject as aob
 from ..synth import node as nod
-from ..synth import server as srv
 
 
 _logger = logging.getLogger(__name__)
@@ -52,9 +51,10 @@ class _UniqueList(list):
             super().remove(item)
 
 
-class Patch():
+class Patch:
     _Entry = collections.namedtuple(
-        '_Entry', ['beat', 'next_beat', 'trig', 'messages', 'roots'])
+        "_Entry", ["beat", "next_beat", "trig", "messages", "roots"]
+    )
     current_patch = None
 
     def __init__(self):
@@ -80,7 +80,7 @@ class Patch():
     @outlet.setter
     def outlet(self, value):
         if self._outlet:
-            raise Exception('Patch can only have one Outlet object.')
+            raise Exception("Patch can only have one Outlet object.")
         self._outlet = value
 
     @property
@@ -129,14 +129,12 @@ class Patch():
         self._triggers.append(trigger)
         messages = trigger._get_active_messages()
         roots = trigger._get_active_roots()
-        self._queue.add(
-            self._beat + next(trigger), (trigger, messages, roots))
+        self._queue.add(self._beat + next(trigger), (trigger, messages, roots))
 
     def _remove_trigger(self, trigger):
         if trigger not in self._triggers:
             return
-        if not trigger._get_active_messages()\
-        and len(trigger._get_active_roots()) < 2:
+        if not trigger._get_active_messages() and len(trigger._get_active_roots()) < 2:
             trigger._active = False  # Cancel in queue.
             self._triggers.remove(trigger)
 
@@ -176,15 +174,17 @@ class Patch():
 
             # Triggers are evaluated first each cycle (after yield).
             next_beat = next(trigger)  # Triggers are infinite.
-            evaluables.append(self._Entry(
-                beat, next_beat, trigger, messages, roots))
+            evaluables.append(self._Entry(beat, next_beat, trigger, messages, roots))
 
-            while not self._queue.empty()\
-            and round(beat, 9) == round(self._queue.peek()[0], 9):  # Sincroniza pero introduce un error diferente, hay que ver si converge para el delta de cada trigger.
+            while (
+                not self._queue.empty()
+                and round(beat, 9) == round(self._queue.peek()[0], 9)
+            ):  # Sincroniza pero introduce un error diferente, hay que ver si converge para el delta de cada trigger.
                 trigger, messages, roots = self._queue.pop()[1]
                 next_beat = next(trigger)
-                evaluables.append(self._Entry(
-                    beat, next_beat, trigger, messages, roots))
+                evaluables.append(
+                    self._Entry(beat, next_beat, trigger, messages, roots)
+                )
 
             # Evaluation.
 
@@ -207,8 +207,8 @@ class Patch():
                         continue
                     # Time tends to error/overflow by resolution over time.
                     self._queue.add(
-                        entry.beat + entry.next_beat,
-                        (entry.trig, messages, roots))
+                        entry.beat + entry.next_beat, (entry.trig, messages, roots)
+                    )
 
             prev_beat = beat
 
@@ -254,7 +254,7 @@ class Patch():
             Patch.current_patch = prev_patch
 
 
-class PatchFunction():
+class PatchFunction:
     def __init__(self, func):
         self.func = func
 
@@ -277,7 +277,7 @@ def patch(func):
     return PatchFunction(func)
 
 
-'''
+"""
 from sc3.all import *
 from sc3.seq.patch import *
 
@@ -296,11 +296,12 @@ def test():
 t = test(play=False)
 print([out for out in t.roots])
 t.play()
-'''
+"""
 
 
-class BoxObject():
-    class __NOCACHE(): pass
+class BoxObject:
+    class __NOCACHE:
+        pass
 
     def __init__(self, tgg=None, msg=None):
         self._active = True
@@ -321,7 +322,7 @@ class BoxObject():
         return self
 
     def __next__(self):
-        raise NotImplementedError(f'{type(self).__name__}.__next__')
+        raise NotImplementedError(f"{type(self).__name__}.__next__")
 
     def _evaluate(self):
         # Patch is a generator function that creates an timed generator
@@ -440,11 +441,12 @@ class BoxObject():
         return ret
 
 
-class TriggerObject():
-    '''
+class TriggerObject:
+    """
     Triggers are iterators that just return floats as deltas.
     They are not part of the graph as nodes, they are transversal.
-    '''
+    """
+
     def __init__(self):
         self._iterator = None
         self._objs = []
@@ -459,7 +461,7 @@ class TriggerObject():
         return next(self._iterator)
 
     def _connect(self, obj):
-        if not obj in self._objs:
+        if obj not in self._objs:
             self._objs.append(obj)
             obj._triggers.append(self)
 
@@ -479,8 +481,12 @@ class TriggerObject():
     def _get_active_roots(self):
         roots = set(r for b in self._boxes for r in b._get_roots() if r._active)
         roots |= set(
-            r for m in self._messages for o in m._objs\
-            for r in o._get_roots() if r._active)
+            r
+            for m in self._messages
+            for o in m._objs
+            for r in o._get_roots()
+            if r._active
+        )
         return tuple(roots)
 
     def _get_active_messages(self):
@@ -507,12 +513,13 @@ class Within(TriggerObject):
         super().__init__()
         if isinstance(n, (list, tuple)):
             self._iterator = itertools.cycle(
-                itertools.chain(*[[time / i] * i for i in n]))
+                itertools.chain(*[[time / i] * i for i in n])
+            )
         else:
             self._iterator = itertools.repeat(time / n)
 
 
-'''
+"""
 from sc3.all import *
 from sc3.seq.patch import *
 
@@ -522,7 +529,7 @@ def test():
     Trace(seq)
 
 p = test()
-'''
+"""
 
 
 class RootBox(BoxObject):
@@ -613,7 +620,7 @@ class ValueList(BoxObject):
         return self._len
 
 
-'''
+"""
 # - Tengo que cambiar la implementación, que cada outlet sea independiente y
 #   si se usan todos juntos funciona como ahora (corta el primero que termina),
 #   pero que esto sea explícito al crear las inlets (ahí se ponene en ValueList,
@@ -653,11 +660,10 @@ def inlst():
 
 # outlst()
 inlst()
-'''
+"""
 
 
 class Event(RootBox):
-
     class _EventDelta(TriggerObject):
         def __init__(self, delta):
             super().__init__()
@@ -685,7 +691,8 @@ class Event(RootBox):
         # case it will be inside a root evaluation call.
         messages = self._obj._get_messages()
         messages = [m for m in messages if m not in self._patch._messages]
-        for m in messages: m._active = True
+        for m in messages:
+            m._active = True
         self._patch._evaluate_cycle(messages)
         self._obj._add_parent(self, True)
 
@@ -698,7 +705,7 @@ class Event(RootBox):
         return self._obj._evaluate()
 
 
-'''
+"""
 from sc3.all import *
 from sc3.seq.patch import *
 
@@ -708,9 +715,9 @@ def p1():
     Trace(a, tgg=Trig(1))
 
 p = p1()
-'''
+"""
 
-'''
+"""
 from sc3.all import *
 from sc3.seq.patch import *
 
@@ -729,9 +736,9 @@ def test():
     Event(6, Note(name='ping', freq=Seq([350, 500, 750], repeat=5, tgg=Trig(3))))
 
 # p = test()
-'''
+"""
 
-'''
+"""
 from logging import info
 from sc3.all import *
 from sc3.seq.patch import *
@@ -750,26 +757,27 @@ def test():
     Trace(e)
 
 p = test()
-'''
+"""
 
 
 class Trace(RootBox):
     def __init__(self, graph, prefix=None, tgg=None, msg=None):
         super().__init__(tgg, msg)
         self._graph = Value(graph)
-        self._prefix = prefix or 'Trace'
+        self._prefix = prefix or "Trace"
         self._graph._add_parent(self)
 
     def __next__(self):
         value = self._graph._evaluate()
         _logger.info(
-            f'{self._prefix}: <{type(self._graph).__name__}, '
-            f'{hex(id(self._graph))}>, cycle: {self._patch._cycle}, '
-            f'value: {value}')
+            f"{self._prefix}: <{type(self._graph).__name__}, "
+            f"{hex(id(self._graph))}>, cycle: {self._patch._cycle}, "
+            f"value: {value}"
+        )
         return value
 
 
-'''
+"""
 from sc3.all import *
 from sc3.seq.patch import *
 
@@ -782,7 +790,7 @@ def test():
     Trace(r)
 
 test()
-'''
+"""
 
 
 class Tempo(RootBox):
@@ -798,7 +806,7 @@ class Tempo(RootBox):
         return value
 
 
-'''
+"""
 from sc3.all import *
 from sc3.seq.patch import *
 
@@ -810,7 +818,7 @@ def test():
     Trace(seq1, tgg=Trig(1))
 
 p = test()
-'''
+"""
 
 
 class Note(RootBox):
@@ -835,19 +843,19 @@ class Note(RootBox):
     def __next__(self):
         ...  # bundle
         params = {k: v._evaluate() for k, v in self._params.items()}
-        def_name = params.pop('name', 'default')
-        target = params.pop('target', None)
-        add_action = params.pop('add_action', 'addToHead')
-        register = params.pop('register', None)
+        def_name = params.pop("name", "default")
+        target = params.pop("target", None)
+        add_action = params.pop("add_action", "addToHead")
+        register = params.pop("register", None)
         args = [i for t in params.items() for i in t]
         synth = nod.Synth(def_name, args, target, add_action, register)
-        ... # release en base a dur msg.
-        ... # bundle
-        ... # send
+        ...  # release en base a dur msg.
+        ...  # bundle
+        ...  # send
         return synth
 
 
-'''
+"""
 from sc3.all import *
 from sc3.seq.patch import *
 
@@ -867,7 +875,7 @@ def test():
     # Trig(3)._connect(note)
 
 # p = test()
-'''
+"""
 
 
 class Inlet(BoxObject):
@@ -894,7 +902,7 @@ class Inlet(BoxObject):
         return len(self._input)
 
 
-'''
+"""
 from sc3.all import *
 from sc3.seq.patch import *
 
@@ -915,7 +923,7 @@ def b():
     Trace(freq2, 'Seq B', Trig(1))
 
 pb = b()
-'''
+"""
 
 
 class Box(BoxObject):  # *** TEST
@@ -930,7 +938,7 @@ class Box(BoxObject):  # *** TEST
         return self._obj
 
 
-class Message():
+class Message:
     def __init__(self, lst, tgg, bang=True):
         self._active = True
         self._lst = lst
@@ -963,7 +971,7 @@ class Message():
         return msg
 
     def _connect(self, obj):
-        if not obj in self._objs:
+        if obj not in self._objs:
             self._objs.append(obj)
             obj._messages.append(self)
 
@@ -971,7 +979,6 @@ class Message():
         if obj in self._objs:
             self._objs.remove(obj)
             obj._messages.remove(self)
-
 
     # Needed by _evaluate_cycle.
 
@@ -993,14 +1000,13 @@ class Message():
                 if not any(t._active for t in root._get_triggers()):
                     root._active = False
 
-
     # Needed by triggers interface.
 
     def _clear_cache(self):
         pass
 
 
-'''
+"""
 from logging import info  # to avoid a very annoying ipython bug.
 from sc3.all import *
 from sc3.seq.patch import *
@@ -1018,10 +1024,10 @@ def test():
     Trace(box)  # Outlet(box)
 
 p = test()
-'''
+"""
 
 
-class Tidyner():
+class Tidyner:
     def __init__(self):
         self._patch = Patch.current_patch
         self._patch._cleaners.append(self)
@@ -1030,7 +1036,7 @@ class Tidyner():
 class Cleanup(Tidyner):
     def __init__(self, lst, method=None, delay=None):
         super().__init__()
-        method = method or 'free'
+        method = method or "free"
         delay = 1.0 if delay is None else delay
         self.lst = []
         for item in lst:
@@ -1046,9 +1052,7 @@ class Cleanup(Tidyner):
             try:
                 getattr(obj, method)(*args)
             except:
-                _logger.error(
-                    ''.join(traceback.format_exception(
-                        *sys.exc_info(), -1)))
+                _logger.error("".join(traceback.format_exception(*sys.exc_info(), -1)))
 
 
 class CleanupFunction(Tidyner):
@@ -1062,22 +1066,22 @@ class CleanupFunction(Tidyner):
         try:
             self.func(*self.args)
         except:
-            _logger.error(
-                ''.join(traceback.format_exception(
-                    *sys.exc_info(), -1)))
+            _logger.error("".join(traceback.format_exception(*sys.exc_info(), -1)))
 
 
 # Decorator syntax.
 def cleanup(func=None, *, args=(), delay=None):
     if func is None and delay is not None:
+
         def _(func):
             return CleanupFunction(func, args, delay)
+
         return _
     else:
         return CleanupFunction(func)
 
 
-'''
+"""
 from sc3.all import *
 from sc3.seq.patch import *
 
@@ -1093,9 +1097,9 @@ def test():
         print('neat!')
 
 p = test()
-'''
+"""
 
-'''
+"""
 from logging import info
 from sc3.all import *
 from sc3.seq.patch import *
@@ -1121,9 +1125,9 @@ def test():
         group.free()
 
 # p = test()
-'''
+"""
 
-'''
+"""
 from sc3.all import *
 from sc3.seq.patch import *
 
@@ -1145,7 +1149,7 @@ def test():
     Cleanup([g, h])
 
 # p = test()
-'''
+"""
 
 
 class AbstractBox(BoxObject, aob.AbstractObject):
@@ -1213,13 +1217,15 @@ class If(AbstractBox):
         false = Value(false)
         self._check_fork(true, false)
         self.fork = (true, false)
-        for obj in (self.cond, *self.fork):  # inactive branch keeps running its own triggers.
+        for obj in (
+            self.cond,
+            *self.fork,
+        ):  # inactive branch keeps running its own triggers.
             obj._add_parent(self)
 
     def _check_fork(self, *fork):
         for b in fork:
-            if (isinstance(b, Outlet) or hasattr(b, '_get_roots'))\
-            and b._get_roots():
+            if (isinstance(b, Outlet) or hasattr(b, "_get_roots")) and b._get_roots():
                 raise ValueError("true/false expressions can't contain roots")
 
     def __next__(self):
@@ -1228,7 +1234,7 @@ class If(AbstractBox):
         return self.fork[cond]._evaluate()
 
 
-'''
+"""
 from sc3.all import *
 from sc3.seq.patch import *
 
@@ -1242,9 +1248,9 @@ def test():
 
 g = test(play=False)._gen_function()
 [value for value in g]
-'''
+"""
 
-'''
+"""
 from sc3.all import *
 from sc3.seq.patch import *
 
@@ -1257,13 +1263,13 @@ def test():
     Trace(res)
 
 p = test()
-'''
+"""
 
 
 class MetaValue(type):
     def __call__(cls, value, tgg=None):
-        if isinstance(value, (TriggerObject, Message)):  #, RootBox)):
-            raise TypeError(f'{type(value).__name__} is not valid input')
+        if isinstance(value, (TriggerObject, Message)):  # , RootBox)):
+            raise TypeError(f"{type(value).__name__} is not valid input")
         if isinstance(value, BoxObject):
             return value
         obj = cls.__new__(cls, value, tgg)
@@ -1280,7 +1286,7 @@ class Value(AbstractBox, metaclass=MetaValue):
         return self._value
 
 
-'''
+"""
 from sc3.all import *
 from sc3.seq.patch import *
 
@@ -1293,7 +1299,7 @@ def test():
 
 g = test(play=False)._gen_function()
 for _ in range(10): next(g)
-'''
+"""
 
 
 class Map(BoxObject):
@@ -1309,7 +1315,7 @@ class Map(BoxObject):
         return {k: v._evaluate() for k, v in self._params.items()}
 
 
-'''
+"""
 from sc3.all import *
 from sc3.seq.patch import *
 
@@ -1323,7 +1329,7 @@ def t():
     Trace(m)
 
 p = t()
-'''
+"""
 
 
 class Seq(AbstractBox):
@@ -1341,7 +1347,7 @@ class Seq(AbstractBox):
                     try:
                         obj._add_parent(self, True)
                         while True:
-                             yield obj._evaluate()
+                            yield obj._evaluate()
                     except StopIteration:
                         pass
                     obj._remove_parent(self, True)
@@ -1355,7 +1361,7 @@ class Seq(AbstractBox):
         return self._len
 
 
-'''
+"""
 from sc3.all import *
 from sc3.seq.patch import *
 
@@ -1369,9 +1375,9 @@ def p1():
     Trace(a)  #, tgg=Trig(1))
 
 p = p1()
-'''
+"""
 
-'''
+"""
 from sc3.all import *
 from sc3.seq.patch import *
 
@@ -1385,7 +1391,7 @@ def p1():
     Trace(a)  #, tgg=Trig(1))
 
 p = p1()
-'''
+"""
 
 
 class FunctionBox(AbstractBox):

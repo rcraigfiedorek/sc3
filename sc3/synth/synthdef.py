@@ -22,24 +22,23 @@ from .ugens import inout as iou
 from .ugens import fft
 
 
-__all__ = ['SynthDef', 'synthdef']
+__all__ = ["SynthDef", "synthdef"]
 
 
 _logger = logging.getLogger(__name__)
 
 
 class MetaSynthDef(type):
-    tmp_name_prefix = 'tmp__'
+    tmp_name_prefix = "tmp__"
     _tmp_def_count = 0
 
     def __init__(cls, *_):
-
         def init_func(cls):
             # // Ensure exists.
             if not plf.Platform.support_dir.exists():
                 _logger.info(
-                    'creating Platform.support_dir '
-                    f'at {plf.Platform.support_dir}')
+                    "creating Platform.support_dir " f"at {plf.Platform.support_dir}"
+                )
             plf.Platform.synthdef_dir.mkdir(parents=True, exist_ok=True)
 
         clb.ClassLibrary.add(cls, init_func)
@@ -51,7 +50,7 @@ class MetaSynthDef(type):
 
 
 class SynthDef(metaclass=MetaSynthDef):
-    '''Build the instructions to create synthesis nodes in the server.
+    """Build the instructions to create synthesis nodes in the server.
 
     SynthDef instances build the instructions to create synthesis nodes
     in the server from a function containing interconnected UGen objects.
@@ -85,10 +84,10 @@ class SynthDef(metaclass=MetaSynthDef):
         An user defined JSON serializable dictionary to
         provide information about the synthesis definition.
 
-    '''
+    """
 
-    _SUFFIX = 'scsyndef'
-    _RATE_NAMES = ('ar', 'kr', 'ir', 'tr')
+    _SUFFIX = "scsyndef"
+    _RATE_NAMES = ("ar", "kr", "ir", "tr")
 
     @classmethod
     def _dummy(cls, name):
@@ -118,8 +117,9 @@ class SynthDef(metaclass=MetaSynthDef):
 
         return obj
 
-    def __init__(self, name, func, rates=None, prepend=None,
-                 variants=None, metadata=None):
+    def __init__(
+        self, name, func, rates=None, prepend=None, variants=None, metadata=None
+    ):
         self._name = name
         self._func = None
         self._variants = variants or dict()
@@ -162,41 +162,42 @@ class SynthDef(metaclass=MetaSynthDef):
 
     @property
     def name(self):
-        '''SynthDef's name.'''
+        """SynthDef's name."""
         return self._name
 
     @property
     def func(self):
-        '''SynthDef's function.'''
+        """SynthDef's function."""
         return self._func
 
     @property
     def variants(self):
-        '''SynthDef's argument variants dict.'''
+        """SynthDef's argument variants dict."""
         return self._variants
 
     @property
     def metadata(self):
-        '''SynthDef's metadata dict.'''
+        """SynthDef's metadata dict."""
         return self._metadata
 
     @classmethod
     def wrap(cls, func, rates=None, prepend=None):
-        '''Wrap a function within another SynthDef function.
+        """Wrap a function within another SynthDef function.
 
         The wrapped ``func`` must return an UGen or None, ``rates`` and
         ``prepend`` are processed as in the default constructor and parameters
         are converted to controls of the resulting SynthDef.
 
-        '''
+        """
 
         if _libsc3.main._current_synthdef is not None:
             return _libsc3.main._current_synthdef._build_ugen_graph(
-                func, rates or [], prepend or [])
+                func, rates or [], prepend or []
+            )
         else:
             raise Exception(
-                'SynthDef wrap should be called inside '
-                'a SynthDef graph function')
+                "SynthDef wrap should be called inside " "a SynthDef graph function"
+            )
 
     def _init_build(self):
         # UGen.buildSynthDef, lock above.
@@ -216,9 +217,11 @@ class SynthDef(metaclass=MetaSynthDef):
         self._control_names = save_ctl_names
         return result
 
-    def _args_to_controls(self, func, rates, skip_args=0):  # Was addControlsFromArgsOfFunc.
+    def _args_to_controls(
+        self, func, rates, skip_args=0
+    ):  # Was addControlsFromArgsOfFunc.
         if not inspect.isfunction(func):
-            raise TypeError('func argument is not a function')
+            raise TypeError("func argument is not a function")
 
         sig = inspect.signature(func)
         self._callable_args = list(sig.parameters.keys())
@@ -230,12 +233,12 @@ class SynthDef(metaclass=MetaSynthDef):
         pork = inspect.Parameter.POSITIONAL_OR_KEYWORD
         for p in params:
             if p.kind != pork:
-                raise ValueError(
-                    'all func parameters must be POSITIONAL_OR_KEYWORD')
+                raise ValueError("all func parameters must be POSITIONAL_OR_KEYWORD")
 
         for p in params[skip_args:]:
-            if isinstance(p.default, tuple)\
-            and any(isinstance(v, Container) for v in p.default):
+            if isinstance(p.default, tuple) and any(
+                isinstance(v, Container) for v in p.default
+            ):
                 raise ValueError(f"tuple rank > 1 for parameter '{p.name}'")
 
         # // What we do here is separate the ir, tr and kr rate arguments,
@@ -249,8 +252,7 @@ class SynthDef(metaclass=MetaSynthDef):
         values = self._apply_metadata_specs(names, values)
 
         empty = inspect.Signature.empty
-        annotations = [
-            x.annotation if x.annotation != empty else None for x in params]
+        annotations = [x.annotation if x.annotation != empty else None for x in params]
         annotations = annotations[skip_args:]
 
         rates += [0] * (len(names) - len(rates))
@@ -260,30 +262,30 @@ class SynthDef(metaclass=MetaSynthDef):
 
         for a in annotations:
             if a is not None and a not in rate_names:
-                raise ValueError(
-                    f'rate annotation {repr(a)} not in {rate_names}')
+                raise ValueError(f"rate annotation {repr(a)} not in {rate_names}")
 
         for i, name in enumerate(names):
             value = values[i]
             annot = annotations[i]
             lag = rates[i]
 
-            if annot and annot != 'kr'\
-            and isinstance(lag, (int, float)) and lag != 0:
+            if annot and annot != "kr" and isinstance(lag, (int, float)) and lag != 0:
                 _logger.warning(
                     f"lag value {lag} for '{annot}' parameter "
-                    f"'{name}' will be ignored")
+                    f"'{name}' will be ignored"
+                )
 
             overridden = lag in rate_names
 
-            if lag == 'ir' or annot == 'ir' and not overridden:
+            if lag == "ir" or annot == "ir" and not overridden:
                 self._add_ir(name, value)
-            elif lag == 'tr' or annot == 'tr' and not overridden:
+            elif lag == "tr" or annot == "tr" and not overridden:
                 self._add_tr(name, value)
-            elif lag == 'ar' or annot == 'ar' and not overridden:
+            elif lag == "ar" or annot == "ar" and not overridden:
                 self._add_ar(name, value)
             else:
-                if lag == 'kr': lag = 0.0
+                if lag == "kr":
+                    lag = 0.0
                 self._add_kr(name, value, lag)
 
     def _get_valid_arg_values(self, params):
@@ -299,7 +301,8 @@ class SynthDef(metaclass=MetaSynthDef):
                 else:
                     _logger.warning(
                         "invalid value as default argument, "
-                        f"'{param.default}' replaced by None")
+                        f"'{param.default}' replaced by None"
+                    )
                     ret.append(None)
             else:
                 ret.append(None)
@@ -311,8 +314,8 @@ class SynthDef(metaclass=MetaSynthDef):
         # but it's called when building the definition and may add
         # a default value for control parameters if they are None.
         new_values = []
-        if 'specs' in self._metadata:
-            specs = self._metadata['specs']
+        if "specs" in self._metadata:
+            specs = self._metadata["specs"]
             for i, value in enumerate(values):
                 if value is not None:
                     new_values.append(value)
@@ -326,40 +329,53 @@ class SynthDef(metaclass=MetaSynthDef):
         return new_values
 
     def _add_non_control(self, name, value):  # Not used.
-        self._add_control_name(iou.ControlName(
-            name, None, 'noncontrol',
-            value, len(self._control_names)))
+        self._add_control_name(
+            iou.ControlName(name, None, "noncontrol", value, len(self._control_names))
+        )
 
     def _add_ir(self, name, value):
-        self._add_control_name(iou.ControlName(
-            name, len(self._controls), 'scalar',
-            value, len(self._control_names)))
+        self._add_control_name(
+            iou.ControlName(
+                name, len(self._controls), "scalar", value, len(self._control_names)
+            )
+        )
 
     def _add_tr(self, name, value):
-        self._add_control_name(iou.ControlName(
-            name, len(self._controls), 'trigger',
-            value, len(self._control_names)))
+        self._add_control_name(
+            iou.ControlName(
+                name, len(self._controls), "trigger", value, len(self._control_names)
+            )
+        )
 
     def _add_ar(self, name, value):
-        self._add_control_name(iou.ControlName(
-            name, len(self._controls), 'audio',
-            value, len(self._control_names)))
+        self._add_control_name(
+            iou.ControlName(
+                name, len(self._controls), "audio", value, len(self._control_names)
+            )
+        )
 
     def _add_kr(self, name, value, lag):
-        self._add_control_name(iou.ControlName(
-            name, len(self._controls), 'control',
-            value, len(self._control_names), lag))
+        self._add_control_name(
+            iou.ControlName(
+                name,
+                len(self._controls),
+                "control",
+                value,
+                len(self._control_names),
+                lag,
+            )
+        )
 
     def _add_control_name(self, cn):
         self._control_names.append(cn)
         self._all_control_names.append(cn)
 
     def _build_controls(self):
-        nn_cns = [x for x in self._control_names if x.rate == 'noncontrol']
-        ir_cns = [x for x in self._control_names if x.rate == 'scalar']
-        tr_cns = [x for x in self._control_names if x.rate == 'trigger']
-        ar_cns = [x for x in self._control_names if x.rate == 'audio']
-        kr_cns = [x for x in self._control_names if x.rate == 'control']
+        nn_cns = [x for x in self._control_names if x.rate == "noncontrol"]
+        ir_cns = [x for x in self._control_names if x.rate == "scalar"]
+        tr_cns = [x for x in self._control_names if x.rate == "trigger"]
+        ar_cns = [x for x in self._control_names if x.rate == "audio"]
+        kr_cns = [x for x in self._control_names if x.rate == "control"]
 
         arguments = [0] * len(self._control_names)
         values = []
@@ -387,9 +403,9 @@ class SynthDef(metaclass=MetaSynthDef):
                     arguments[cn.arg_num] = ctrl_ugens[i]
                     self._set_control_names(ctrl_ugens[i], cn)
 
-        build_ita_controls(ir_cns, iou.Control, 'ir')
-        build_ita_controls(tr_cns, iou.TrigControl, 'kr')
-        build_ita_controls(ar_cns, iou.AudioControl, 'ar')
+        build_ita_controls(ir_cns, iou.Control, "ir")
+        build_ita_controls(tr_cns, iou.TrigControl, "kr")
+        build_ita_controls(ar_cns, iou.AudioControl, "ar")
 
         if kr_cns:
             values = []
@@ -416,8 +432,7 @@ class SynthDef(metaclass=MetaSynthDef):
                 arguments[cn.arg_num] = ctrl_ugens[i]
                 self._set_control_names(ctrl_ugens[i], cn)
 
-        self._control_names = [
-            x for x in self._control_names if x.rate != 'noncontrol']
+        self._control_names = [x for x in self._control_names if x.rate != "noncontrol"]
         return arguments
 
     def _set_control_names(self, ctrl_ugens, cn):
@@ -443,7 +458,6 @@ class SynthDef(metaclass=MetaSynthDef):
         for child in self._width_first_ugens:
             if isinstance(child, fft.PV_ChainUGen):
                 child._add_copies_if_needed()  # pong
-
 
     # OC: Multi channel expansion causes a non optimal breadth-wise
     # ordering of the graph. The topological sort below follows
@@ -487,13 +501,13 @@ class SynthDef(metaclass=MetaSynthDef):
     def _check_inputs(self):  # ping
         first_err = None
         for ugen in self._children:
-            err = ugen._check_inputs() # pong
+            err = ugen._check_inputs()  # pong
             if err:
                 # err = ugen.class.asString + err;
                 # err.postln;
                 # ugen._dump_args
                 if first_err is None:
-                    first_err = ugen.name + ' ' + err
+                    first_err = ugen.name + " " + err
         if first_err:
             raise ValueError(first_err)
         return True  # Returns: None, bool, str (True or str is error).
@@ -514,7 +528,6 @@ class SynthDef(metaclass=MetaSynthDef):
             ugen._descendants = set()
             ugen._width_first_antecedents = []
 
-
     # // UGens do these (ping pong methods).
 
     def _add_ugen(self, ugen):
@@ -529,7 +542,7 @@ class SynthDef(metaclass=MetaSynthDef):
 
     def _replace_ugen(self, a, b):
         if not isinstance(b, ugn.SynthObject):
-            raise Exception('_replace_ugen assumes a SynthObject')
+            raise Exception("_replace_ugen assumes a SynthObject")
 
         b._width_first_antecedents = a._width_first_antecedents
         b._descendants = a._descendants
@@ -550,19 +563,20 @@ class SynthDef(metaclass=MetaSynthDef):
             self._constants[value] = len(self._constants)
 
     def dump_ugens(self):
-        '''Print the generated graph instructions in a human readable way.'''
+        """Print the generated graph instructions in a human readable way."""
 
         print(self._name)
         for ugen in self._children:
             inputs = None
             if ugen.inputs is not None:
                 inputs = [
-                    x._dump_name() if isinstance(x, ugn.SynthObject)
-                    else x for x in ugen.inputs]
+                    x._dump_name() if isinstance(x, ugn.SynthObject) else x
+                    for x in ugen.inputs
+                ]
             print([ugen._dump_name(), ugen.rate, inputs])
 
     def add(self, libname=None, completion_msg=None, keep_def=True):
-        '''Send the definition to the servers and keep a description.
+        """Send the definition to the servers and keep a description.
 
         Adds the synthesis definition to the SynthDescLib specified by
         ``libname`` and sends it to the library's registered servers.
@@ -582,14 +596,13 @@ class SynthDef(metaclass=MetaSynthDef):
             A flag indicating if the function's code will be kept in the
             SynthDesc object, default value is `True`.
 
-        '''
+        """
 
         # // Make SynthDef available to all servers.
         desc = sdc.SynthDesc.new_from(self, keep_def)
         if libname is None:
-            sdc.SynthDescLib.get_lib('default').add(desc)
-            servers = set(
-                s for s in srv.Server.all if s._status_watcher.has_booted)
+            sdc.SynthDescLib.get_lib("default").add(desc)
+            servers = set(s for s in srv.Server.all if s._status_watcher.has_booted)
         else:
             lib = sdc.SynthDescLib.get_lib(libname)
             lib.add(desc)
@@ -598,25 +611,27 @@ class SynthDef(metaclass=MetaSynthDef):
             self._do_send(server, fn.value(completion_msg, server))
 
     def _do_send(self, server, completion_msg):
-        msg = ['/d_recv', self.as_bytes(), completion_msg]
+        msg = ["/d_recv", self.as_bytes(), completion_msg]
         msg_size = server.addr._calc_msg_dgram_size(msg)
         if msg_size <= server.addr._MAX_UDP_DGRAM_SIZE:  # Was max size // 4.
             server.addr.send_msg(*msg)
         else:
             if server.addr.is_local:
                 _logger.warning(
-                    f'SynthDef {self._name} too big for sending. '
-                    'Retrying via synthdef file')
+                    f"SynthDef {self._name} too big for sending. "
+                    "Retrying via synthdef file"
+                )
                 self._write_def_file(plf.Platform.tmp_dir)
                 server.addr.send_msg(
-                    '/d_load',
-                    str(plf.Platform.tmp_dir / f'{self._name}.{self._SUFFIX}'),
-                    completion_msg)
+                    "/d_load",
+                    str(plf.Platform.tmp_dir / f"{self._name}.{self._SUFFIX}"),
+                    completion_msg,
+                )
             else:
-                _logger.warning(f'SynthDef {self._name} too big for sending')
+                _logger.warning(f"SynthDef {self._name} too big for sending")
 
     def as_bytes(self):
-        '''Binary format of the synthesis definition.'''
+        """Binary format of the synthesis definition."""
 
         if self._bytes is None:
             stream = io.BytesIO()
@@ -633,19 +648,20 @@ class SynthDef(metaclass=MetaSynthDef):
         # So far, this method is not called with overwrite and md_plugin in
         # this transcription (overwrite was for SynthDef.writeOnce which is
         # not used anywhere).
-        if self._metadata.get('reconstructed', False):  # Was 'shouldNotSend'.
+        if self._metadata.get("reconstructed", False):  # Was 'shouldNotSend'.
             raise Exception(
-                f'reconstructed SynthDef {repr(self._name)} does not contain '
-                'all the required structure to write back to disk')
+                f"reconstructed SynthDef {repr(self._name)} does not contain "
+                "all the required structure to write back to disk"
+            )
         if not self._name or not isinstance(self._name, str):
-            raise Exception(f'invalid SynthDef name: {repr(self._name)}')
+            raise Exception(f"invalid SynthDef name: {repr(self._name)}")
         dir = dir or plf.Platform.synthdef_dir
         dir = pathlib.Path(dir)
-        path = dir / f'{self._name}.{self._SUFFIX}'
+        path = dir / f"{self._name}.{self._SUFFIX}"
         if overwrite:
-            mode = 'wb'
+            mode = "wb"
         else:
-            mode = 'xb'
+            mode = "xb"
         try:
             # Should write if file doesn't exists or overwrite is True.
             with open(path, mode) as file:
@@ -653,7 +669,7 @@ class SynthDef(metaclass=MetaSynthDef):
             desc = sdc.SynthDesc.new_from(self)
             sdc.SynthDesc.populate_metadata_func(desc)
             desc.write_metadata(dir, md_plugin)
-            sdc.SynthDescLib.get_lib('default').add(desc)
+            sdc.SynthDescLib.get_lib("default").add(desc)
         except FileExistsError:
             pass
 
@@ -661,7 +677,7 @@ class SynthDef(metaclass=MetaSynthDef):
     def _write_def_list(lst, file):
         # This method is Collection-writeDef in sclang, is the only one
         # that creates the header. Called from as_bytes.
-        file.write(b'SCgf')  # putString 'a null terminated String'
+        file.write(b"SCgf")  # putString 'a null terminated String'
         frw.write_i32(file, 2)  # // file version
         frw.write_i16(file, len(lst))  # // number of defs in file.
         for synthdef in lst:
@@ -677,18 +693,18 @@ class SynthDef(metaclass=MetaSynthDef):
             for item in self._controls:
                 frw.write_f32(file, item)
 
-            allcns_tmp = [
-                x for x in self._all_control_names if x.rate != 'noncontrol']
+            allcns_tmp = [x for x in self._all_control_names if x.rate != "noncontrol"]
             frw.write_i32(file, len(allcns_tmp))
             for item in allcns_tmp:
                 if not isinstance(item, iou.ControlName):
                     raise Exception(
-                        'SynthDef self._all_control_names '
-                        'has non ControlName object')
-                elif not item.name: # ídem.
+                        "SynthDef self._all_control_names " "has non ControlName object"
+                    )
+                elif not item.name:  # ídem.
                     raise Exception(
-                        'SynthDef self._all_control_names has '
-                        f'empty ControlName object = {item.name}')
+                        "SynthDef self._all_control_names has "
+                        f"empty ControlName object = {item.name}"
+                    )
                 frw.write_pascal_str(file, item.name)
                 frw.write_i32(file, item.index)
 
@@ -703,11 +719,12 @@ class SynthDef(metaclass=MetaSynthDef):
                     allcns_map[cn.name] = cn
 
                 for varname, pairs in self._variants.items():
-                    varname = self._name + '.' + varname
+                    varname = self._name + "." + varname
                     if len(varname) > 32:
                         _logger.warning(
                             f"variant '{varname}' name too log, "
-                            "not writing more variants")
+                            "not writing more variants"
+                        )
                         return False
 
                     varcontrols = self._controls[:]
@@ -715,7 +732,8 @@ class SynthDef(metaclass=MetaSynthDef):
                         if allcns_map.keys().isdisjoint([cname]):
                             _logger.warning(
                                 f"control '{cname}' of variant '{varname}' "
-                                "not found, not writing more variants")
+                                "not found, not writing more variants"
+                            )
                             return False
 
                         cn = allcns_map[cname]
@@ -723,7 +741,8 @@ class SynthDef(metaclass=MetaSynthDef):
                         if len(values) > len(utl.as_list(cn.default_value)):
                             _logger.warning(
                                 f"control: '{cname}' of variant: '{varname}' "
-                                "size mismatch, not writing more variants")
+                                "size mismatch, not writing more variants"
+                            )
                             return False
 
                         index = cn.index
@@ -735,7 +754,7 @@ class SynthDef(metaclass=MetaSynthDef):
                         frw.write_f32(file, item)
             return True
         except Exception as e:
-            raise Exception('SynthDef: could not write def') from e
+            raise Exception("SynthDef: could not write def") from e
 
     def _write_constants(self, file):
         size = len(self._constants)
@@ -749,11 +768,10 @@ class SynthDef(metaclass=MetaSynthDef):
     # writeOnce, removed, see documentation.
     # removeAt, discarded, use SynthDescLib directly.
 
-
     # // Methods for special optimizations.
 
     def send(self, server=None, completion_msg=None):
-        '''Send the definition to the server.
+        """Send the definition to the server.
 
         Parameters
         ----------
@@ -764,22 +782,20 @@ class SynthDef(metaclass=MetaSynthDef):
             and return an OSC message. This message will be executed in the
             server after the definition is loaded.
 
-        '''
+        """
 
         # // Only send to servers.
         if server is None:
-            servers = list(
-                s for s in srv.Server.all if s._status_watcher.has_booted)
+            servers = list(s for s in srv.Server.all if s._status_watcher.has_booted)
         else:
             servers = utl.as_list(server)
         for server in servers:
             if not server._status_watcher.has_booted:
                 _logger.warning(
-                    f"Server '{server.name}' not running, "
-                    "could not send SynthDef")
-            if self._metadata.get('reconstructed', False):
-                self._load_reconstructed(
-                    server, fn.value(completion_msg, server))
+                    f"Server '{server.name}' not running, " "could not send SynthDef"
+                )
+            if self._metadata.get("reconstructed", False):
+                self._load_reconstructed(server, fn.value(completion_msg, server))
             else:
                 self._do_send(server, fn.value(completion_msg, server))
 
@@ -790,17 +806,16 @@ class SynthDef(metaclass=MetaSynthDef):
         _logger.warning(
             f"SynthDef '{self._name}' was reconstructed from a "
             f"{self._SUFFIX} file, it does not contain all the "
-            "required structure to send back to the server")
+            "required structure to send back to the server"
+        )
         if server.addr.is_local:
             _logger.warning(f"loading from disk instead for Server '{server}'")
-            server.addr.send_msg(
-                '/d_load', self._metadata['load_path'], completion_msg)
+            server.addr.send_msg("/d_load", self._metadata["load_path"], completion_msg)
         else:
-            raise Exception(
-                f"Server '{server}' is remote, cannot load from disk")
+            raise Exception(f"Server '{server}' is remote, cannot load from disk")
 
     def load(self, server, completion_msg=None, dir=None):
-        '''Write the definition to a file that is loaded from the server.
+        """Write the definition to a file that is loaded from the server.
 
         This method is used for definitions too large to be sent over UDP.
 
@@ -816,11 +831,11 @@ class SynthDef(metaclass=MetaSynthDef):
             Directory in which the file is saved, if not specified
             platform's default directory is used.
 
-        '''
+        """
 
         server = server or srv.Server.default
         completion_msg = fn.value(completion_msg, server)
-        if self._metadata.get('reconstructed', False):
+        if self._metadata.get("reconstructed", False):
             self._load_reconstructed(server, completion_msg)
         else:
             # // Should remember what dir synthDef was written to.
@@ -828,12 +843,11 @@ class SynthDef(metaclass=MetaSynthDef):
             dir = pathlib.Path(dir)
             self._write_def_file(dir)
             server.addr.send_msg(
-                '/d_load', str(dir / f'{self._name}.{self._SUFFIX}'),
-                completion_msg)
+                "/d_load", str(dir / f"{self._name}.{self._SUFFIX}"), completion_msg
+            )
 
-    def store(self, libname='default', dir=None, completion_msg=None,
-              md_plugin=None):
-        '''Add a description, write the definition to disk and send
+    def store(self, libname="default", dir=None, completion_msg=None, md_plugin=None):
+        """Add a description, write the definition to disk and send
         it to the registered servers.
 
         Similar to ``add`` but write to disk.
@@ -853,15 +867,15 @@ class SynthDef(metaclass=MetaSynthDef):
         md_plugin :
             TODO: Not defined yet.
 
-        '''
+        """
 
         # // Write to file and make synth description.
         lib = sdc.SynthDescLib.get_lib(libname)
         dir = dir or plf.Platform.synthdef_dir
         dir = pathlib.Path(dir)
-        path = dir / f'{self._name}.{self._SUFFIX}'
-        if not self._metadata.get('reconstructed', False):
-            with open(path, 'wb') as file:
+        path = dir / f"{self._name}.{self._SUFFIX}"
+        if not self._metadata.get("reconstructed", False):
+            with open(path, "wb") as file:
                 self._write_def_list([self], file)
             desc = sdc.SynthDesc.new_from(self)
             desc.metadata = self._metadata
@@ -873,8 +887,7 @@ class SynthDef(metaclass=MetaSynthDef):
         else:
             lib.read(path)
             for server in lib.servers:
-                self._load_reconstructed(
-                    server, fn.value(completion_msg, server))
+                self._load_reconstructed(server, fn.value(completion_msg, server))
 
     # def store_once(self, libname='default', dir=None, completion_msg=None,
     #                md_plugin=None):
@@ -896,19 +909,19 @@ class SynthDef(metaclass=MetaSynthDef):
     # creation (e.g. in {}.play) with *wrapOut in Function-asSynthDef.
     # hasGateControl Used in canReleaseSynth.
 
-    def __call__(self, *args, target=None, add_action='addToHead',
-                 register=False, **kwargs):
+    def __call__(
+        self, *args, target=None, add_action="addToHead", register=False, **kwargs
+    ):
         # NOTE: kwargs can duplicate args.
         arg_list = [v for p in zip(self._callable_args, args) for v in p]
         arg_list += [v for p in kwargs.items() for v in p]
         return nod.Synth(self.name, arg_list, target, add_action, register)
 
-
     # Utilities
 
     @classmethod
     def send_from_file(cls, server, name, dir=None):  # Was s.send_synthdef.
-        '''Read a synthdef file and send the definition to the server.
+        """Read a synthdef file and send the definition to the server.
 
         Parameters
         ----------
@@ -918,21 +931,23 @@ class SynthDef(metaclass=MetaSynthDef):
             Path to the synthdef directory, if not set default location is
             used.
 
-        '''
+        """
 
         dir = dir or plf.Platform.synthdef_dir
         dir = pathlib.Path(dir)
-        full_path = dir / f'{name}.{sdf.SynthDef._SUFFIX}'
+        full_path = dir / f"{name}.{sdf.SynthDef._SUFFIX}"
         try:
-            with open(full_path, 'rb') as file:
+            with open(full_path, "rb") as file:
                 buffer = file.read()
-                server.addr.send_msg('/d_recv', buffer)
+                server.addr.send_msg("/d_recv", buffer)
         except FileNotFoundError:
-            _logger.warning(f'send_synthdef FileNotFoundError: {full_path}')
+            _logger.warning(f"send_synthdef FileNotFoundError: {full_path}")
 
     @classmethod
-    def load_from_file(cls, server, name, completion_msg=None, dir=None):  # Was s.load_synthdef.
-        '''Ask the server to load a synthdef from disk.
+    def load_from_file(
+        cls, server, name, completion_msg=None, dir=None
+    ):  # Was s.load_synthdef.
+        """Ask the server to load a synthdef from disk.
 
         Parameters
         ----------
@@ -945,17 +960,16 @@ class SynthDef(metaclass=MetaSynthDef):
             Path to the synthdef directory, if not set default location is
             used.
 
-        '''
+        """
 
         dir = dir or plf.Platform.synthdef_dir
         dir = pathlib.Path(dir)
-        path = str(dir / f'{name}.{sdf.SynthDef._SUFFIX}')
-        server.addr.send_msg(
-            '/d_load', path, fn.value(completion_msg, server))
+        path = str(dir / f"{name}.{sdf.SynthDef._SUFFIX}")
+        server.addr.send_msg("/d_load", path, fn.value(completion_msg, server))
 
     @classmethod
     def load_directory(cls, server, dir, completion_msg=None):
-        '''Ask the server to load synthdefs from a directory.
+        """Ask the server to load synthdefs from a directory.
 
         Parameters
         ----------
@@ -965,22 +979,23 @@ class SynthDef(metaclass=MetaSynthDef):
             An OSC message to be evaluated by the server after load command
             finishes.
 
-        '''
+        """
 
-        server.addr.send_msg(
-            '/d_loadDir', dir, fn.value(completion_msg, server))
+        server.addr.send_msg("/d_loadDir", dir, fn.value(completion_msg, server))
 
 
 ### Decorator syntax ###
 
+
 def _create_synthdef(func, **kwargs):
     sdef = SynthDef(func.__name__, func, **kwargs)
     sdef.add()  # Running servers or offline patterns.
-    sac.ServerBoot.add('all', lambda server: sdef.add())  # Next boot.
+    sac.ServerBoot.add("all", lambda server: sdef.add())  # Next boot.
     return sdef
 
+
 def synthdef(func=None, **kwargs):
-    '''Decorator function to build and add definitions.
+    """Decorator function to build and add definitions.
 
     The name of the decorated function becomes the name of the
     definition. After instantiation the `add` method is called
@@ -1020,7 +1035,7 @@ def synthdef(func=None, **kwargs):
         sd = SynthDef('test', test, [0.02, 0.02], None, {'low': {'freq': 110}})
         sd.add()
 
-    '''
+    """
 
     if func is None:
         # action: 'load', 'send', 'store', 'add'? (needs kwargs filtering).

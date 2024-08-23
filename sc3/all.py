@@ -7,6 +7,7 @@ Usage::
 """
 
 import sc3 as _sc3
-_sc3.init('rt')
+
+_sc3.init("rt")
 
 from ._all import *

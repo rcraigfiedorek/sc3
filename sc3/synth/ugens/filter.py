@@ -17,21 +17,21 @@ class Filter(ugn.PureUGenMixin, ugn.UGen):
 class Resonz(Filter):
     @classmethod
     def ar(cls, input=0.0, freq=440.0, bwr=1.0):
-        return cls._multi_new('audio', input, freq, bwr)
+        return cls._multi_new("audio", input, freq, bwr)
 
     @classmethod
     def kr(cls, input=0.0, freq=440.0, bwr=1.0):
-        return cls._multi_new('control', input, freq, bwr)
+        return cls._multi_new("control", input, freq, bwr)
 
 
 class OnePole(Filter):
     @classmethod
     def ar(cls, input=0.0, coef=0.5):
-        return cls._multi_new('audio', input, coef)
+        return cls._multi_new("audio", input, coef)
 
     @classmethod
     def kr(cls, input=0.0, coef=0.5):
-        return cls._multi_new('control', input, coef)
+        return cls._multi_new("control", input, coef)
 
 
 class OneZero(OnePole):
@@ -41,11 +41,11 @@ class OneZero(OnePole):
 class TwoPole(Filter):
     @classmethod
     def ar(cls, input=0.0, freq=440.0, radius=0.8):
-        return cls._multi_new('audio', input, freq, radius)
+        return cls._multi_new("audio", input, freq, radius)
 
     @classmethod
     def kr(cls, input=0.0, freq=440.0, radius=0.8):
-        return cls._multi_new('control', input, freq, radius)
+        return cls._multi_new("control", input, freq, radius)
 
 
 class TwoZero(TwoPole):
@@ -59,49 +59,55 @@ class APF(TwoPole):
 class Integrator(Filter):
     @classmethod
     def ar(cls, input=0.0, coef=1.0):
-        return cls._multi_new('audio', input, coef)
+        return cls._multi_new("audio", input, coef)
 
     @classmethod
     def kr(cls, input=0.0, coef=1.0):
-        return cls._multi_new('control', input, coef)
+        return cls._multi_new("control", input, coef)
 
 
 class Decay(Filter):
     @classmethod
     def ar(cls, input=0.0, decay_time=1.0):
-        return cls._multi_new('audio', input, decay_time)
+        return cls._multi_new("audio", input, decay_time)
 
     @classmethod
     def kr(cls, input=0.0, decay_time=1.0):
-        return cls._multi_new('control', input, decay_time)
+        return cls._multi_new("control", input, decay_time)
 
 
 class Decay2(Filter):
     @classmethod
     def ar(cls, input=0.0, attack_time=0.01, decay_time=1.0):
-        return cls._multi_new('audio', input, attack_time, decay_time)
+        return cls._multi_new("audio", input, attack_time, decay_time)
 
     @classmethod
     def kr(cls, input=0.0, attack_time=0.01, decay_time=1.0):
-        return cls._multi_new('control', input, attack_time, decay_time)
+        return cls._multi_new("control", input, attack_time, decay_time)
 
 
 class Lag(Filter):
     @classmethod
     def ar(cls, input=0.0, lag_time=0.1):
-        if gpp.ugen_param(input)._as_ugen_rate() == 'scalar'\
-        or isinstance(lag_time, (int, float)) and lag_time == 0:
+        if (
+            gpp.ugen_param(input)._as_ugen_rate() == "scalar"
+            or isinstance(lag_time, (int, float))
+            and lag_time == 0
+        ):
             return input
         else:
-            return cls._multi_new('audio', input, lag_time)
+            return cls._multi_new("audio", input, lag_time)
 
     @classmethod
     def kr(cls, input=0.0, lag_time=0.1):
-        if gpp.ugen_param(input)._as_ugen_rate() == 'scalar'\
-        or isinstance(lag_time, (int, float)) and lag_time == 0:
+        if (
+            gpp.ugen_param(input)._as_ugen_rate() == "scalar"
+            or isinstance(lag_time, (int, float))
+            and lag_time == 0
+        ):
             return input
         else:
-            return cls._multi_new('control', input, lag_time)
+            return cls._multi_new("control", input, lag_time)
 
 
 class Lag2(Lag):
@@ -119,17 +125,17 @@ class Ramp(Lag):
 class LagUD(Filter):
     @classmethod
     def ar(cls, input=0.0, lag_time_up=0.1, lag_time_down=0.1):
-        if gpp.ugen_param(input)._as_ugen_rate() == 'scalar':
+        if gpp.ugen_param(input)._as_ugen_rate() == "scalar":
             return input
         else:
-            return cls._multi_new('audio', input, lag_time_up, lag_time_down)
+            return cls._multi_new("audio", input, lag_time_up, lag_time_down)
 
     @classmethod
     def kr(cls, input=0.0, lag_time_up=0.1, lag_time_down=0.1):
-        if gpp.ugen_param(input)._as_ugen_rate() == 'scalar':
+        if gpp.ugen_param(input)._as_ugen_rate() == "scalar":
             return input
         else:
-            return cls._multi_new('control', input, lag_time_up, lag_time_down)
+            return cls._multi_new("control", input, lag_time_up, lag_time_down)
 
 
 class Lag2UD(LagUD):
@@ -143,27 +149,32 @@ class Lag3UD(LagUD):
 class VarLag(Filter):
     @classmethod
     def ar(cls, input=0.0, time=0.1, curvature=0, warp=5, start=None):
-        if gpp.ugen_param(input)._as_ugen_rate() == 'scalar'\
-        or isinstance(time, (int, float)) and time == 0:
+        if (
+            gpp.ugen_param(input)._as_ugen_rate() == "scalar"
+            or isinstance(time, (int, float))
+            and time == 0
+        ):
             return input
         else:
-            return cls._multi_new('audio', input, time, curvature, warp, start)
+            return cls._multi_new("audio", input, time, curvature, warp, start)
 
     @classmethod
     def kr(cls, input=0.0, time=0.1, curvature=0, warp=5, start=None):
-        if gpp.ugen_param(input)._as_ugen_rate() == 'scalar'\
-        or isinstance(time, (int, float)) and time == 0:
+        if (
+            gpp.ugen_param(input)._as_ugen_rate() == "scalar"
+            or isinstance(time, (int, float))
+            and time == 0
+        ):
             return input
         else:
-            return cls._multi_new(
-                'control', input, time, curvature, warp, start)
+            return cls._multi_new("control", input, time, curvature, warp, start)
 
     @classmethod
-    def _new1(cls, rate, input, time, curvature, warp, start):   # *** BUG: TEST.
+    def _new1(cls, rate, input, time, curvature, warp, start):  # *** BUG: TEST.
         # // FIXME: Implement 'curve' input on VLag ugen instead of using EnvGen.
         # // Then 'exp' warp should probably behave as Lag ugen.
         # NOTE: this provisory implementation is low level like in sclang.
-        selector = 'ar' if rate == 'audio' else 'kr'
+        selector = "ar" if rate == "audio" else "kr"
         if start is None:
             start = input
         try:
@@ -176,9 +187,8 @@ class VarLag(Filter):
             env[6] = curve
             env[7] = curvature
             env = [tuple(env)]
-            trig = getattr(Changed, selector)(input) +\
-                   getattr(ocl.Impulse, selector)(0)
-            if gpp.ugen_param(time)._as_ugen_rate() != 'scalar':
+            trig = getattr(Changed, selector)(input) + getattr(ocl.Impulse, selector)(0)
+            if gpp.ugen_param(time)._as_ugen_rate() != "scalar":
                 trig += Changed.kr(time)
             return getattr(evg.EnvGen, selector)(env, trig)
         else:
@@ -190,21 +200,21 @@ class VarLag(Filter):
 class LeakDC(Filter):
     @classmethod
     def ar(cls, input=0.0, coef=0.995):
-        return cls._multi_new('audio', input, coef)
+        return cls._multi_new("audio", input, coef)
 
     @classmethod
     def kr(cls, input=0.0, coef=0.995):
-        return cls._multi_new('control', input, coef)
+        return cls._multi_new("control", input, coef)
 
 
 class RLPF(Filter):
     @classmethod
     def ar(cls, input=0.0, freq=440.0, rq=1.0):
-        return cls._multi_new('audio', input, freq, rq)
+        return cls._multi_new("audio", input, freq, rq)
 
     @classmethod
     def kr(cls, input=0.0, freq=440.0, rq=1.0):
-        return cls._multi_new('control', input, freq, rq)
+        return cls._multi_new("control", input, freq, rq)
 
 
 class RHPF(RLPF):
@@ -214,11 +224,11 @@ class RHPF(RLPF):
 class LPF(Filter):
     @classmethod
     def ar(cls, input=0.0, freq=440.0):
-        return cls._multi_new('audio', input, freq)
+        return cls._multi_new("audio", input, freq)
 
     @classmethod
     def kr(cls, input=0.0, freq=440.0):
-        return cls._multi_new('control', input, freq)
+        return cls._multi_new("control", input, freq)
 
 
 class HPF(LPF):
@@ -228,11 +238,11 @@ class HPF(LPF):
 class BPF(Filter):
     @classmethod
     def ar(cls, input=0.0, freq=440.0, rq=1.0):
-        return cls._multi_new('audio', input, freq, rq)
+        return cls._multi_new("audio", input, freq, rq)
 
     @classmethod
     def kr(cls, input=0.0, freq=440.0, rq=1.0):
-        return cls._multi_new('control', input, freq, rq)
+        return cls._multi_new("control", input, freq, rq)
 
 
 class BRF(BPF):
@@ -242,21 +252,21 @@ class BRF(BPF):
 class MidEQ(Filter):
     @classmethod
     def ar(cls, input=0.0, freq=440.0, rq=1.0, db=0.0):
-        return cls._multi_new('audio', input, freq, rq, db)
+        return cls._multi_new("audio", input, freq, rq, db)
 
     @classmethod
     def kr(cls, input=0.0, freq=440.0, rq=1.0, db=0.0):
-        return cls._multi_new('control', input, freq, rq, db)
+        return cls._multi_new("control", input, freq, rq, db)
 
 
 class LPZ1(Filter):
     @classmethod
     def ar(cls, input=0.0):
-        return cls._multi_new('audio', input)
+        return cls._multi_new("audio", input)
 
     @classmethod
     def kr(cls, input=0.0):
-        return cls._multi_new('control', input)
+        return cls._multi_new("control", input)
 
 
 class HPZ1(LPZ1):
@@ -266,11 +276,11 @@ class HPZ1(LPZ1):
 class Slope(Filter):
     @classmethod
     def ar(cls, input=0.0):
-        return cls._multi_new('audio', input)
+        return cls._multi_new("audio", input)
 
     @classmethod
     def kr(cls, input=0.0):
-        return cls._multi_new('control', input)
+        return cls._multi_new("control", input)
 
 
 class Changed(Filter):  # is pseudo really
@@ -286,11 +296,11 @@ class Changed(Filter):  # is pseudo really
 class LPZ2(Filter):
     @classmethod
     def ar(cls, input=0.0):
-        return cls._multi_new('audio', input)
+        return cls._multi_new("audio", input)
 
     @classmethod
     def kr(cls, input=0.0):
-        return cls._multi_new('control', input)
+        return cls._multi_new("control", input)
 
 
 class HPZ2(LPZ2):
@@ -308,16 +318,18 @@ class BRZ2(LPZ2):
 class Median(Filter):
     @classmethod
     def ar(cls, length=3, input=0.0):
-        return cls._multi_new('audio', length, input)
+        return cls._multi_new("audio", length, input)
 
     @classmethod
     def kr(cls, length=3, input=0.0):
-        return cls._multi_new('control', length, input)
+        return cls._multi_new("control", length, input)
 
     def _check_inputs(self):
-        if self.rate == 'audio'\
-        and gpp.ugen_param(self.inputs[1])._as_ugen_rate() != 'audio':
-            return 'input was not audio rate'
+        if (
+            self.rate == "audio"
+            and gpp.ugen_param(self.inputs[1])._as_ugen_rate() != "audio"
+        ):
+            return "input was not audio rate"
         else:
             return self._check_valid_inputs()
 
@@ -328,17 +340,17 @@ class Median(Filter):
 class Slew(Filter):
     @classmethod
     def ar(cls, input=0.0, up=1.0, dn=1.0):
-        if gpp.ugen_param(input)._as_ugen_rate() == 'scalar':
+        if gpp.ugen_param(input)._as_ugen_rate() == "scalar":
             return input
         else:
-            return cls._multi_new('audio', input, up, dn)
+            return cls._multi_new("audio", input, up, dn)
 
     @classmethod
     def kr(cls, input=0.0, up=1.0, dn=1.0):
-        if gpp.ugen_param(input)._as_ugen_rate() == 'scalar':
+        if gpp.ugen_param(input)._as_ugen_rate() == "scalar":
             return input
         else:
-            return cls._multi_new('control', input, up, dn)
+            return cls._multi_new("control", input, up, dn)
 
 
 # Lost UGen RLPF4.
@@ -347,43 +359,41 @@ class Slew(Filter):
 class FOS(Filter):
     @classmethod
     def ar(cls, input=0.0, a0=0.0, a1=0.0, b1=0.0):
-        return cls._multi_new('audio', input, a0, a1, b1)
+        return cls._multi_new("audio", input, a0, a1, b1)
 
     @classmethod
     def kr(cls, input=0.0, a0=0.0, a1=0.0, b1=0.0):
-        return cls._multi_new('control', input, a0, a1, b1)
+        return cls._multi_new("control", input, a0, a1, b1)
 
 
 class SOS(Filter):
     @classmethod
     def ar(cls, input=0.0, a0=0.0, a1=0.0, a2=0.0, b1=0.0, b2=0.0):
-        return cls._multi_new(
-            'audio', input, a0, a1, a2, b1, b2)
+        return cls._multi_new("audio", input, a0, a1, a2, b1, b2)
 
     @classmethod
     def kr(cls, input=0.0, a0=0.0, a1=0.0, a2=0.0, b1=0.0, b2=0.0):
-        return cls._multi_new(
-            'control', input, a0, a1, a2, b1, b2)
+        return cls._multi_new("control", input, a0, a1, a2, b1, b2)
 
 
 class Ringz(Filter):
     @classmethod
     def ar(cls, input=0.0, freq=440.0, decay_time=1.0):
-        return cls._multi_new('audio', input, freq, decay_time)
+        return cls._multi_new("audio", input, freq, decay_time)
 
     @classmethod
     def kr(cls, input=0.0, freq=440.0, decay_time=1.0):
-        return cls._multi_new('control', input, freq, decay_time)
+        return cls._multi_new("control", input, freq, decay_time)
 
 
 class Formlet(Filter):
     @classmethod
     def ar(cls, input=0.0, freq=440.0, attack_time=1.0, decay_time=1.0):
-        return cls._multi_new('audio', input, freq, attack_time, decay_time)
+        return cls._multi_new("audio", input, freq, attack_time, decay_time)
 
     @classmethod
     def kr(cls, input=0.0, freq=440.0, attack_time=1.0, decay_time=1.0):
-        return cls._multi_new('control', input, freq, attack_time, decay_time)
+        return cls._multi_new("control", input, freq, attack_time, decay_time)
 
 
 # // the doneAction arg lets you cause the EnvGen to stop or end the
@@ -399,11 +409,11 @@ class Formlet(Filter):
 class DetectSilence(Filter):
     @classmethod
     def ar(cls, input=0.0, amp=0.0001, time=0.1, done_action=0):
-        return cls._multi_new('audio', input, amp, time, done_action)
+        return cls._multi_new("audio", input, amp, time, done_action)
 
     @classmethod
     def kr(cls, input=0.0, amp=0.0001, time=0.1, done_action=0):
-        return cls._multi_new('control', input, amp, time, done_action)
+        return cls._multi_new("control", input, amp, time, done_action)
 
     def _optimize_graph(self):
         pass
@@ -424,11 +434,12 @@ class DetectSilence(Filter):
 # Ported to C++ for SuperCollider by Dan Stowell - August 2007
 # http://www.mcld.co.uk/
 
+
 class MoogFF(Filter):
     @classmethod
     def ar(cls, input, freq=100, gain=2, reset=0):
-        return cls._multi_new('audio', input, freq, gain, reset)
+        return cls._multi_new("audio", input, freq, gain, reset)
 
     @classmethod
     def kr(cls, input, freq=100, gain=2, reset=0):
-        return cls._multi_new('control', input, freq, gain, reset)
+        return cls._multi_new("control", input, freq, gain, reset)
