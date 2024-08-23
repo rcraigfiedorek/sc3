@@ -617,7 +617,7 @@ class SynthDef(metaclass=MetaSynthDef):
     def _do_send(self, server, completion_msg):
         msg = ["/d_recv", self.as_bytes(), completion_msg]
         msg_size = server.addr._calc_msg_dgram_size(msg)
-        if msg_size <= server.addr._MAX_UDP_DGRAM_SIZE:  # Was max size // 4.
+        if msg_size <= server.addr._MAX_UDP_DGRAM_SIZE // 4:
             server.addr.send_msg(*msg)
         else:
             if server.addr.is_local:
