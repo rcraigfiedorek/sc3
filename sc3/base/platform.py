@@ -240,7 +240,7 @@ class DarwinPlatform(UnixPlatform):
 
     @property
     def recording_dir(self):
-        return self.home / Path("Music/SuperCollider Recordings")
+        return self.home_dir / Path("Music/SuperCollider Recordings")
 
     @property
     def bin_dir(self):
